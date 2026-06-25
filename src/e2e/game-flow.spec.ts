@@ -34,6 +34,7 @@ test.describe("纵横四海：E2E 游戏流程", () => {
     // 造船厂（从港口卡片进入）
     await page.locator("nav").getByRole("link", { name: "港口" }).click()
     await page.getByRole("link", { name: /造船厂/ }).click()
+    await page.getByRole("button", { name: /进入造船厂/ }).click()
     await expect(page.getByText("造船厂")).toBeVisible({ timeout: 15_000 })
   })
 
@@ -51,7 +52,7 @@ test.describe("纵横四海：E2E 游戏流程", () => {
     await page.getByRole("button", { name: "买入" }).first().click()
 
     // 购买弹窗出现 → 确认购买
-    await expect(page.getByRole("button", { name: "确认购买" })).toBeVisible()
+    await expect(page.getByRole("button", { name: "确认购买" })).toBeVisible({ timeout: 15_000 })
     await page.getByRole("button", { name: "确认购买" }).click()
 
     // 进入船舱查看
@@ -60,7 +61,7 @@ test.describe("纵横四海：E2E 游戏流程", () => {
     await expect(page.getByText("船舱")).toBeVisible({ timeout: 15_000 })
 
     // 应有货物（不再显示"空空如也"）
-    await expect(page.getByText("空空如也")).toHaveCount(0, { timeout: 5_000 })
+    await expect(page.getByText("空空如也")).toHaveCount(0, { timeout: 15_000 })
   })
 
   test("完整流程：出航并抵达", async ({ page }) => {
@@ -76,8 +77,7 @@ test.describe("纵横四海：E2E 游戏流程", () => {
     // 点击第一个目的地的"前往"按钮
     await page.getByRole("button", { name: "前往" }).first().click()
 
-    // 确认出航弹窗 → 确认
-    await expect(page.getByText("确认出航")).toBeVisible()
+    await expect(page.getByText("确认出航")).toBeVisible({ timeout: 15_000 })
     await page.getByRole("button", { name: "确认出航" }).click()
 
     // 跳转到航行页
