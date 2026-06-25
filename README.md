@@ -33,7 +33,7 @@ bun install
 bunx prisma generate
 bunx prisma db push
 
-# 启动开发服务器
+# 启动开发服务器 (webpack)
 bun run dev
 ```
 
@@ -43,7 +43,7 @@ bun run dev
 
 ## 可用命令
 
-| `bun run dev` | 启动开发服务器 (Turbopack) |
+| `bun run dev` | 启动开发服务器 (webpack) |
 | `bun run build` | 生产构建 |
 | `bun run start` | 运行生产构建 |
 | `bun run test` | 运行单元测试 (Bun Test) |
