@@ -159,7 +159,8 @@ export function buildShipView(world: World): ShipView {
     speed: shipConfig.speed,
     playerGold: world.player.gold,
     upgradeCost,
-    canUpgrade: canUpgrade && world.player.gold >= (upgradeCost ?? Infinity),
+    blockedByVoyage: !!world.voyage,
+    canUpgrade: canUpgrade && world.player.gold >= (upgradeCost ?? Infinity) && !world.voyage,
   }
 }
 

@@ -1,12 +1,13 @@
 "use client"
 
-import { useActionState, useState } from "react"
+import { useActionState, useState, useTransition } from "react"
 import { loadNavigationView } from "./actions"
 import { startTravel } from "../actions/travel"
 import type { NavigationView, DestinationView } from "../../types/game-view"
 
 export default function NavigationPage() {
   const [view, loadAction, isLoading] = useActionState(loadNavigationView, null)
+  const [isTravelPending, startTravelTransition] = useTransition()
   const [selectedDest, setSelectedDest] = useState<DestinationView | null>(null)
 
   if (!view) {
@@ -93,18 +94,20 @@ export default function NavigationPage() {
 
             <form
               action={async (formData) => {
-                await startTravel(formData)
-                window.location.href = "/voyage"
+                startTravelTransition(async () => {
+                  await startTravel(formData)
+                  window.location.href = "/voyage"
+                })
               }}
               className="mt-4 flex gap-2"
             >
               <input type="hidden" name="portId" value={selectedDest.portId} />
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isTravelPending}
                 className="flex-1 rounded bg-gold-500 py-2 text-sm font-bold text-ocean-900 hover:bg-gold-400 transition-colors disabled:opacity-50"
               >
-                {isLoading ? "出航中..." : "确认出航"}
+                {isTravelPending ? "出航中..." : "确认出航"}
               </button>
               <button
                 type="button"

@@ -15,7 +15,7 @@ export async function buyGoods(
   const goodId = formData.get("goodId") as string
   const quantity = Number(formData.get("quantity"))
 
-  if (!goodId || quantity <= 0) throw new Error("无效的购买请求")
+  if (!goodId || !Number.isFinite(quantity) || quantity <= 0) throw new Error("无效的购买请求")
 
   return await prisma.$transaction(async (tx) => {
     const world = await loadWorld(tx)
@@ -34,7 +34,7 @@ export async function sellGoods(
   const goodId = formData.get("goodId") as string
   const quantity = Number(formData.get("quantity"))
 
-  if (!goodId || quantity <= 0) throw new Error("无效的卖出请求")
+  if (!goodId || !Number.isFinite(quantity) || quantity <= 0) throw new Error("无效的卖出请求")
 
   return await prisma.$transaction(async (tx) => {
     const world = await loadWorld(tx)

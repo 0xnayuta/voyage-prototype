@@ -99,7 +99,7 @@ Server Action（入口）
 
 ---
 
-### Phase 1.2：核心循环补齐（计划中）
+### Phase 1.2：核心循环补齐（已完成）
 
 在骨架上填充让核心循环完整运行所需的功能。
 
@@ -112,7 +112,7 @@ Server Action（入口）
 | 均值回归 | 每天价格向基础价回归（`PRICE_REGRESSION_RATE`） |
 | 每日推进 | 航行出发时推进天数，触发全市场价格刷新 |
 
-**关联模块：** `src/game/domain/market.ts` → 新增 `simulateDayPass(world): World` 纯函数
+**关联模块：** `src/game/domain/market.ts` → 新增 `applyDayPass(world): World` 纯函数
 
 #### 1.2.2 航行体验
 
@@ -122,7 +122,7 @@ Server Action（入口）
 | 抵达逻辑 | 航行天数到达后自动处理抵达，更新 currentPort |
 | 随机事件 | 航行中按概率触发事件（文字描述 + 简单效果：丢货/得物） |
 
-**关联文件：** `src/app/voyage/page.tsx`（新建）、`src/game/event/event-resolver.ts`（新建）
+**关联文件：** `src/app/voyage/page.tsx`（新建）、`src/game/domain/voyage.ts`（已有 `generateVoyageEvents` + `applyVoyageEvents`）
 
 #### 1.2.3 船只升级
 
@@ -131,7 +131,7 @@ Server Action（入口）
 | 升级 Server Action | `upgradeShip` — 扣金币 + 提升等级 + 增加容量 |
 | UI 联动 | `/ship` 页调用升级 action，刷新 view |
 
-**关联文件：** `src/app/actions/ship.ts`（新建）、`src/game/domain/ship.ts`（已有 `upgradeLevel` 计算）
+**关联文件：** `src/app/ship/actions.ts`（新建）、`src/game/domain/ship.ts`（已有 `upgradeShip`）
 
 #### 1.2.4 存档增强
 
@@ -266,12 +266,12 @@ Server Action（入口）
 - [x] 可以完成至少一轮完整的「买 → 航 → 卖」循环
 - [x] 可以退出游戏后重新加载，从存档恢复
 - [x] 至少 3 个港口、5 种商品、2 种船只
-- [ ] 价格随供需波动，跑过多次后利润变化
-- [ ] 航行过程有文字反馈和可选的随机事件体验
-- [ ] 船只可升级
-- [ ] `npx next build` 无错误
-- [ ] 游戏引擎纯函数测试全部通过
-- [ ] 无 Zustand 依赖
+- [x] 价格随供需波动，跑过多次后利润变化
+- [x] 航行过程有文字反馈和可选的随机事件体验
+- [x] 船只可升级
+- [x] `npx next build` 无错误
+- [x] 游戏引擎纯函数测试全部通过
+- [x] 无 Zustand 依赖
 
 ### 质量条件（建议满足）
 

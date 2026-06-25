@@ -6,6 +6,7 @@ import {
   buildNavigationView,
   buildCargoView,
   buildShipView,
+  buildVoyageView,
 } from "../buildGameView"
 
 describe("buildHarborView", () => {
@@ -185,5 +186,79 @@ describe("buildShipView", () => {
 
     expect(view.upgradeCost).toBeNull()
     expect(view.canUpgrade).toBe(false)
+  })
+})
+
+describe("buildVoyageView", () => {
+  it("returns default state when not traveling", () => {
+    const world = createTestWorld()
+    const view = buildVoyageView(world)
+
+    expect(view.isUnderway).toBe(false)
+    expect(view.fromPortName).toBe("未知")
+    expect(view.toPortName).toBe("未知")
+    expect(view.travelDays).toBe(0)
+    expect(view.events).toHaveLength(0)
+  })
+
+  it("shows voyage info when underway", () => {
+    const world = createTestWorld({
+      voyage: {
+        fromPortId: "quanzhou",
+        toPortId: "malacca",
+        departureDay: 1,
+        travelDays: 4,
+        events: [
+          { day: 2, description: "遇到一群海豚，心情大好", goldChange: 50, cargoLoss: 0 },
+        ],
+      },
+    })
+    const view = buildVoyageView(world)
+
+    expect(view.isUnderway).toBe(true)
+    expect(view.fromPortName).toBe("泉州")
+    expect(view.toPortName).toBe("马六甲")
+    expect(view.travelDays).toBe(4)
+    expect(view.events).toHaveLength(1)
+    expect(view.events[0].description).toBe("遇到一群海豚，心情大好")
+    expect(view.events[0].effect).toContain("50 金币")
+  })
+
+  it("handles unknown port gracefully", () => {
+    const world = createTestWorld({
+      voyage: {
+        fromPortId: "unknown_port",
+        toPortId: "also_unknown",
+        departureDay: 1,
+        travelDays: 3,
+        events: [],
+      },
+    })
+    const view = buildVoyageView(world)
+
+    expect(view.isUnderway).toBe(true)
+    expect(view.fromPortName).toBe("未知")
+    expect(view.toPortName).toBe("未知")
+  })
+
+  it("event effect is empty when no gold or cargo change", () => {
+    const world = createTestWorld({
+      voyage: {
+        fromPortId: "quanzhou",
+        toPortId: "nagasaki",
+        departureDay: 1,
+        travelDays: 3,
+        events: [
+          { day: 1, description: "海面风平浪静", goldChange: 0, cargoLoss: 0 },
+          { day: 2, description: "遇到海盗", goldChange: -30, cargoLoss: 2 },
+        ],
+      },
+    })
+    const view = buildVoyageView(world)
+
+    expect(view.events).toHaveLength(2)
+    expect(view.events[0].effect).toBe("无影响")
+    expect(view.events[1].effect).toContain("损失 30 金币")
+    expect(view.events[1].effect).toContain("丢失 2 单位货物")
   })
 })

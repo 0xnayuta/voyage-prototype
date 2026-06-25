@@ -82,11 +82,17 @@ export function generateVoyageEvents(
   travelDays: number,
 ): readonly VoyageEvent[] {
   const events: VoyageEvent[] = []
+  const totalChance = VOYAGE_EVENTS.reduce((sum, t) => sum + t.chance, 0)
 
   for (let day = 1; day <= travelDays; day++) {
-    // 每天最多一个事件
+    // 每天最多一个事件：按权重随机选择
+    const roll = Math.random()
+    if (roll >= totalChance) continue // 今日无事
+
+    let cumulative = 0
     for (const tmpl of VOYAGE_EVENTS) {
-      if (Math.random() < tmpl.chance) {
+      cumulative += tmpl.chance
+      if (roll < cumulative) {
         const goldChange =
           tmpl.minGold +
           Math.round(Math.random() * (tmpl.maxGold - tmpl.minGold))
@@ -101,7 +107,7 @@ export function generateVoyageEvents(
           goldChange,
           cargoLoss,
         })
-        break // 每天只触发一个事件
+        break
       }
     }
   }

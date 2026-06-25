@@ -76,6 +76,7 @@ export interface ShipView {
   readonly playerGold: number
   readonly upgradeCost: number | null
   readonly canUpgrade: boolean
+  readonly blockedByVoyage: boolean
 }
 
 /** 航行中页（/voyage） */

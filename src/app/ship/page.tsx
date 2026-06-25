@@ -28,6 +28,7 @@ export default function ShipPage() {
   }
 
   const canUpgrade = displayView.canUpgrade
+  const blockedByVoyage = displayView.blockedByVoyage
 
   return (
     <div className="flex-1 p-4 max-w-2xl mx-auto w-full space-y-4">
@@ -92,7 +93,9 @@ export default function ShipPage() {
                 ? "升级中..."
                 : canUpgrade
                   ? "升级"
-                  : "金币不足"}
+                  : blockedByVoyage
+                    ? "航行中无法升级"
+                    : "金币不足"}
             </button>
           </form>
         ) : (
