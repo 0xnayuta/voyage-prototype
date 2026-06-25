@@ -1,0 +1,102 @@
+import { test, expect } from "@playwright/test"
+
+test.describe("纵横四海：E2E 游戏流程", () => {
+  test("首页自动加载、显示港口视图", async ({ page }) => {
+    await page.goto("/")
+    await page.waitForLoadState("networkidle")
+
+    await expect(page.getByRole("heading", { name: "泉州" })).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText("第 1 天")).toBeVisible()
+    await expect(page.getByText("5,000")).toBeVisible()
+    await expect(page.getByText("舱 0/30")).toBeVisible()
+  })
+
+  test("导航栏各链接冒烟测试", async ({ page }) => {
+    await page.goto("/")
+    await page.waitForLoadState("networkidle")
+    await expect(page.getByRole("heading", { name: "泉州" })).toBeVisible({ timeout: 15_000 })
+
+    // 交易所
+    await page.locator("nav").getByRole("link", { name: "交易所" }).click()
+    await page.getByRole("button", { name: "进入交易所" }).click()
+    await expect(page.getByRole("button", { name: "买入" }).first()).toBeVisible({ timeout: 15_000 })
+
+    // 船舱（空舱）
+    await page.locator("nav").getByRole("link", { name: "船舱" }).click()
+    await page.getByRole("button", { name: "查看船舱" }).click()
+    await expect(page.getByText("空空如也")).toBeVisible({ timeout: 15_000 })
+
+    // 航海图
+    await page.locator("nav").getByRole("link", { name: "航海图" }).click()
+    await page.getByRole("button", { name: "打开航海图" }).click()
+    await expect(page.getByRole("button", { name: "前往" }).first()).toBeVisible({ timeout: 15_000 })
+
+    // 造船厂（从港口卡片进入）
+    await page.locator("nav").getByRole("link", { name: "港口" }).click()
+    await page.getByRole("link", { name: /造船厂/ }).click()
+    await expect(page.getByText("造船厂")).toBeVisible({ timeout: 15_000 })
+  })
+
+  test("完整流程：在交易所购买商品后船舱显示", async ({ page }) => {
+    await page.goto("/")
+    await page.waitForLoadState("networkidle")
+    await expect(page.getByRole("heading", { name: "泉州" })).toBeVisible({ timeout: 15_000 })
+
+    // 进入交易所
+    await page.locator("nav").getByRole("link", { name: "交易所" }).click()
+    await page.getByRole("button", { name: "进入交易所" }).click()
+    await expect(page.getByRole("button", { name: "买入" }).first()).toBeVisible({ timeout: 15_000 })
+
+    // 点击第一个可购买的"买入"按钮
+    await page.getByRole("button", { name: "买入" }).first().click()
+
+    // 购买弹窗出现 → 确认购买
+    await expect(page.getByRole("button", { name: "确认购买" })).toBeVisible()
+    await page.getByRole("button", { name: "确认购买" }).click()
+
+    // 进入船舱查看
+    await page.locator("nav").getByRole("link", { name: "船舱" }).click()
+    await page.getByRole("button", { name: "查看船舱" }).click()
+    await expect(page.getByText("船舱")).toBeVisible({ timeout: 15_000 })
+
+    // 应有货物（不再显示"空空如也"）
+    await expect(page.getByText("空空如也")).toHaveCount(0, { timeout: 5_000 })
+  })
+
+  test("完整流程：出航并抵达", async ({ page }) => {
+    await page.goto("/")
+    await page.waitForLoadState("networkidle")
+    await expect(page.getByRole("heading", { name: "泉州" })).toBeVisible({ timeout: 15_000 })
+
+    // 进入航海图
+    await page.locator("nav").getByRole("link", { name: "航海图" }).click()
+    await page.getByRole("button", { name: "打开航海图" }).click()
+    await expect(page.getByRole("button", { name: "前往" }).first()).toBeVisible({ timeout: 15_000 })
+
+    // 点击第一个目的地的"前往"按钮
+    await page.getByRole("button", { name: "前往" }).first().click()
+
+    // 确认出航弹窗 → 确认
+    await expect(page.getByText("确认出航")).toBeVisible()
+    await page.getByRole("button", { name: "确认出航" }).click()
+
+    // 跳转到航行页
+    await page.waitForURL("**/voyage", { timeout: 15_000 })
+
+    // 显示"航行中"
+    await expect(page.getByText("航行中")).toBeVisible({ timeout: 15_000 })
+
+    // 点击"抵达"完成航行
+    await page.getByRole("button", { name: "抵达" }).click()
+
+    // 抵达后显示"已抵达！"
+    await expect(page.getByText("已抵达！")).toBeVisible({ timeout: 15_000 })
+
+    // 点击"回到港口"
+    await page.getByRole("link", { name: "回到港口" }).click()
+    await page.waitForLoadState("networkidle")
+
+    // 回到港口页，应显示港口名 heading
+    await expect(page.getByRole("heading").first()).toBeVisible({ timeout: 15_000 })
+  })
+})
