@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect } from "bun:test"
 import { createTestWorld, createEmptyWorld } from "../../domain/__tests__/helpers"
 import {
   buildHarborView,

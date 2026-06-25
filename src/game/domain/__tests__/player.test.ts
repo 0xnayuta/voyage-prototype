@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect, vi } from "bun:test"
 import { PORTS } from "../../../data/ports"
 import { GOODS } from "../../../data/goods"
 import { createTestWorld } from "./helpers"
@@ -143,7 +143,7 @@ describe("advanceDay", () => {
     )
     expect(changed).toBe(true)
 
-    vi.mocked(Math.random).mockRestore()
+    vi.restoreAllMocks()
   })
 
   it("no price goes below 1 after advancing", () => {
@@ -159,7 +159,7 @@ describe("advanceDay", () => {
       }
     }
 
-    vi.mocked(Math.random).mockRestore()
+    vi.restoreAllMocks()
   })
 
   it("prices differ from initial after multiple days", () => {
@@ -177,6 +177,6 @@ describe("advanceDay", () => {
     )
     expect(changed).toBe(true)
 
-    vi.mocked(Math.random).mockRestore()
+    vi.restoreAllMocks()
   })
 })

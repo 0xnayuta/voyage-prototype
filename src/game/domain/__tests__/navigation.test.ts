@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect } from "bun:test"
 import { createTestWorld } from "./helpers"
 import { calcTravelDays, getReachablePorts, arriveAtPort } from "../navigation"
 import { ROUTES } from "../../../data/ports"
