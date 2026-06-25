@@ -43,6 +43,8 @@ bun run dev
 
 ## 可用命令
 
+| 命令 | 作用 |
+|---|---|
 | `bun run dev` | 启动开发服务器 (webpack) |
 | `bun run build` | 生产构建 |
 | `bun run start` | 运行生产构建 |
