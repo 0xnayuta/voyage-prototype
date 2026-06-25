@@ -13,6 +13,14 @@ export interface GoodConfig {
 
 export type GoodCategory = "food" | "textile" | "metal" | "luxury" | "spice"
 
+export const CATEGORY_LABEL: Record<GoodCategory, string> = {
+  food: "食品",
+  textile: "纺织品",
+  metal: "金属",
+  luxury: "奢侈品",
+  spice: "香料",
+}
+
 export const GOODS: readonly GoodConfig[] = [
   {
     id: "silk",

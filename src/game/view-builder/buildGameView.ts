@@ -18,7 +18,7 @@ import type {
 } from "../../types/game-view"
 
 import { PORTS } from "../../data/ports"
-import { GOODS } from "../../data/goods"
+import { GOODS, CATEGORY_LABEL } from "../../data/goods"
 import { SHIPS } from "../../data/ships"
 import {
   getBuyPrice,
@@ -62,7 +62,7 @@ export function buildMarketView(world: World): MarketView {
     return {
       id: good.id,
       name: good.name,
-      category: good.category,
+      category: CATEGORY_LABEL[good.category],
       buyPrice,
       sellPrice: getSellPrice(good.id, world.player.currentPortId, world),
       inCargo,
