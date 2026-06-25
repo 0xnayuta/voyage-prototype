@@ -1,22 +1,59 @@
 "use client"
 
-import { useActionState } from "react"
+import { useState, useEffect } from "react"
 import { loadGame } from "./actions/save"
+import type { HarborView } from "../types/game-view"
 
 export default function HarborPage() {
-  const [view, formAction, isPending] = useActionState(loadGame, null)
+  const [view, setView] = useState<HarborView | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [loaded, setLoaded] = useState(false)
 
+  // 首次挂载时自动尝试读档
+  useEffect(() => {
+    loadGame()
+      .then((result) => {
+        setView(result)
+        setLoaded(true)
+      })
+      .catch(() => {
+        // 无存档或读档失败，停留在开始页面
+        setLoaded(true)
+      })
+  }, [])
+
+  async function doNewGame() {
+    setLoading(true)
+    try {
+      const result = await loadGame()
+      setView(result)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 等待首次加载
+  if (!loaded) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <p className="text-sm text-parchment-dark">读取存档...</p>
+      </div>
+    )
+  }
+
+  // 无存档/读档失败 → 显示开始按钮
   if (!view) {
     return (
-      <form action={formAction} className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center">
         <button
-          type="submit"
-          disabled={isPending}
+          type="button"
+          onClick={doNewGame}
+          disabled={loading}
           className="rounded-lg bg-gold-500 px-6 py-3 text-lg font-bold text-ocean-900 hover:bg-gold-400 transition-colors disabled:opacity-50"
         >
-          {isPending ? "加载中..." : "开始航海"}
+          {loading ? "加载中..." : "开始航海"}
         </button>
-      </form>
+      </div>
     )
   }
 
@@ -30,7 +67,8 @@ export default function HarborPage() {
         </div>
         <div className="flex items-center gap-4">
           <span className="text-gold-400">
-            <span className="text-parchment-dark">金币</span> {view.playerGold.toLocaleString()}
+            <span className="text-parchment-dark">金币</span>{" "}
+            {view.playerGold.toLocaleString()}
           </span>
           <span className="text-parchment-dark">
             舱 {view.cargoCount}/{view.cargoCapacity}
@@ -40,8 +78,12 @@ export default function HarborPage() {
 
       {/* 港口信息 */}
       <div className="rounded-lg border border-ocean-600 bg-ocean-800/80 p-4">
-        <h2 className="text-lg font-semibold text-gold-400">{view.portName}</h2>
-        <p className="mt-1 text-sm text-parchment-dark">{view.portDescription}</p>
+        <h2 className="text-lg font-semibold text-gold-400">
+          {view.portName}
+        </h2>
+        <p className="mt-1 text-sm text-parchment-dark">
+          {view.portDescription}
+        </p>
         <p className="mt-2 text-xs text-ocean-500">地区：{view.region}</p>
       </div>
 
