@@ -31,6 +31,23 @@ export interface MarketPriceState {
   readonly prices: Record<string, Record<string, number>>
 }
 
+// ---- 航行 ----
+
+export interface VoyageEvent {
+  readonly day: number     // 航行第几天触发
+  readonly description: string
+  readonly goldChange: number // 负=损失，0=无变化
+  readonly cargoLoss: number  // 随机丢失货物单位数，0=不丢失
+}
+
+export interface VoyageState {
+  readonly fromPortId: string
+  readonly toPortId: string
+  readonly departureDay: number
+  readonly travelDays: number
+  readonly events: readonly VoyageEvent[]
+}
+
 // ---- 玩家 ----
 
 export interface PlayerState {
@@ -46,6 +63,7 @@ export interface World {
   readonly player: PlayerState
   readonly ship: ShipState
   readonly market: MarketPriceState
+  readonly voyage: VoyageState | null
   // 后续 Phase 增加：
   // quests: QuestState[]
   // worldEvents: WorldEventState[]

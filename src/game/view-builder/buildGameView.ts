@@ -13,6 +13,8 @@ import type {
   CargoView,
   CargoItemView,
   ShipView,
+  VoyageView,
+  VoyageEventView,
 } from "../../types/game-view"
 
 import { PORTS } from "../../data/ports"
@@ -158,5 +160,46 @@ export function buildShipView(world: World): ShipView {
     playerGold: world.player.gold,
     upgradeCost,
     canUpgrade: canUpgrade && world.player.gold >= (upgradeCost ?? Infinity),
+  }
+}
+
+export function buildVoyageView(world: World): VoyageView {
+  const voyage = world.voyage
+  if (!voyage) {
+    return {
+      fromPortName: "未知",
+      toPortName: "未知",
+      travelDays: 0,
+      isUnderway: false,
+      events: [],
+    }
+  }
+
+  const fromPort = PORTS.find((p) => p.id === voyage.fromPortId)
+  const toPort = PORTS.find((p) => p.id === voyage.toPortId)
+
+  const events: VoyageEventView[] = voyage.events.map((e) => {
+    const parts: string[] = []
+    if (e.goldChange > 0) {
+      parts.push(`获得 ${e.goldChange} 金币`)
+    } else if (e.goldChange < 0) {
+      parts.push(`损失 ${Math.abs(e.goldChange)} 金币`)
+    }
+    if (e.cargoLoss > 0) {
+      parts.push(`丢失 ${e.cargoLoss} 单位货物`)
+    }
+    return {
+      day: e.day,
+      description: e.description,
+      effect: parts.length > 0 ? parts.join("，") : "无影响",
+    }
+  })
+
+  return {
+    fromPortName: fromPort?.name ?? "未知",
+    toPortName: toPort?.name ?? "未知",
+    travelDays: voyage.travelDays,
+    isUnderway: true,
+    events,
   }
 }

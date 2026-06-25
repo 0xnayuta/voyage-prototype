@@ -8,7 +8,6 @@ import type { NavigationView, DestinationView } from "../../types/game-view"
 export default function NavigationPage() {
   const [view, loadAction, isLoading] = useActionState(loadNavigationView, null)
   const [selectedDest, setSelectedDest] = useState<DestinationView | null>(null)
-  const [travelMsg, setTravelMsg] = useState<string | null>(null)
 
   if (!view) {
     return (
@@ -24,22 +23,6 @@ export default function NavigationPage() {
     )
   }
 
-  if (travelMsg) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center p-4 space-y-4">
-        <div className="rounded-lg border border-ocean-600 bg-ocean-800/80 p-8 text-center max-w-md">
-          <h2 className="text-xl font-bold text-gold-400">出航！</h2>
-          <p className="mt-4 text-parchment-dark">{travelMsg}</p>
-        </div>
-        <a
-          href="/"
-          className="rounded-lg bg-gold-500 px-6 py-3 font-bold text-ocean-900 hover:bg-gold-400 transition-colors"
-        >
-          返回港口
-        </a>
-      </div>
-    )
-  }
 
   return (
     <div className="flex-1 p-4 max-w-2xl mx-auto w-full space-y-4">
@@ -110,11 +93,8 @@ export default function NavigationPage() {
 
             <form
               action={async (formData) => {
-                await startTravel(null, formData)
-                setTravelMsg(
-                  `起航前往 ${selectedDest.portName}，预计 ${selectedDest.travelDays} 天后到达。`,
-                )
-                setSelectedDest(null)
+                await startTravel(formData)
+                window.location.href = "/voyage"
               }}
               className="mt-4 flex gap-2"
             >

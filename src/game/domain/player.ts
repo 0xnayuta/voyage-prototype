@@ -23,6 +23,7 @@ export function createDefaultWorld(): World {
       cargo: [],
     },
     market: initMarketPrices(),
+    voyage: null,
   }
 }
 

@@ -83,6 +83,12 @@ export interface VoyageView {
   readonly fromPortName: string
   readonly toPortName: string
   readonly travelDays: number
-  readonly daysElapsed: number
-  readonly isArrived: boolean
+  readonly isUnderway: boolean   // true=航行中, false=已抵达等待确认
+  readonly events: VoyageEventView[]
+}
+
+export interface VoyageEventView {
+  readonly day: number
+  readonly description: string
+  readonly effect: string // 文字描述效果
 }
