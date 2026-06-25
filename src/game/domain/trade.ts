@@ -1,7 +1,7 @@
 import type { CargoItem, World } from "./types"
 import { GOODS } from "../../data/goods"
 import { SHIPS } from "../../data/ships"
-import { getBuyPrice, getSellPrice } from "./market"
+import { getBuyPrice, getSellPrice, applyTradeImpact } from "./market"
 
 // ============================================================
 // 买卖逻辑 — 纯函数
@@ -13,7 +13,7 @@ export function getUsedCapacity(world: World): number {
   return world.ship.cargo.reduce(
     (total, item) => {
       const good = GOODS.find((g) => g.id === item.goodId)
-      return total + (good?.volume ?? 1) * item.quantity
+      return total + (good?.volume ?? 0) * item.quantity
     },
     0,
   )
@@ -85,18 +85,17 @@ export function executeBuy(world: World, input: BuyInput): BuyResult {
     ]
   }
 
+  // 买入后冲击价格（需求增加 → 涨价）
+  const worldAfterTrade = applyTradeImpact(
+    { ...world, ship: { ...world.ship, cargo: newCargo }, player: { ...world.player, gold: world.player.gold - totalCost } },
+    world.player.currentPortId,
+    goodId,
+    quantity,
+    true, // isBuy
+  )
+
   return {
-    world: {
-      ...world,
-      player: {
-        ...world.player,
-        gold: world.player.gold - totalCost,
-      },
-      ship: {
-        ...world.ship,
-        cargo: newCargo,
-      },
-    },
+    world: worldAfterTrade,
     totalCost,
   }
 }
@@ -135,18 +134,17 @@ export function executeSell(world: World, input: SellInput): SellResult {
         )
       : world.ship.cargo.filter((c) => c.goodId !== goodId)
 
+  // 卖出后冲击价格（供应增加 → 降价）
+  const worldAfterTrade = applyTradeImpact(
+    { ...world, ship: { ...world.ship, cargo: newCargo }, player: { ...world.player, gold: world.player.gold + totalRevenue } },
+    world.player.currentPortId,
+    goodId,
+    quantity,
+    false, // isBuy
+  )
+
   return {
-    world: {
-      ...world,
-      player: {
-        ...world.player,
-        gold: world.player.gold + totalRevenue,
-      },
-      ship: {
-        ...world.ship,
-        cargo: newCargo,
-      },
-    },
+    world: worldAfterTrade,
     totalRevenue,
     profit,
   }

@@ -23,6 +23,14 @@ export interface ShipState {
   readonly cargo: readonly CargoItem[]
 }
 
+// ---- 市场 ----
+
+/** 每个港口每种商品的当前价格 */
+export interface MarketPriceState {
+  /** portId → goodId → 当前价格 */
+  readonly prices: Record<string, Record<string, number>>
+}
+
 // ---- 玩家 ----
 
 export interface PlayerState {
@@ -37,6 +45,7 @@ export interface PlayerState {
 export interface World {
   readonly player: PlayerState
   readonly ship: ShipState
+  readonly market: MarketPriceState
   // 后续 Phase 增加：
   // quests: QuestState[]
   // worldEvents: WorldEventState[]

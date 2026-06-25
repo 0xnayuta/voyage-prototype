@@ -31,19 +31,18 @@ export function calcTravelDays(distance: number, world: World): number {
   return Math.ceil(distance / (ship.speed * SPEED_BASE))
 }
 
-/** 执行到达：更新当前港口 */
+/** 执行到达：更新当前港口。天数推进由 advanceDay 处理 */
 export function arriveAtPort(
   world: World,
   targetPortId: string,
-  travelDays: number,
+  _travelDays: number,
 ): World {
   return {
     ...world,
     player: {
       ...world.player,
       currentPortId: targetPortId,
-      day: world.player.day + travelDays,
     },
-    // 抵达后最终状态由外层统一保存
+    // 天数已在 advanceDay 中推进，抵达后最终状态由外层统一保存
   }
 }

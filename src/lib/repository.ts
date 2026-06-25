@@ -1,6 +1,7 @@
 import type { PrismaTransactionClient } from "../types/prisma"
 import type { World } from "../game/domain/types"
 import { createDefaultWorld } from "../game/domain/player"
+import { initMarketPrices } from "../game/domain/market"
 
 // ============================================================
 // Repository — 数据读写层
@@ -17,7 +18,18 @@ export async function loadWorld(
     where: { slot: AUTO_SAVE_SLOT },
   })
   if (!save) return createDefaultWorld()
-  return JSON.parse(save.data) as World
+
+  const world = JSON.parse(save.data) as World
+
+  // 迁移：旧存档没有 market 字段 → 初始化价格
+  if (!world.market) {
+    return {
+      ...world,
+      market: initMarketPrices(),
+    }
+  }
+
+  return world
 }
 
 /** 保存 World 到 SQLite（upsert） */

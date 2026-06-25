@@ -1,6 +1,7 @@
 import type { World } from "./types"
 import { STARTING_GOLD, STARTING_DAY } from "../../data/formulas"
 import { SHIPS } from "../../data/ships"
+import { initMarketPrices, applyDayPass } from "./market"
 
 // ============================================================
 // 玩家 / 世界初始化的纯函数
@@ -21,15 +22,27 @@ export function createDefaultWorld(): World {
       upgradeLevel: 0,
       cargo: [],
     },
+    market: initMarketPrices(),
   }
 }
 
+/**
+ * 推进 N 天：玩家天数 + 全市场价格向均衡回归 + 随机波动。
+ * 每次航行到达时调用，天数等于航行耗时。
+ */
 export function advanceDay(world: World, days: number): World {
-  return {
+  let result: World = {
     ...world,
     player: {
       ...world.player,
       day: world.player.day + days,
     },
   }
+
+  // 每过一天，价格推进一次
+  for (let i = 0; i < days; i++) {
+    result = applyDayPass(result)
+  }
+
+  return result
 }
