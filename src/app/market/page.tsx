@@ -24,6 +24,7 @@ export default function MarketPage() {
 
   async function doBuy(formData: FormData) {
     setLoading(true)
+    setMessage(null)
     try {
       const result = await buyGoods(null, formData)
       setView(result)
@@ -33,6 +34,8 @@ export default function MarketPage() {
       setMessage(`成功购买 ${qty} 个 ${good?.name ?? ""}`)
       setSelectedGoodId(null)
       setQuantity(1)
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "购买失败")
     } finally {
       setLoading(false)
     }

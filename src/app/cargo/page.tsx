@@ -24,6 +24,7 @@ export default function CargoPage() {
 
   async function doSell(formData: FormData) {
     setLoading(true)
+    setMessage(null)
     try {
       await sellGoods(null, formData)
       const result = await loadCargoView()
@@ -31,6 +32,8 @@ export default function CargoPage() {
       setMessage(`成功卖出`)
       setSelectedItem(null)
       setSellQuantity(1)
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "卖出失败")
     } finally {
       setLoading(false)
     }

@@ -41,7 +41,7 @@ export const GOODS: readonly GoodConfig[] = [
   {
     id: "timber",
     name: "木材",
-    category: "food",
+    category: "metal",
     basePrice: 40,
     volume: 4,
     tier: 0,

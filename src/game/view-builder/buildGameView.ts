@@ -96,7 +96,7 @@ export function buildNavigationView(world: World): NavigationView {
       region: r.port.region,
       distance: r.distance,
       travelDays: r.travelDays,
-      estimatedProfit: Math.max(0, estimatedProfit),
+      estimatedProfit,
     }
   })
 

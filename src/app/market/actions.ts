@@ -6,8 +6,6 @@ import { buildMarketView } from "../../game/view-builder/buildGameView"
 import type { MarketView } from "../../types/game-view"
 
 export async function loadMarketView(): Promise<MarketView> {
-  return await prisma.$transaction(async (tx) => {
-    const world = await loadWorld(tx)
-    return buildMarketView(world)
-  })
+  const world = await loadWorld(prisma)
+  return buildMarketView(world)
 }

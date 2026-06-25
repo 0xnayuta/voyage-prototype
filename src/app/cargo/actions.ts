@@ -6,8 +6,6 @@ import { buildCargoView } from "../../game/view-builder/buildGameView"
 import type { CargoView } from "../../types/game-view"
 
 export async function loadCargoView(): Promise<CargoView> {
-  return await prisma.$transaction(async (tx) => {
-    const world = await loadWorld(tx)
-    return buildCargoView(world)
-  })
+  const world = await loadWorld(prisma)
+  return buildCargoView(world)
 }

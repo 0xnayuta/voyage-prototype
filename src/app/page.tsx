@@ -8,6 +8,7 @@ export default function HarborPage() {
   const [view, setView] = useState<HarborView | null>(null)
   const [loading, setLoading] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // 首次挂载时自动尝试读档
   useEffect(() => {
@@ -24,19 +25,33 @@ export default function HarborPage() {
 
   async function doNewGame() {
     setLoading(true)
+    setError(null)
     try {
       const result = await loadGame()
       setView(result)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "开始游戏失败")
     } finally {
       setLoading(false)
     }
   }
 
   // 等待首次加载
-  if (!loaded) {
+  if (!view) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <p className="text-sm text-parchment-dark">读取存档...</p>
+        <form action={doNewGame} className="text-center space-y-3">
+          {error && (
+            <p className="text-sm text-red-400">{error}</p>
+          )}
+          <button
+            type="submit"
+            disabled={loading}
+            className="rounded bg-gold-500 px-6 py-3 text-lg font-bold text-ocean-900 hover:bg-gold-400 transition-colors disabled:opacity-50"
+          >
+            {loading ? "加载中..." : "开始航海"}
+          </button>
+        </form>
       </div>
     )
   }

@@ -82,11 +82,13 @@ export default function NavigationPage() {
                 <span>航行天数</span>
                 <span className="text-gold-400">{selectedDest.travelDays} 天</span>
               </div>
-              {selectedDest.estimatedProfit > 0 && (
+              {selectedDest.estimatedProfit !== 0 && (
                 <div className="flex justify-between">
                   <span>预估利润</span>
-                  <span className="text-gold-400">
-                    +{selectedDest.estimatedProfit.toLocaleString()}
+                  <span className={selectedDest.estimatedProfit > 0 ? "text-gold-400" : "text-red-400"}>
+                    {selectedDest.estimatedProfit > 0
+                      ? `+${selectedDest.estimatedProfit.toLocaleString()}`
+                      : selectedDest.estimatedProfit.toLocaleString()}
                   </span>
                 </div>
               )}

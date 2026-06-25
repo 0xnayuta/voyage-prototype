@@ -137,23 +137,26 @@ export function applyVoyageEvents(
       }
     }
 
-    // 丢失货物
+    // 丢失货物 — 支持超额丢失（跨多个货物摊分）
     if (event.cargoLoss > 0 && result.ship.cargo.length > 0) {
-      // 随机丢失一种货物
-      const idx = Math.floor(Math.random() * result.ship.cargo.length)
-      const item = result.ship.cargo[idx]
-      const remaining = item.quantity - event.cargoLoss
+      let remainingLoss = event.cargoLoss
+      let cargo = [...result.ship.cargo]
+      while (remainingLoss > 0 && cargo.length > 0) {
+        const idx = Math.floor(Math.random() * cargo.length)
+        const item = cargo[idx]
+        if (item.quantity <= remainingLoss) {
+          remainingLoss -= item.quantity
+          cargo = cargo.filter((_, i) => i !== idx)
+        } else {
+          cargo = cargo.map((c, i) =>
+            i === idx ? { ...c, quantity: c.quantity - remainingLoss } : c,
+          )
+          remainingLoss = 0
+        }
+      }
       result = {
         ...result,
-        ship: {
-          ...result.ship,
-          cargo:
-            remaining > 0
-              ? result.ship.cargo.map((c, i) =>
-                  i === idx ? { ...c, quantity: remaining } : c,
-                )
-              : result.ship.cargo.filter((_, i) => i !== idx),
-        },
+        ship: { ...result.ship, cargo },
       }
     }
   }

@@ -5,10 +5,6 @@
 
 // ---- 商品 ----
 
-export interface GoodId {
-  readonly id: string
-}
-
 export interface CargoItem {
   readonly goodId: string
   readonly quantity: number

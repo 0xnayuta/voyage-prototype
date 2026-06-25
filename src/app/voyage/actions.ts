@@ -9,10 +9,8 @@ import { buildVoyageView, buildHarborView } from "../../game/view-builder/buildG
 import type { VoyageView, HarborView } from "../../types/game-view"
 
 export async function loadVoyageView(): Promise<VoyageView> {
-  return await prisma.$transaction(async (tx) => {
-    const world = await loadWorld(tx)
-    return buildVoyageView(world)
-  })
+  const world = await loadWorld(prisma)
+  return buildVoyageView(world)
 }
 
 /** 完成航行：推进天数 + 应用事件效果 + 抵达 + 清空航行状态 */
