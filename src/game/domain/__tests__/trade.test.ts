@@ -77,20 +77,20 @@ describe("executeBuy", () => {
     const price = getBuyPrice("silk", world.player.currentPortId, world)
     // 1000 * price = 102000 > 5000
     expect(1000 * price).toBeGreaterThan(world.player.gold)
-    expect(() => executeBuy(world, { goodId: "silk", quantity: 1000 })).toThrow("金币不足")
+    expect(() => executeBuy(world, { goodId: "silk", quantity: 1000 })).toThrow("INSUFFICIENT_GOLD")
   })
 
   it("should throw when not enough cargo capacity", () => {
     const world = createTestWorld()
     // used = 13, max = 30, silk vol = 2
     // buy 10 silk → 13 + 20 = 33 > 30; cost 10*102 = 1020 < 5000 (gold check passes)
-    expect(() => executeBuy(world, { goodId: "silk", quantity: 10 })).toThrow("舱容不足")
+    expect(() => executeBuy(world, { goodId: "silk", quantity: 10 })).toThrow("INSUFFICIENT_CARGO")
   })
 
   it("should throw when quantity is zero or negative", () => {
     const world = createTestWorld()
-    expect(() => executeBuy(world, { goodId: "silk", quantity: 0 })).toThrow("购买数量必须大于 0")
-    expect(() => executeBuy(world, { goodId: "silk", quantity: -1 })).toThrow("购买数量必须大于 0")
+    expect(() => executeBuy(world, { goodId: "silk", quantity: 0 })).toThrow("INVALID_QUANTITY")
+    expect(() => executeBuy(world, { goodId: "silk", quantity: -1 })).toThrow("INVALID_QUANTITY")
   })
 })
 
@@ -116,12 +116,12 @@ describe("executeSell", () => {
   it("should throw when not enough cargo quantity", () => {
     const world = createTestWorld()
     // only 5 silk in cargo, try to sell 100
-    expect(() => executeSell(world, { goodId: "silk", quantity: 100 })).toThrow("货物不足")
+    expect(() => executeSell(world, { goodId: "silk", quantity: 100 })).toThrow("CARGO_NOT_FOUND")
   })
 
   it("should throw when good not in cargo", () => {
     const world = createEmptyWorld()
-    expect(() => executeSell(world, { goodId: "silk", quantity: 1 })).toThrow("货物不足")
+    expect(() => executeSell(world, { goodId: "silk", quantity: 1 })).toThrow("CARGO_NOT_FOUND")
   })
 
   it("should remove cargo entry entirely when selling exact amount", () => {

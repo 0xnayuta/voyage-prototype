@@ -25,12 +25,12 @@ describe("market pure functions", () => {
 
     it("throws for unknown port", () => {
       const world = createTestWorld()
-      expect(() => getCurrentPrice("silk", "atlantis", world)).toThrow("未知港口")
+      expect(() => getCurrentPrice("silk", "atlantis", world)).toThrow("UNKNOWN_PORT")
     })
 
     it("throws for unknown good", () => {
       const world = createTestWorld()
-      expect(() => getCurrentPrice("unicorn", "quanzhou", world)).toThrow("无商品")
+      expect(() => getCurrentPrice("unicorn", "quanzhou", world)).toThrow("NO_PRICE_DATA")
     })
   })
 

@@ -1,3 +1,4 @@
+import { DomainError } from "./types"
 import type { World, MarketPriceState } from "./types"
 import { GOODS, type GoodConfig } from "../../data/goods"
 import { PORTS } from "../../data/ports"
@@ -42,9 +43,9 @@ export function getCurrentPrice(
   world: World,
 ): number {
   const portPrices = world.market.prices[portId]
-  if (!portPrices) throw new Error(`未知港口：${portId}`)
+  if (!portPrices) throw new DomainError("UNKNOWN_PORT")
   const price = portPrices[goodId]
-  if (price === undefined) throw new Error(`港口 ${portId} 无商品 ${goodId} 的价格数据`)
+  if (price === undefined) throw new DomainError("NO_PRICE_DATA")
   return price
 }
 

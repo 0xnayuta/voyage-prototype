@@ -64,3 +64,28 @@ export interface World {
   // quests: QuestState[]
   // worldEvents: WorldEventState[]
 }
+
+// ---- 领域错误 ----
+
+/** 领域层只抛出错误码，不包含展示文本 */
+export class DomainError extends Error {
+  readonly code: string
+  constructor(code: string) {
+    super(code)
+    this.code = code
+    this.name = "DomainError"
+  }
+}
+
+export type DomainErrorCode =
+  | "INSUFFICIENT_GOLD"
+  | "INSUFFICIENT_CARGO"
+  | "INVALID_QUANTITY"
+  | "GOOD_NOT_FOUND"
+  | "CARGO_NOT_FOUND"
+  | "MAX_LEVEL_REACHED"
+  | "INVALID_SHIP"
+  | "IN_VOYAGE"
+  | "UNKNOWN_PORT"
+  | "NO_PRICE_DATA"
+  | "NOT_AT_PORT"

@@ -1,4 +1,5 @@
 import type { CargoItem, World } from "./types"
+import { DomainError } from "./types"
 import { GOODS } from "../../data/goods"
 import { SHIPS } from "../../data/ships"
 import { getBuyPrice, getSellPrice, applyTradeImpact } from "./market"
@@ -40,20 +41,20 @@ export interface BuyResult {
 
 export function executeBuy(world: World, input: BuyInput): BuyResult {
   const { goodId, quantity } = input
-  if (quantity <= 0) throw new Error("购买数量必须大于 0")
+  if (quantity <= 0) throw new DomainError("INVALID_QUANTITY")
 
   const price = getBuyPrice(goodId, world.player.currentPortId, world)
   const totalCost = price * quantity
 
-  if (world.player.gold < totalCost) throw new Error("金币不足")
+  if (world.player.gold < totalCost) throw new DomainError("INSUFFICIENT_GOLD")
 
   const good = GOODS.find((g) => g.id === goodId)
-  if (!good) throw new Error("商品不存在")
+  if (!good) throw new DomainError("GOOD_NOT_FOUND")
 
   const usedCapacity = getUsedCapacity(world)
   const maxCapacity = getMaxCapacity(world)
   const neededVolume = good.volume * quantity
-  if (usedCapacity + neededVolume > maxCapacity) throw new Error("舱容不足")
+  if (usedCapacity + neededVolume > maxCapacity) throw new DomainError("INSUFFICIENT_CARGO")
 
   const existingIndex = world.ship.cargo.findIndex(
     (c) => c.goodId === goodId,
@@ -115,10 +116,10 @@ export interface SellResult {
 
 export function executeSell(world: World, input: SellInput): SellResult {
   const { goodId, quantity } = input
-  if (quantity <= 0) throw new Error("卖出数量必须大于 0")
+  if (quantity <= 0) throw new DomainError("INVALID_QUANTITY")
 
   const cargo = world.ship.cargo.find((c) => c.goodId === goodId)
-  if (!cargo || cargo.quantity < quantity) throw new Error("货物不足")
+  if (!cargo || cargo.quantity < quantity) throw new DomainError("CARGO_NOT_FOUND")
 
   const price = getSellPrice(goodId, world.player.currentPortId, world)
   const totalRevenue = price * quantity

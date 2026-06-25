@@ -1,3 +1,4 @@
+import { DomainError } from "./types"
 import type { World } from "./types"
 import { SHIPS } from "../../data/ships"
 
@@ -8,15 +9,15 @@ import { SHIPS } from "../../data/ships"
 /** 升级船只：扣金币 + 提升等级。返回新 World 或抛出错误。 */
 export function upgradeShip(world: World): World {
   const shipConfig = SHIPS.find((s) => s.id === world.ship.typeId)
-  if (!shipConfig) throw new Error("无效船只")
+  if (!shipConfig) throw new DomainError("INVALID_SHIP")
 
   const level = world.ship.upgradeLevel
-  if (level >= shipConfig.maxUpgradeLevel) throw new Error("已达最高等级")
+  if (level >= shipConfig.maxUpgradeLevel) throw new DomainError("MAX_LEVEL_REACHED")
 
   const cost = shipConfig.upgradeCosts[level]
-  if (world.player.gold < cost) throw new Error("金币不足")
+  if (world.player.gold < cost) throw new DomainError("INSUFFICIENT_GOLD")
 
-  if (world.voyage) throw new Error("航行中无法升级")
+  if (world.voyage) throw new DomainError("IN_VOYAGE")
 
   return {
     ...world,
