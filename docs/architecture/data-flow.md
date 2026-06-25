@@ -40,6 +40,40 @@ Server Action 被调用
       React 重新渲染
 ```
 
+## 为什么是 Server Action 权威（而不是客户端先算）
+
+一个被明确否掉的设计是「客户端先算，再异步保存」：
+
+```
+用户点击 → 客户端执行逻辑 → 更新 UI → 异步保存到 SQLite
+```
+
+否掉的原因：**客户端状态与存档状态可能不一致。**
+
+| 问题 | 客户端先算 | Server Action 权威 |
+|---|---|---|
+| UI 显示的钱和 SQLite 里的钱是否一致 | 概率性不一致（异步保存失败、浏览器崩溃、竞态条件） | **不可能不一致**（World = 唯一真相源） |
+| 调试时查哪个 | 需要同时查客户端 store 和 SQLite，对不上定位困难 | 查 SQLite 就是全部事实 |
+| 加新字段改几处 | store 类型 + 序列化 + SQLite 三处 | 只在 World 类型一处 |
+| 浏览器崩溃 | 丢当前操作（客户端内存里的状态没了） | 不丢（SQLite 中是上一个完整状态） |
+
+### Server Action 权威路径
+
+```
+用户点击
+  ↓
+Server Action
+  ├── loadWorld(tx)          ← 从 SQLite 读权威状态
+  ├── execute(world, input)  ← 纯函数计算
+  ├── saveWorld(tx, newWorld)← 写回 SQLite（同一事务）
+  ├── buildGameView(newWorld)← 构建渲染快照
+  └── 返回 GameView          ← 客户端只渲染
+```
+
+这个路径对回合制策略游戏来说，100-200ms 的往返是可接受的。禁用按钮 + "处理中..." 足以覆盖等待期。
+
+**决策记录：** `docs/adr/ADR-0001-server-action-as-entry-point.md`
+
 ## 事务边界
 
 Step 1-3 必须在同一个 `prisma.$transaction` 内完成。
