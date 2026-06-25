@@ -3,7 +3,7 @@
   "configVersion": 0,
   "workspaces": {
     "": {
-      "name": "voyage-prototype",
+      "name": "seaforge",
       "dependencies": {
         "@libsql/client": "^0.17.4",
         "@prisma/adapter-libsql": "^7.8.0",
