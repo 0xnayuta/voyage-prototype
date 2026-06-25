@@ -1,4 +1,5 @@
 "use server"
+import type { PrismaTransactionClient } from "../../types/prisma"
 
 import { prisma } from "../../lib/prisma"
 import { loadWorld, saveWorld } from "../../lib/repository"
@@ -15,7 +16,7 @@ export async function loadVoyageView(): Promise<VoyageView> {
 
 /** 完成航行：推进天数 + 应用事件效果 + 抵达 + 清空航行状态 */
 export async function completeVoyage(): Promise<HarborView> {
-  return await prisma.$transaction(async (tx) => {
+  return await prisma.$transaction(async (tx: PrismaTransactionClient) => {
     const world = await loadWorld(tx)
     if (!world.voyage) throw new Error("没有进行中的航行")
 

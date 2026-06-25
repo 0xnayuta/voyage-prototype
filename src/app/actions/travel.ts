@@ -1,4 +1,5 @@
 "use server"
+import type { PrismaTransactionClient } from "../../types/prisma"
 
 import { prisma } from "../../lib/prisma"
 import { loadWorld, saveWorld } from "../../lib/repository"
@@ -12,7 +13,7 @@ export async function startTravel(formData: FormData): Promise<VoyageView> {
   const targetPortId = formData.get("portId") as string
   if (!targetPortId) throw new Error("未选择目的港")
 
-  return await prisma.$transaction(async (tx) => {
+  return await prisma.$transaction(async (tx: PrismaTransactionClient) => {
     const world = await loadWorld(tx)
     if (world.voyage) throw new Error("航行中，无法再次出航")
 
