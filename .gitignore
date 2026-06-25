@@ -12,6 +12,9 @@
 
 # testing
 /coverage
+/test-results
+/prisma/e2e-test.db
+/prisma/dev.db
 
 # next.js
 /.next/
