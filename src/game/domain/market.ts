@@ -5,6 +5,7 @@ import {
 } from "../../data/formulas";
 import { GOODS, type GoodConfig } from "../../data/goods";
 import { PORTS } from "../../data/ports";
+import { REGIONS } from "../../data/regions";
 import type { MarketPriceState, World } from "./types";
 import { DomainError } from "./types";
 
@@ -18,16 +19,14 @@ import { DomainError } from "./types";
 // ============================================================
 
 // ---- 初始化 ----
-
-/** 初始化所有港口所有商品的当前价格（basePrice × portModifier，无随机） */
 export function initMarketPrices(): MarketPriceState {
   const prices: Record<string, Record<string, number>> = {};
-
   for (const port of PORTS) {
     prices[port.id] = {};
     for (const good of GOODS) {
-      const modifier = port.priceModifiers[good.id] ?? 1.0;
-      prices[port.id][good.id] = Math.round(good.basePrice * modifier);
+      prices[port.id][good.id] = Math.round(
+        good.basePrice * getPriceModifier(port.id, good.id),
+      );
     }
   }
 
@@ -78,13 +77,23 @@ export function getPortGoods(
 
 // ---- 价格计算 ----
 
-/** 某 (港口, 商品) 的目标均衡价 */
-function getBasePriceFor(goodId: string, portId: string): number {
-  const good = GOODS.find((g) => g.id === goodId);
+/** 两级价格系数：区域品类系数 × 港口商品微调 */
+function getPriceModifier(portId: string, goodId: string): number {
   const port = PORTS.find((p) => p.id === portId);
-  if (!good || !port) return 0;
-  const modifier = port.priceModifiers[goodId] ?? 1.0;
-  return good.basePrice * modifier;
+  const good = GOODS.find((g) => g.id === goodId);
+  if (!port || !good) return 1.0;
+  const region = REGIONS.find((r) => r.id === port.regionId);
+  if (!region) return 1.0;
+  const regionMod = region.basePriceModifiers[good.category];
+  const localMod = port.localPriceModifiers?.[goodId] ?? 1.0;
+  return regionMod * localMod;
+}
+
+/** 某 (港口, 商品) 的目标均衡价 */
+export function getBasePriceFor(goodId: string, portId: string): number {
+  const good = GOODS.find((g) => g.id === goodId);
+  if (!good) return 0;
+  return Math.round(good.basePrice * getPriceModifier(portId, goodId));
 }
 
 /** 设置单个价格，返回新 prices 结构 */

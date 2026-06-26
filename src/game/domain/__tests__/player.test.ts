@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "bun:test";
 import { GOODS } from "../../../data/goods";
 import { PORTS } from "../../../data/ports";
+import { getBasePriceFor } from "../market";
 import { advanceDay, createDefaultWorld } from "../player";
 import { createTestWorld } from "./helpers";
 
@@ -27,13 +28,13 @@ describe("createDefaultWorld", () => {
     expect(world.market.prices).toBeDefined();
   });
 
-  it("market.prices has entries for all 3 ports x 5 goods = 15 entries", () => {
+  it(`market.prices has entries for all ${PORTS.length} ports x ${GOODS.length} goods = ${PORTS.length * GOODS.length} entries`, () => {
     const world = createDefaultWorld();
     const prices = world.market.prices;
     const entries = PORTS.flatMap((port) =>
       GOODS.map((good) => ({ portId: port.id, goodId: good.id })),
     );
-    expect(entries).toHaveLength(15);
+    expect(entries).toHaveLength(PORTS.length * GOODS.length);
     for (const { portId, goodId } of entries) {
       expect(prices[portId][goodId]).toBeTypeOf("number");
     }
@@ -43,8 +44,7 @@ describe("createDefaultWorld", () => {
     const prices = world.market.prices;
     const entries = PORTS.flatMap((port) =>
       GOODS.map((good) => {
-        const modifier = port.priceModifiers[good.id] ?? 1.0;
-        const expected = Math.round(good.basePrice * modifier);
+        const expected = getBasePriceFor(good.id, port.id);
         return { portId: port.id, goodId: good.id, expected };
       }),
     );

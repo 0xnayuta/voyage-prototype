@@ -1,4 +1,6 @@
 import { describe, expect, it } from "bun:test";
+import { GOODS } from "../../../data/goods";
+import { PORTS } from "../../../data/ports";
 import {
   createEmptyWorld,
   createTestWorld,
@@ -19,7 +21,7 @@ describe("buildHarborView", () => {
 
     expect(view.portName).toBe("泉州");
     expect(view.portDescription).toBeTruthy();
-    expect(view.region).toBe("闽南");
+    expect(view.region).toBe("东亚");
   });
 
   it("shows player gold, cargo, day", () => {
@@ -55,16 +57,16 @@ describe("buildMarketView", () => {
     const view = buildMarketView(world);
 
     expect(view.portName).toBe("泉州");
-    expect(view.goods).toHaveLength(5);
+    expect(view.goods).toHaveLength(GOODS.length);
     expect(view.playerGold).toBe(5000);
   });
 
-  it("silk price at quanzhou = 94 (base 120 × 0.78)", () => {
+  it("silk price at quanzhou matches current market", () => {
     const world = createTestWorld();
     const view = buildMarketView(world);
 
     const silk = view.goods.find((g) => g.id === "silk");
-    expect(silk?.buyPrice).toBe(94);
+    expect(silk?.buyPrice).toBe(82);
   });
 
   it("sell price equals buy price (no spread)", () => {
@@ -86,6 +88,15 @@ describe("buildMarketView", () => {
     const timber = view.goods.find((g) => g.id === "timber");
     expect(timber?.inCargo).toBe(0);
   });
+
+  it("includes priceChangePercent for each good", () => {
+    const world = createTestWorld();
+    const view = buildMarketView(world);
+
+    for (const good of view.goods) {
+      expect(typeof good.priceChangePercent).toBe("number");
+    }
+  });
 });
 
 describe("buildNavigationView", () => {
@@ -94,8 +105,8 @@ describe("buildNavigationView", () => {
     const view = buildNavigationView(world);
 
     expect(view.currentPortName).toBe("泉州");
-    // quanzhou routes: to malacca (dist 8) and nagasaki (dist 5)
-    expect(view.destinations).toHaveLength(2);
+    // All other ports are reachable via coordinate distance
+    expect(view.destinations).toHaveLength(PORTS.length - 1);
   });
 
   it("each destination has port info and travel days", () => {
@@ -166,7 +177,6 @@ describe("buildShipView", () => {
     const world = createTestWorld();
     const view = buildShipView(world);
 
-    // sloop level 0, cost = 500, player has 5000
     expect(view.upgradeCost).toBe(500);
     expect(view.canUpgrade).toBe(true);
   });

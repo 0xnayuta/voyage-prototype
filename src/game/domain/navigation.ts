@@ -1,5 +1,5 @@
 import { SPEED_BASE } from "../../data/formulas";
-import { PORTS, type PortConfig, ROUTES } from "../../data/ports";
+import { PORTS, type PortConfig } from "../../data/ports";
 import { SHIPS } from "../../data/ships";
 import type { World } from "./types";
 
@@ -7,21 +7,29 @@ import type { World } from "./types";
 // 航行逻辑 — 纯函数
 // ============================================================
 
-/** 当前港口可前往的所有目的地（港口气氛，非游戏事实） */
+function calcDistance(a: PortConfig, b: PortConfig): number {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return Math.round(Math.sqrt(dx * dx + dy * dy));
+}
+
+/** 当前港口可前往的所有目的地 */
 export function getReachablePorts(
   world: World,
 ): Array<{ port: PortConfig; distance: number; travelDays: number }> {
-  const currentPortId = world.player.currentPortId;
+  const currentPort = PORTS.find((p) => p.id === world.player.currentPortId);
+  if (!currentPort) return [];
 
-  return ROUTES.filter((r) => r.from === currentPortId).map((route) => {
-    const port = PORTS.find((p) => p.id === route.to);
-    if (!port) throw new Error(`目标港口 ${route.to} 未找到`);
-    return {
-      port,
-      distance: route.distance,
-      travelDays: calcTravelDays(route.distance, world),
-    };
-  });
+  return PORTS.filter((p) => p.id !== currentPort.id)
+    .map((port) => {
+      const distance = calcDistance(currentPort, port);
+      return {
+        port,
+        distance,
+        travelDays: calcTravelDays(distance, world),
+      };
+    })
+    .sort((a, b) => a.distance - b.distance);
 }
 
 /** 计算航行天数 */

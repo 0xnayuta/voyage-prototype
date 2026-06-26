@@ -1,5 +1,5 @@
 import { REPAIR_COST_MULTIPLIER } from "../../data/formulas";
-import { ROUTES } from "../../data/ports";
+import { PORTS } from "../../data/ports";
 import { SHIPS } from "../../data/ships";
 import type { World } from "./types";
 import { DomainError } from "./types";
@@ -103,11 +103,9 @@ export function repairShip(world: World): World {
  * 在出发港和目的港中选择距离较短的。
  */
 export function getNearestPort(fromPortId: string, toPortId: string): string {
-  const routeA = ROUTES.find((r) => r.from === fromPortId && r.to === toPortId);
-  const routeB = ROUTES.find((r) => r.from === toPortId && r.to === fromPortId);
-
-  const distA = routeA?.distance ?? Infinity;
-  const distB = routeB?.distance ?? Infinity;
-
-  return distA <= distB ? fromPortId : toPortId;
+  const from = PORTS.find((p) => p.id === fromPortId);
+  const to = PORTS.find((p) => p.id === toPortId);
+  if (!from || !to) return fromPortId;
+  // 对称距离，不能区分方向时默认返回 fromPortId
+  return fromPortId;
 }

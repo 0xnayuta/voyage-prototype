@@ -6,7 +6,13 @@
 import { REPAIR_COST_MULTIPLIER } from "../../data/formulas";
 import { CATEGORY_LABEL, GOODS } from "../../data/goods";
 import { PORTS } from "../../data/ports";
+import { REGIONS } from "../../data/regions";
 import { SHIPS } from "../../data/ships";
+
+function getRegionName(regionId: string | undefined): string {
+  return REGIONS.find((r) => r.id === regionId)?.name ?? "";
+}
+
 import type {
   ArmamentOptionView,
   CargoItemView,
@@ -22,7 +28,7 @@ import type {
   VoyageView,
 } from "../../types/game-view";
 import type { CombatOutcome } from "../domain/combat";
-import { getPortGoods, getSellPrice } from "../domain/market";
+import { getBasePriceFor, getPortGoods, getSellPrice } from "../domain/market";
 import {
   getEffectiveCapacityForShip,
   getReachablePorts,
@@ -39,11 +45,10 @@ import type { VoyageEvent, World } from "../domain/types";
 export function buildHarborView(world: World): HarborView {
   const port = PORTS.find((p) => p.id === world.player.currentPortId);
   const ship = SHIPS.find((s) => s.id === world.ship.typeId);
-
   return {
     portName: port?.name ?? "未知",
     portDescription: port?.description ?? "",
-    region: port?.region ?? "",
+    region: getRegionName(port?.regionId),
     playerGold: world.player.gold,
     cargoCount: getUsedCapacity(world),
     cargoCapacity: getMaxCapacity(world),
@@ -62,6 +67,12 @@ export function buildMarketView(world: World): MarketView {
     const cargo = world.ship.cargo.find((c) => c.goodId === good.id);
     const inCargo = cargo?.quantity ?? 0;
 
+    const basePrice = getBasePriceFor(good.id, world.player.currentPortId);
+    const priceChangePercent =
+      basePrice > 0
+        ? Math.round(((buyPrice - basePrice) / basePrice) * 100)
+        : 0;
+
     return {
       id: good.id,
       name: good.name,
@@ -70,6 +81,7 @@ export function buildMarketView(world: World): MarketView {
       sellPrice: getSellPrice(good.id, world.player.currentPortId, world),
       inCargo,
       canAfford: world.player.gold >= buyPrice,
+      priceChangePercent,
     };
   });
 
@@ -96,11 +108,10 @@ export function buildNavigationView(world: World): NavigationView {
     const hpRatio =
       world.ship.maxHp > 0 ? world.ship.currentHp / world.ship.maxHp : 0;
     const baseSurvival = Math.min(99, Math.floor(hpRatio * 100));
-
     return {
       portId: r.port.id,
       portName: r.port.name,
-      region: r.port.region,
+      region: getRegionName(r.port.regionId),
       distance: r.distance,
       travelDays: r.travelDays,
       estimatedProfit,

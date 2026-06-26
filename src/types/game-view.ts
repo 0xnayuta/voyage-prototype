@@ -34,6 +34,7 @@ export interface GoodView {
   readonly sellPrice: number;
   readonly inCargo: number;
   readonly canAfford: boolean;
+  readonly priceChangePercent: number; // 行情涨跌（与均衡价对比）
 }
 /** 武装配置选项 */
 export interface ArmamentOptionView {

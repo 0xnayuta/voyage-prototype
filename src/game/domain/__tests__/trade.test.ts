@@ -56,8 +56,8 @@ describe("executeBuy", () => {
     expect(cargo).toBeDefined();
     expect(cargo?.quantity).toBe(5 + quantity);
 
-    // weighted average = (5 * 102 + 2 * 94) / 7 = 99.714 → round 100
-    expect(cargo?.buyPrice).toBe(100);
+    // weighted average = (5 * 102 + 2 * 82) / 7 = 96.285 → round 96
+    expect(cargo?.buyPrice).toBe(96);
   });
 
   it("should add new cargo entry when good not already in cargo", () => {

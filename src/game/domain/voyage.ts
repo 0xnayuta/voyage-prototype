@@ -86,7 +86,7 @@ export function generateVoyageEvents(
   travelDays: number,
 ): readonly VoyageEvent[] {
   const port = PORTS.find((p) => p.id === world.player.currentPortId);
-  const region = port?.region ?? "";
+  const region = port?.regionId ?? "";
   const { events, totalChance } = adjustEventsByRegion(region);
 
   const result: VoyageEvent[] = [];
@@ -123,7 +123,7 @@ function subtractCargoLoss(
 /** 解析战斗事件并应用结果 */
 function applyCombatEvent(world: World, event: VoyageEvent): World {
   const port = PORTS.find((p) => p.id === world.player.currentPortId);
-  const region = port?.region ?? "";
+  const region = port?.regionId ?? "";
   const outcome = resolveCombat(world, region);
   const nearestPort = getNearestPort(
     world.voyage?.fromPortId ?? world.player.currentPortId,

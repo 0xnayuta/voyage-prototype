@@ -2,20 +2,11 @@
  * 测试辅助：构建已知 World 供测试使用
  */
 
-import { GOODS } from "../../../data/goods";
-import { PORTS } from "../../../data/ports";
+import { initMarketPrices } from "../market";
 import type { World } from "../types";
 
 function buildTestPrices(): Record<string, Record<string, number>> {
-  const prices: Record<string, Record<string, number>> = {};
-  for (const port of PORTS) {
-    prices[port.id] = {};
-    for (const good of GOODS) {
-      const modifier = port.priceModifiers[good.id] ?? 1.0;
-      prices[port.id][good.id] = Math.round(good.basePrice * modifier);
-    }
-  }
-  return prices;
+  return initMarketPrices().prices;
 }
 
 /** 带基础货物的默认 World（泉州出发，单桅帆船，有丝绸和香料） */

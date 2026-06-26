@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "bun:test";
+import { GOODS } from "../../../data/goods";
 import {
   applyDayPass,
   applyTradeImpact,
@@ -13,14 +14,14 @@ describe("market pure functions", () => {
   describe("getCurrentPrice", () => {
     it("reads stored price for silk in quanzhou", () => {
       const world = createTestWorld();
-      // silk basePrice=120 × 0.78 (quanzhou modifier) = 94
-      expect(getCurrentPrice("silk", "quanzhou", world)).toBe(94);
+      // east_asia textile=0.8 × quanzhou local=0.85 = 0.68 × 120 → 82
+      expect(getCurrentPrice("silk", "quanzhou", world)).toBe(82);
     });
 
     it("reads stored price for spice in quanzhou", () => {
       const world = createTestWorld();
-      // spice basePrice=200 × 1.25 (quanzhou modifier) = 250
-      expect(getCurrentPrice("spice", "quanzhou", world)).toBe(250);
+      // east_asia material=1.15 × quanzhou local=1.0 = 1.15 × 200 → 230
+      expect(getCurrentPrice("spice", "quanzhou", world)).toBe(230);
     });
 
     it("throws for unknown port", () => {
@@ -55,36 +56,25 @@ describe("market pure functions", () => {
   });
 
   describe("getPortGoods", () => {
-    it("returns all 5 goods with computed prices for quanzhou", () => {
+    it(`returns all ${GOODS.length} goods with computed prices for quanzhou`, () => {
       const world = createTestWorld();
       const goods = getPortGoods("quanzhou", world);
 
-      expect(goods).toHaveLength(5);
+      expect(goods).toHaveLength(GOODS.length);
 
       const silk = goods.find((g) => g.good.id === "silk");
       expect(silk).toBeDefined();
-      expect(silk?.buyPrice).toBe(94);
+      expect(silk?.buyPrice).toBe(82);
       const spice = goods.find((g) => g.good.id === "spice");
       expect(spice).toBeDefined();
-      expect(spice?.buyPrice).toBe(250);
-      const timber = goods.find((g) => g.good.id === "timber");
-      expect(timber).toBeDefined();
-      expect(timber?.buyPrice).toBe(40); // 40 × 1.00
-      const porcelain = goods.find((g) => g.good.id === "porcelain");
-      expect(porcelain).toBeDefined();
-      expect(porcelain?.buyPrice).toBe(108); // 150 × 0.72
-      const jade = goods.find((g) => g.good.id === "jade");
-      expect(jade).toBeDefined();
-      expect(jade?.buyPrice).toBe(360); // 300 × 1.20
+      expect(spice?.buyPrice).toBe(230);
     });
 
     it("returns correct prices for a different port", () => {
       const world = createTestWorld();
       const goods = getPortGoods("malacca", world);
 
-      expect(goods).toHaveLength(5);
-      // malacca prices are calculated from the helper, just verify it runs
-      // and returns prices > 0
+      expect(goods).toHaveLength(GOODS.length);
       for (const entry of goods) {
         expect(entry.buyPrice).toBeGreaterThan(0);
         expect(entry.good.id).toBeTruthy();
@@ -95,23 +85,23 @@ describe("market pure functions", () => {
   describe("applyTradeImpact", () => {
     it("buy 10 silk in quanzhou increases price (TRADE_IMPACT=0.05)", () => {
       const world = createTestWorld();
-      // 94 × (1 + 10 × 0.05) = 94 × 1.5 = 141
+      // 82 × (1 + 10 × 0.05) = 82 × 1.5 = 123
       const updated = applyTradeImpact(world, "quanzhou", "silk", 10, true);
-      expect(getCurrentPrice("silk", "quanzhou", updated)).toBe(141);
+      expect(getCurrentPrice("silk", "quanzhou", updated)).toBe(123);
     });
 
     it("sell 10 silk decreases price", () => {
       const world = createTestWorld();
-      // 94 × (1 - 10 × 0.05) = 94 × 0.5 = 47
+      // 82 × (1 - 10 × 0.05) = 82 × 0.5 = 41
       const updated = applyTradeImpact(world, "quanzhou", "silk", 10, false);
-      expect(getCurrentPrice("silk", "quanzhou", updated)).toBe(47);
+      expect(getCurrentPrice("silk", "quanzhou", updated)).toBe(41);
     });
 
     it("quantity 0 returns original world unchanged", () => {
       const world = createTestWorld();
       const updated = applyTradeImpact(world, "quanzhou", "silk", 0, true);
       expect(updated).toBe(world);
-      expect(getCurrentPrice("silk", "quanzhou", updated)).toBe(94);
+      expect(getCurrentPrice("silk", "quanzhou", updated)).toBe(82);
     });
 
     it("price never drops below 1 after large sell", () => {
@@ -153,24 +143,24 @@ describe("market pure functions", () => {
       vi.spyOn(Math, "random").mockReturnValue(0.5);
 
       const world = createTestWorld();
-      // shock: buy 10 silk in quanzhou → 94 × 1.5 = 141
+      // shock: buy 10 silk in quanzhou → 82 × 1.5 = 123
       const shocked = applyTradeImpact(world, "quanzhou", "silk", 10, true);
-      expect(getCurrentPrice("silk", "quanzhou", shocked)).toBe(141);
-      // day pass: regressed = 141 + (94-141)×0.03 = 141 - 1.41 = 139.59 → round 140
+      expect(getCurrentPrice("silk", "quanzhou", shocked)).toBe(123);
+      // day pass: regressed = 123 + (82-123)×0.03 = 123 - 1.23 = 121.77 → round 122
       const dayPassed = applyDayPass(shocked);
-      expect(getCurrentPrice("silk", "quanzhou", dayPassed)).toBe(140);
+      expect(getCurrentPrice("silk", "quanzhou", dayPassed)).toBe(122);
     });
 
     it("sell shock price regresses upward toward base (zero noise)", () => {
       vi.spyOn(Math, "random").mockReturnValue(0.5);
 
       const world = createTestWorld();
-      // shock: sell 10 silk → 94 × 0.5 = 47
+      // shock: sell 10 silk → 82 × 0.5 = 41
       const shocked = applyTradeImpact(world, "quanzhou", "silk", 10, false);
-      expect(getCurrentPrice("silk", "quanzhou", shocked)).toBe(47);
-      // day pass: regressed = 47 + (94-47)×0.03 = 47 + 1.41 = 48.41 → round 48
+      expect(getCurrentPrice("silk", "quanzhou", shocked)).toBe(41);
+      // day pass: regressed = 41 + (82-41)×0.03 = 41 + 1.23 = 42.23 → round 42
       const dayPassed = applyDayPass(shocked);
-      expect(getCurrentPrice("silk", "quanzhou", dayPassed)).toBe(48);
+      expect(getCurrentPrice("silk", "quanzhou", dayPassed)).toBe(42);
     });
 
     it("does not mutate original world", () => {

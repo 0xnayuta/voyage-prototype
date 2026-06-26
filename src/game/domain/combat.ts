@@ -5,6 +5,7 @@ import {
   COMBAT_CARGO_LOSS_MIN,
   TOTAL_LOSS_THRESHOLD,
 } from "../../data/formulas";
+import { REGIONS } from "../../data/regions";
 import { SHIPS } from "../../data/ships";
 import { takeDamage } from "./ship";
 import type { CargoItem, World } from "./types";
@@ -48,8 +49,11 @@ export function resolveCombat(
   // 随机波动 ±40%
   score = score * (0.6 + rng() * 0.8);
 
-  // 区域影响
-  score = score * (region === "南洋" ? 0.9 : 1.0);
+  // 区域影响 — 从配置读取危险度系数
+  const regionCfg = REGIONS.find((r) => r.id === region);
+  if (regionCfg) {
+    score = score * regionCfg.dangerModifier;
+  }
 
   if (score < TOTAL_LOSS_THRESHOLD) {
     return {

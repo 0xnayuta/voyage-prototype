@@ -41,7 +41,8 @@ export const EVENT_CONFIGS: readonly EventTemplate[] = [
     maxCargoLoss: 0,
     triggerText: "海面平静如镜，船帆无力地垂下，船队停滞不前。",
     regionProbMultiplier: {
-      南洋: 1.5,
+      indian_ocean: 1.5,
+      africa: 1.3,
     },
   },
   {
@@ -52,7 +53,9 @@ export const EVENT_CONFIGS: readonly EventTemplate[] = [
     maxCargoLoss: 3,
     triggerText: "天色骤变，狂风裹着巨浪劈头盖脸地砸来！",
     regionProbMultiplier: {
-      东瀛: 1.4,
+      north_sea: 1.4,
+      east_asia: 1.3,
+      indian_ocean: 1.2,
     },
   },
   {
@@ -64,9 +67,10 @@ export const EVENT_CONFIGS: readonly EventTemplate[] = [
     triggerText: "前方出现海盗船，高高挂起黑色骷髅旗！",
     type: "combat",
     regionProbMultiplier: {
-      南洋: 1.6,
-      闽南: 1.2,
-      东瀛: 0.6,
+      mediterranean: 1.3,
+      indian_ocean: 1.2,
+      east_asia: 1.1,
+      north_sea: 0.5,
     },
   },
   {
