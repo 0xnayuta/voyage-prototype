@@ -169,6 +169,7 @@ export function buildCargoView(world: World): CargoView {
       quantity: c.quantity,
       buyPrice: c.buyPrice,
       sellPrice,
+      volume: good?.volume ?? 0,
       estimatedProfit: (sellPrice - c.buyPrice) * c.quantity,
     };
   });

@@ -79,6 +79,7 @@ export interface CargoItemView {
   readonly quantity: number;
   readonly buyPrice: number;
   readonly sellPrice: number;
+  readonly volume: number;
   readonly estimatedProfit: number;
 }
 export interface ShipView {

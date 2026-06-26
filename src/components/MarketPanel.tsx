@@ -157,7 +157,12 @@ export function MarketPanel({ view, onRefresh }: MarketPanelProps) {
             key={good.id}
             className="grid grid-cols-5 gap-2 items-center border-b border-ocean-700/30 px-4 py-3 text-sm hover:bg-ocean-700/40 transition-colors last:border-b-0"
           >
-            <span className="font-medium">{good.name}</span>
+            <span className="font-medium">
+              {good.name}
+              <span className="ml-1 text-xs text-parchment-dark">
+                (×{good.volume}舱)
+              </span>
+            </span>
             <span className="text-xs text-parchment-dark">{good.category}</span>
             <span
               className={`text-right ${good.priceChangePercent > 10 ? "text-red-400" : good.priceChangePercent < -10 ? "text-green-400" : "text-gold-400"}`}

@@ -1,3 +1,4 @@
+"use server";
 import { executeBuy, executeSell } from "../../game/domain/trade";
 import {
   buildCargoView,

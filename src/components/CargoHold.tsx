@@ -61,9 +61,10 @@ export function CargoHold({ view, onRefresh }: CargoHoldProps) {
         </div>
       ) : (
         <div className="rounded-lg border border-ocean-600 bg-ocean-800/80 overflow-hidden">
-          <div className="grid grid-cols-5 gap-2 border-b border-ocean-600 bg-ocean-700/60 px-4 py-2 text-xs font-semibold text-parchment-dark uppercase tracking-wider">
+          <div className="grid grid-cols-6 gap-2 border-b border-ocean-600 bg-ocean-700/60 px-4 py-2 text-xs font-semibold text-parchment-dark uppercase tracking-wider">
             <span>货物</span>
             <span className="text-right">数量</span>
+            <span className="text-right">舱位</span>
             <span className="text-right">买入价</span>
             <span className="text-right">利润</span>
             <span />
@@ -71,11 +72,14 @@ export function CargoHold({ view, onRefresh }: CargoHoldProps) {
           {view.items.map((item) => (
             <div
               key={item.goodId}
-              className="grid grid-cols-5 gap-2 items-center border-b border-ocean-700/30 px-4 py-3 text-sm hover:bg-ocean-700/40 transition-colors last:border-b-0"
+              className="grid grid-cols-6 gap-2 items-center border-b border-ocean-700/30 px-4 py-3 text-sm hover:bg-ocean-700/40 transition-colors last:border-b-0"
             >
               <span className="font-medium">{item.goodName}</span>
               <span className="text-right text-parchment-dark">
                 {item.quantity}
+              </span>
+              <span className="text-right text-parchment-dark">
+                {item.quantity * item.volume}
               </span>
               <span className="text-right text-parchment-dark">
                 {item.buyPrice}
