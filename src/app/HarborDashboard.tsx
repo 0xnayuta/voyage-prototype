@@ -27,7 +27,7 @@ export function HarborDashboard({ view }: { view: HarborView }) {
         <p className="mt-1 text-sm text-parchment-dark">
           {view.portDescription}
         </p>
-        <p className="mt-2 text-xs text-ocean-500">地区：{view.region}</p>
+        <p className="mt-2 text-xs text-parchment-dark">地区：{view.region}</p>
       </div>
 
       {/* 船只信息 */}

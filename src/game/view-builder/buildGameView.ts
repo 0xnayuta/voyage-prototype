@@ -28,7 +28,7 @@ import type {
   VoyageView,
 } from "../../types/game-view";
 import type { CombatOutcome } from "../domain/combat";
-import { getBasePriceFor, getPortGoods, getSellPrice } from "../domain/market";
+import { getPortGoods, getSellPrice } from "../domain/market";
 import {
   getEffectiveCapacityForShip,
   getReachablePorts,
@@ -67,7 +67,7 @@ export function buildMarketView(world: World): MarketView {
     const cargo = world.ship.cargo.find((c) => c.goodId === good.id);
     const inCargo = cargo?.quantity ?? 0;
 
-    const basePrice = getBasePriceFor(good.id, world.player.currentPortId);
+    const basePrice = good.basePrice;
     const priceChangePercent =
       basePrice > 0
         ? Math.round(((buyPrice - basePrice) / basePrice) * 100)

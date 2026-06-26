@@ -22,7 +22,6 @@ export function NavigationPanel({ view }: NavigationPanelProps) {
   const [selectedArmament, setSelectedArmament] = useState(0);
 
   const selectedOption = view.armamentOptions[selectedArmament];
-  const cargoRatio = selectedOption?.cargoRatio ?? 1;
   const isOverCargo =
     view.currentCargoCount >
     (selectedOption?.effectiveCapacity ?? view.currentCargoCount);
@@ -40,7 +39,6 @@ export function NavigationPanel({ view }: NavigationPanelProps) {
       <ArmamentConfig
         options={view.armamentOptions}
         selectedIndex={selectedArmament}
-        cargoRatio={cargoRatio}
         isOverCargo={isOverCargo}
         riskLevel={riskLevel}
         currentCargoCount={view.currentCargoCount}
@@ -124,7 +122,6 @@ export function NavigationPanel({ view }: NavigationPanelProps) {
 interface ArmamentConfigProps {
   readonly options: NavigationView["armamentOptions"];
   readonly selectedIndex: number;
-  readonly cargoRatio: number;
   readonly isOverCargo: boolean;
   readonly riskLevel: number;
   readonly currentCargoCount: number;
@@ -133,7 +130,6 @@ interface ArmamentConfigProps {
 function ArmamentConfig({
   options,
   selectedIndex,
-  cargoRatio,
   isOverCargo,
   riskLevel,
   currentCargoCount,
@@ -171,7 +167,7 @@ function ArmamentConfig({
               </div>
               <div className="mt-1 flex gap-3 text-xs text-parchment-dark">
                 <span>舱容 {opt.effectiveCapacity}</span>
-                <span>{Math.round(cargoRatio * 100)}%</span>
+                <span>{Math.round(opt.cargoRatio * 100)}%</span>
                 <span>防御 {opt.defenseMultiplier.toFixed(1)}x</span>
               </div>
             </div>

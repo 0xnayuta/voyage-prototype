@@ -16,6 +16,47 @@ export function MarketPanel({ view, onRefresh }: MarketPanelProps) {
   const [selectedGoodId, setSelectedGoodId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [message, setMessage] = useState<string | null>(null);
+  // L3: 排序状态
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc" | null>(null);
+  function toggleSort(col: string) {
+    if (sortColumn === col) {
+      setSortDir((prev) =>
+        prev === "asc" ? "desc" : prev === "desc" ? null : "asc",
+      );
+    } else {
+      setSortColumn(col);
+      setSortDir("asc");
+    }
+  }
+  const sortedGoods = [...view.goods].sort((a, b) => {
+    if (!sortColumn || !sortDir) return 0;
+    let cmp = 0;
+    switch (sortColumn) {
+      case "name":
+        cmp = a.name.localeCompare(b.name);
+        break;
+      case "category":
+        cmp = a.category.localeCompare(b.category);
+        break;
+      case "buyPrice":
+        cmp = a.buyPrice - b.buyPrice;
+        break;
+      case "inCargo":
+        cmp = a.inCargo - b.inCargo;
+        break;
+    }
+    return sortDir === "desc" ? -cmp : cmp;
+  });
+  function sortIndicator(col: string): string {
+    return sortColumn === col
+      ? sortDir === "asc"
+        ? " ▲"
+        : sortDir === "desc"
+          ? " ▼"
+          : ""
+      : "";
+  }
 
   async function doBuy(formData: FormData) {
     setIsBuying(true);
@@ -76,21 +117,49 @@ export function MarketPanel({ view, onRefresh }: MarketPanelProps) {
 
       {/* 商品列表 */}
       <div className="rounded-lg border border-ocean-600 bg-ocean-800/80 overflow-hidden">
-        <div className="grid grid-cols-5 gap-2 border-b border-ocean-600 bg-ocean-700/60 px-4 py-2 text-xs font-semibold text-parchment-dark uppercase tracking-wider">
-          <span>商品</span>
-          <span>分类</span>
-          <span className="text-right">买入价</span>
-          <span className="text-right">持有</span>
+        <div className="grid grid-cols-5 gap-0.5 border-b border-ocean-600 bg-ocean-700/60 px-4 py-2 text-xs font-semibold text-parchment-dark uppercase tracking-wider">
+          <button
+            type="button"
+            onClick={() => toggleSort("name")}
+            className="text-left hover:text-gold-400 transition-colors"
+          >
+            商品{sortIndicator("name")}
+          </button>
+          <button
+            type="button"
+            onClick={() => toggleSort("category")}
+            className="text-left hover:text-gold-400 transition-colors"
+          >
+            分类{sortIndicator("category")}
+          </button>
+          <button
+            type="button"
+            onClick={() => toggleSort("buyPrice")}
+            className="text-right hover:text-gold-400 transition-colors"
+          >
+            买入价{sortIndicator("buyPrice")}
+          </button>
+          <button
+            type="button"
+            onClick={() => toggleSort("inCargo")}
+            className="text-right hover:text-gold-400 transition-colors"
+          >
+            持有{sortIndicator("inCargo")}
+          </button>
           <span />
         </div>
-        {view.goods.map((good) => (
+        {sortedGoods.map((good) => (
           <div
             key={good.id}
-            className="grid grid-cols-5 gap-2 items-center border-b border-ocean-700/30 px-4 py-3 text-sm hover:bg-ocean-700/40 transition-colors last:border-b-0"
+            className="grid grid-cols-5 gap-0.5 items-center border-b border-ocean-700/30 px-4 py-3 text-sm hover:bg-ocean-700/40 transition-colors last:border-b-0"
           >
             <span className="font-medium">{good.name}</span>
             <span className="text-xs text-parchment-dark">{good.category}</span>
-            <span className="text-right text-gold-400">{good.buyPrice}</span>
+            <span
+              className={`text-right ${good.priceChangePercent > 0 ? "text-red-400" : good.priceChangePercent < 0 ? "text-green-400" : "text-gold-400"}`}
+            >
+              {good.buyPrice}
+            </span>
             <span className="text-right text-parchment-dark">
               {good.inCargo}
             </span>
@@ -102,7 +171,7 @@ export function MarketPanel({ view, onRefresh }: MarketPanelProps) {
                 setMessage(null);
               }}
               disabled={!good.canAfford}
-              className="rounded bg-gold-500/20 px-2 py-1 text-xs text-gold-400 hover:bg-gold-500/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="ml-4 rounded bg-gold-500/20 px-2 py-1 text-xs text-gold-400 hover:bg-gold-500/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               买入
             </button>
