@@ -86,7 +86,7 @@ export function buildNavigationView(world: World): NavigationView {
   const destinations: DestinationView[] = reachable.map((r) => {
     // 预估利润 = 当前 cargo 到目标港预估
     const estimatedProfit = world.ship.cargo.reduce((sum, c) => {
-      const targetPrice = calcSellPrice(c.goodId, r.port.id, world)
+      const targetPrice = getSellPrice(c.goodId, r.port.id, world)
       return sum + (targetPrice - c.buyPrice) * c.quantity
     }, 0)
 
@@ -106,14 +106,6 @@ export function buildNavigationView(world: World): NavigationView {
   }
 }
 
-/** 预估目标港的卖价（用于 View Builder，不存档） */
-function calcSellPrice(
-  goodId: string,
-  targetPortId: string,
-  world: World,
-): number {
-  return getSellPrice(goodId, targetPortId, world)
-}
 
 export function buildCargoView(world: World): CargoView {
   const ship = SHIPS.find((s) => s.id === world.ship.typeId)

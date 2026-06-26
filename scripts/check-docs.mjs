@@ -127,6 +127,46 @@ function checkDocMetaRuleConflicts() {
 // 检查：Frontmatter
 // =============================================================================
 
+function validateStatusField(file, fm) {
+	if (!fm.status) {
+		errors.push(`${file}: missing required field 'status'`);
+		return;
+	}
+
+	const allowed = ruleFor(file, "status");
+	const scope = scopeNameFor(file, "status");
+	if (!allowed.has(fm.status)) {
+		errors.push(
+			`${file}: invalid status '${fm.status}' for scope '${scope}' (allowed: ${[...allowed].join(", ")})`,
+		);
+	}
+}
+
+function validateLastVerifiedField(file, fm) {
+	if (!fm.last_verified) {
+		errors.push(`${file}: missing required field 'last_verified'`);
+		return;
+	}
+
+	if (!/^\d{4}-\d{2}-\d{2}$/.test(fm.last_verified)) {
+		if (!(fm.status === "template" && fm.last_verified === "YYYY-MM-DD")) {
+			errors.push(
+				`${file}: invalid last_verified '${fm.last_verified}' (expected YYYY-MM-DD)`,
+			);
+		}
+	}
+}
+
+function validateNoExtraFields(file, fm) {
+	for (const key of Object.keys(fm)) {
+		if (key !== "status" && key !== "last_verified") {
+			errors.push(
+				`${file}: unexpected frontmatter field '${key}' (only status and last_verified allowed)`,
+			);
+		}
+	}
+}
+
 function checkDocFrontmatter() {
 	const files = markdownFilesUnder("docs");
 	if (files.length === 0) {
@@ -141,38 +181,9 @@ function checkDocFrontmatter() {
 			continue;
 		}
 
-		// status
-		if (!fm.status) {
-			errors.push(`${file}: missing required field 'status'`);
-		} else {
-			const allowed = ruleFor(file, "status");
-			const scope = scopeNameFor(file, "status");
-			if (!allowed.has(fm.status)) {
-				errors.push(
-					`${file}: invalid status '${fm.status}' for scope '${scope}' (allowed: ${[...allowed].join(", ")})`,
-				);
-			}
-		}
-
-		// last_verified
-		if (!fm.last_verified) {
-			errors.push(`${file}: missing required field 'last_verified'`);
-		} else if (!/^\d{4}-\d{2}-\d{2}$/.test(fm.last_verified)) {
-			if (!(fm.status === "template" && fm.last_verified === "YYYY-MM-DD")) {
-				errors.push(
-					`${file}: invalid last_verified '${fm.last_verified}' (expected YYYY-MM-DD)`,
-				);
-			}
-		}
-
-		// 禁止多余的字段
-		for (const key of Object.keys(fm)) {
-			if (key !== "status" && key !== "last_verified") {
-				errors.push(
-					`${file}: unexpected frontmatter field '${key}' (only status and last_verified allowed)`,
-				);
-			}
-		}
+		validateStatusField(file, fm);
+		validateLastVerifiedField(file, fm);
+		validateNoExtraFields(file, fm);
 	}
 }
 
