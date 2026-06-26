@@ -1,24 +1,17 @@
 "use server";
+import { redirect } from "next/navigation";
 import { PORTS } from "../../data/ports";
 import { calcTravelDays } from "../../game/domain/navigation";
 import { startVoyage } from "../../game/domain/voyage";
-import { buildVoyageView } from "../../game/view-builder/buildGameView";
 import { prisma } from "../../lib/prisma";
 import { loadWorld, saveWorld } from "../../lib/repository";
-import type { VoyageView } from "../../types/game-view";
 import type { PrismaTransactionClient } from "../../types/prisma";
 
-export async function startTravel(formData: FormData): Promise<VoyageView> {
+export async function startTravel(formData: FormData): Promise<void> {
   const targetPortId = formData.get("portId") as string;
   if (!targetPortId) throw new Error("未选择目的港");
 
-  const armamentStr = formData.get("armamentLevel") as string;
-  const armamentLevel = (armamentStr ? parseInt(armamentStr, 10) : 0) as
-    | 0
-    | 1
-    | 2;
-
-  return await prisma.$transaction(async (tx: PrismaTransactionClient) => {
+  await prisma.$transaction(async (tx: PrismaTransactionClient) => {
     const world = await loadWorld(tx);
     if (world.voyage) throw new Error("航行中，无法再次出航");
 
@@ -42,7 +35,7 @@ export async function startTravel(formData: FormData): Promise<VoyageView> {
       world.player.currentPortId,
       targetPortId,
       travelDays,
-      armamentLevel,
+      world.ship.armamentLevel,
     );
 
     const newWorld: typeof world = {
@@ -51,6 +44,7 @@ export async function startTravel(formData: FormData): Promise<VoyageView> {
     };
 
     await saveWorld(tx, newWorld);
-    return buildVoyageView(newWorld);
   });
+
+  redirect("/voyage");
 }
