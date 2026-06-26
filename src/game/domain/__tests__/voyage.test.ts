@@ -10,7 +10,12 @@ import { createTestWorld } from "./helpers";
 describe("startVoyage", () => {
   it("returns VoyageState with correct from/to/departureDay/travelDays", () => {
     const world = createTestWorld();
-    const result = startVoyage(world, "quanzhou", "malacca", 5);
+    const result = startVoyage(world, {
+      fromPortId: "quanzhou",
+      toPortId: "malacca",
+      travelDays: 5,
+      armamentLevel: 0,
+    });
 
     expect(result.fromPortId).toBe("quanzhou");
     expect(result.toPortId).toBe("malacca");
@@ -20,7 +25,12 @@ describe("startVoyage", () => {
 
   it("events is an array (may be empty)", () => {
     const world = createTestWorld();
-    const result = startVoyage(world, "quanzhou", "malacca", 0);
+    const result = startVoyage(world, {
+      fromPortId: "quanzhou",
+      toPortId: "malacca",
+      travelDays: 0,
+      armamentLevel: 0,
+    });
 
     expect(Array.isArray(result.events)).toBe(true);
   });

@@ -30,13 +30,12 @@ export async function startTravel(formData: FormData): Promise<void> {
     const travelDays = calcTravelDays(distance, world);
 
     // 创建航行状态（含预生成事件 + 武装配置）
-    const voyage = startVoyage(
-      world,
-      world.player.currentPortId,
-      targetPortId,
+    const voyage = startVoyage(world, {
+      fromPortId: world.player.currentPortId,
+      toPortId: targetPortId,
       travelDays,
-      world.ship.armamentLevel,
-    );
+      armamentLevel: world.ship.armamentLevel,
+    });
 
     const newWorld: typeof world = {
       ...world,

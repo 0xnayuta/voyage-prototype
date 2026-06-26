@@ -38,6 +38,23 @@ export function resolveCombat(
     return { result: "victory", hpDamage: 0, cargoLoss: 0, description: "" };
   }
 
+  const score = calcCombatScore(world, region, rng, shipConfig);
+
+  if (score < TOTAL_LOSS_THRESHOLD) return buildTotalLossOutcome(world);
+  if (score < 50) return buildPartialLossOutcome(rng);
+  return buildVictoryOutcome(rng);
+}
+
+/**
+ * 计算战斗评分：基于武装防御倍率、HP 比例、随机波动和区域危险度。
+ * 评分越低，损失越严重。
+ */
+function calcCombatScore(
+  world: World,
+  region: string,
+  rng: RngSource,
+  shipConfig: (typeof SHIPS)[number],
+): number {
   const armamentLevel = world.voyage?.armamentLevel ?? 0;
   const defenseMultiplier = shipConfig.armamentTiers[armamentLevel][1];
 
@@ -55,33 +72,40 @@ export function resolveCombat(
     score = score * regionCfg.dangerModifier;
   }
 
-  if (score < TOTAL_LOSS_THRESHOLD) {
-    return {
-      result: "totalLoss",
-      hpDamage: world.ship.currentHp,
-      cargoLoss: 0,
-      allCargoLost: true,
-      description: "海盗登船洗劫一空，船体严重损毁，勉强漂回港口……",
-    };
-  }
+  return score;
+}
 
-  if (score < 50) {
-    const hpDamage = Math.floor(
-      COMBAT_BASE_DAMAGE_MIN +
-        rng() * (COMBAT_BASE_DAMAGE_MAX - COMBAT_BASE_DAMAGE_MIN),
-    );
-    const cargoLoss = Math.floor(
-      COMBAT_CARGO_LOSS_MIN +
-        rng() * (COMBAT_CARGO_LOSS_MAX - COMBAT_CARGO_LOSS_MIN),
-    );
-    return {
-      result: "partialLoss",
-      hpDamage,
-      cargoLoss,
-      description: `激战后击退海盗，船上损失 ${cargoLoss > 0 ? `${cargoLoss} 单位货物` : "部分物资"}，船体受损。`,
-    };
-  }
+/** 全损结果：HP→0，清空 cargo */
+function buildTotalLossOutcome(world: World): CombatOutcome {
+  return {
+    result: "totalLoss",
+    hpDamage: world.ship.currentHp,
+    cargoLoss: 0,
+    allCargoLost: true,
+    description: "海盗登船洗劫一空，船体严重损毁，勉强漂回港口……",
+  };
+}
 
+/** 部分损失结果：HP 受损 + cargo 损失 */
+function buildPartialLossOutcome(rng: RngSource): CombatOutcome {
+  const hpDamage = Math.floor(
+    COMBAT_BASE_DAMAGE_MIN +
+      rng() * (COMBAT_BASE_DAMAGE_MAX - COMBAT_BASE_DAMAGE_MIN),
+  );
+  const cargoLoss = Math.floor(
+    COMBAT_CARGO_LOSS_MIN +
+      rng() * (COMBAT_CARGO_LOSS_MAX - COMBAT_CARGO_LOSS_MIN),
+  );
+  return {
+    result: "partialLoss",
+    hpDamage,
+    cargoLoss,
+    description: `激战后击退海盗，船上损失 ${cargoLoss > 0 ? `${cargoLoss} 单位货物` : "部分物资"}，船体受损。`,
+  };
+}
+
+/** 胜利结果：微量随机 HP 损失 */
+function buildVictoryOutcome(rng: RngSource): CombatOutcome {
   const hpDamage = Math.floor(rng() * 5);
   return {
     result: "victory",

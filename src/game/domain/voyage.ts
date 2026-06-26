@@ -180,14 +180,20 @@ export function applyVoyageEvents(
   return result;
 }
 
+/** 出航参数 */
+export interface StartVoyageOptions {
+  readonly fromPortId: string;
+  readonly toPortId: string;
+  readonly travelDays: number;
+  readonly armamentLevel: 0 | 1 | 2;
+}
+
 /** 创建航行状态（出航时调用）。校验有效舱容，超载则抛错。 */
 export function startVoyage(
   world: World,
-  fromPortId: string,
-  toPortId: string,
-  travelDays: number,
-  armamentLevel: 0 | 1 | 2 = 0,
+  options: StartVoyageOptions,
 ): VoyageState {
+  const { fromPortId, toPortId, travelDays, armamentLevel } = options;
   const usedCapacity = getUsedCapacity(world);
   const maxCapacity = getMaxCapacity(world);
   const effectiveCapacity = getEffectiveCapacityForShip(
