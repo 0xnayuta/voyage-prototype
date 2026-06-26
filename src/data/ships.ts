@@ -3,13 +3,13 @@
 // ============================================================
 
 export interface ShipConfig {
-  readonly id: string
-  readonly name: string
-  readonly capacity: number     // 最大舱容
-  readonly speed: number        // 速度系数（越大越快）
-  readonly basePrice: number    // 购买价
-  readonly maxUpgradeLevel: number
-  readonly upgradeCosts: readonly number[] // 每级升级费用
+  readonly id: string;
+  readonly name: string;
+  readonly capacity: number; // 最大舱容
+  readonly speed: number; // 速度系数（越大越快）
+  readonly basePrice: number; // 购买价
+  readonly maxUpgradeLevel: number;
+  readonly upgradeCosts: readonly number[]; // 每级升级费用
 }
 
 export const SHIPS: readonly ShipConfig[] = [
@@ -31,4 +31,4 @@ export const SHIPS: readonly ShipConfig[] = [
     maxUpgradeLevel: 3,
     upgradeCosts: [1500, 3500, 6000],
   },
-] as const
+] as const;

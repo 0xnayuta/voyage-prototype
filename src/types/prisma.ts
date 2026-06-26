@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client"
+import type { Prisma } from "@prisma/client";
 
 /**
  * 事务上下文客户端类型。
@@ -10,18 +10,18 @@ import type { Prisma } from "@prisma/client"
 export interface PrismaTransactionClient {
   save: {
     findUnique(args: Prisma.SaveFindUniqueArgs): Promise<{
-      id: string
-      slot: number
-      data: string
-      createdAt: Date
-      updatedAt: Date
-    } | null>
+      id: string;
+      slot: number;
+      data: string;
+      createdAt: Date;
+      updatedAt: Date;
+    } | null>;
     upsert(args: Prisma.SaveUpsertArgs): Promise<{
-      id: string
-      slot: number
-      data: string
-      createdAt: Date
-      updatedAt: Date
-    }>
-  }
+      id: string;
+      slot: number;
+      data: string;
+      createdAt: Date;
+      updatedAt: Date;
+    }>;
+  };
 }

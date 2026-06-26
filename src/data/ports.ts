@@ -4,12 +4,12 @@
 // ============================================================
 
 export interface PortConfig {
-  readonly id: string
-  readonly name: string
-  readonly region: string
-  readonly description: string
-  readonly specialties: readonly string[] // 特产商品 id
-  readonly priceModifiers: Record<string, number> // 商品 id → 价格乘数（0.5 ~ 2.0）
+  readonly id: string;
+  readonly name: string;
+  readonly region: string;
+  readonly description: string;
+  readonly specialties: readonly string[]; // 特产商品 id
+  readonly priceModifiers: Record<string, number>; // 商品 id → 价格乘数（0.5 ~ 2.0）
 }
 
 export const PORTS: readonly PortConfig[] = [
@@ -23,8 +23,8 @@ export const PORTS: readonly PortConfig[] = [
       silk: 0.78,
       porcelain: 0.72,
       spice: 1.25,
-      jade: 1.20,
-      timber: 1.00,
+      jade: 1.2,
+      timber: 1.0,
     },
   },
   {
@@ -34,7 +34,7 @@ export const PORTS: readonly PortConfig[] = [
     description: "东西方海上十字路口，香料集散之地",
     specialties: ["spice"],
     priceModifiers: {
-      spice: 0.70,
+      spice: 0.7,
       silk: 1.28,
       porcelain: 1.22,
       jade: 1.15,
@@ -51,18 +51,18 @@ export const PORTS: readonly PortConfig[] = [
       jade: 0.72,
       silk: 1.32,
       porcelain: 1.18,
-      spice: 1.20,
+      spice: 1.2,
       timber: 0.75,
     },
   },
-] as const
+] as const;
 
 // ---- 港口间距离 ----
 
 export interface RouteConfig {
-  readonly from: string
-  readonly to: string
-  readonly distance: number // 抽象距离单位
+  readonly from: string;
+  readonly to: string;
+  readonly distance: number; // 抽象距离单位
 }
 
 export const ROUTES: readonly RouteConfig[] = [
@@ -72,4 +72,4 @@ export const ROUTES: readonly RouteConfig[] = [
   { from: "malacca", to: "nagasaki", distance: 10 },
   { from: "nagasaki", to: "quanzhou", distance: 5 },
   { from: "nagasaki", to: "malacca", distance: 10 },
-] as const
+] as const;

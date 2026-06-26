@@ -1,4 +1,4 @@
-import { DomainError } from "../game/domain/types"
+import { DomainError } from "../game/domain/types";
 
 const ERROR_MAP: Record<string, string> = {
   INSUFFICIENT_GOLD: "金币不足",
@@ -11,13 +11,13 @@ const ERROR_MAP: Record<string, string> = {
   IN_VOYAGE: "航行中无法进行此操作",
   UNKNOWN_PORT: "未知港口",
   NO_PRICE_DATA: "该商品暂无价格数据",
-}
+};
 
 /** 将领域层的 DomainError 转为用户可读的中文错误消息 */
 export function getErrorMessage(err: unknown): string {
   if (err instanceof DomainError) {
-    return ERROR_MAP[err.code] ?? `未知错误 (${err.code})`
+    return ERROR_MAP[err.code] ?? `未知错误 (${err.code})`;
   }
-  if (err instanceof Error) return err.message
-  return "发生未知错误"
+  if (err instanceof Error) return err.message;
+  return "发生未知错误";
 }

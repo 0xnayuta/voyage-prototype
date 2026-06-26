@@ -1,12 +1,12 @@
-export const dynamic = "force-dynamic"
+export const dynamic = "force-dynamic";
 
-import { prisma } from "../../lib/prisma"
-import { loadWorld } from "../../lib/repository"
-import { buildVoyageView } from "../../game/view-builder/buildGameView"
-import { completeVoyage } from "./actions"
+import { buildVoyageView } from "../../game/view-builder/buildGameView";
+import { prisma } from "../../lib/prisma";
+import { loadWorld } from "../../lib/repository";
+import { completeVoyage } from "./actions";
 
 export default async function VoyagePage() {
-  const world = await loadWorld(prisma)
+  const world = await loadWorld(prisma);
 
   if (!world.voyage) {
     return (
@@ -24,10 +24,10 @@ export default async function VoyagePage() {
           前往航海图
         </a>
       </div>
-    )
+    );
   }
 
-  const view = buildVoyageView(world)
+  const view = buildVoyageView(world);
 
   return (
     <div className="flex-1 p-4 max-w-2xl mx-auto w-full space-y-4">
@@ -56,9 +56,7 @@ export default async function VoyagePage() {
       {/* 航行日志 */}
       {view.events.length > 0 ? (
         <div className="rounded-lg border border-ocean-600 bg-ocean-800/80 p-4">
-          <h3 className="mb-3 text-sm font-semibold text-gold-400">
-            航行日志
-          </h3>
+          <h3 className="mb-3 text-sm font-semibold text-gold-400">航行日志</h3>
           <div className="space-y-2">
             {view.events.map((event, i) => (
               <div
@@ -107,5 +105,5 @@ export default async function VoyagePage() {
         </form>
       </div>
     </div>
-  )
+  );
 }

@@ -1,205 +1,208 @@
-import { describe, it, expect } from "bun:test"
-import { createTestWorld, createEmptyWorld } from "../../domain/__tests__/helpers"
+import { describe, expect, it } from "bun:test";
 import {
+  createEmptyWorld,
+  createTestWorld,
+} from "../../domain/__tests__/helpers";
+import {
+  buildCargoView,
   buildHarborView,
   buildMarketView,
   buildNavigationView,
-  buildCargoView,
   buildShipView,
   buildVoyageView,
-} from "../buildGameView"
+} from "../buildGameView";
 
 describe("buildHarborView", () => {
   it("returns port info for current port", () => {
-    const world = createTestWorld()
-    const view = buildHarborView(world)
+    const world = createTestWorld();
+    const view = buildHarborView(world);
 
-    expect(view.portName).toBe("泉州")
-    expect(view.portDescription).toBeTruthy()
-    expect(view.region).toBe("闽南")
-  })
+    expect(view.portName).toBe("泉州");
+    expect(view.portDescription).toBeTruthy();
+    expect(view.region).toBe("闽南");
+  });
 
   it("shows player gold, cargo, day", () => {
-    const world = createTestWorld()
-    const view = buildHarborView(world)
+    const world = createTestWorld();
+    const view = buildHarborView(world);
 
-    expect(view.playerGold).toBe(5000)
-    expect(view.cargoCount).toBeGreaterThan(0)
-    expect(view.cargoCapacity).toBe(30)
-    expect(view.currentDay).toBe(1)
-  })
+    expect(view.playerGold).toBe(5000);
+    expect(view.cargoCount).toBeGreaterThan(0);
+    expect(view.cargoCapacity).toBe(30);
+    expect(view.currentDay).toBe(1);
+  });
 
   it("shows ship name", () => {
-    const world = createTestWorld()
-    const view = buildHarborView(world)
+    const world = createTestWorld();
+    const view = buildHarborView(world);
 
-    expect(view.shipName).toBe("单桅帆船")
-  })
+    expect(view.shipName).toBe("单桅帆船");
+  });
 
   it("handles unknown port gracefully", () => {
     const world = createTestWorld({
       player: { name: "船长", gold: 5000, currentPortId: "unknown", day: 1 },
-    })
-    const view = buildHarborView(world)
+    });
+    const view = buildHarborView(world);
 
-    expect(view.portName).toBe("未知")
-  })
-})
+    expect(view.portName).toBe("未知");
+  });
+});
 
 describe("buildMarketView", () => {
   it("returns all goods with prices", () => {
-    const world = createTestWorld()
-    const view = buildMarketView(world)
+    const world = createTestWorld();
+    const view = buildMarketView(world);
 
-    expect(view.portName).toBe("泉州")
-    expect(view.goods).toHaveLength(5)
-    expect(view.playerGold).toBe(5000)
-  })
+    expect(view.portName).toBe("泉州");
+    expect(view.goods).toHaveLength(5);
+    expect(view.playerGold).toBe(5000);
+  });
 
   it("silk price at quanzhou = 94 (base 120 × 0.78)", () => {
-    const world = createTestWorld()
-    const view = buildMarketView(world)
+    const world = createTestWorld();
+    const view = buildMarketView(world);
 
-    const silk = view.goods.find((g) => g.id === "silk")
-    expect(silk?.buyPrice).toBe(94)
-  })
+    const silk = view.goods.find((g) => g.id === "silk");
+    expect(silk?.buyPrice).toBe(94);
+  });
 
   it("sell price equals buy price (no spread)", () => {
-    const world = createTestWorld()
-    const view = buildMarketView(world)
+    const world = createTestWorld();
+    const view = buildMarketView(world);
 
     for (const good of view.goods) {
-      expect(good.sellPrice).toBe(good.buyPrice)
+      expect(good.sellPrice).toBe(good.buyPrice);
     }
-  })
+  });
 
   it("shows inCargo for goods in hold", () => {
-    const world = createTestWorld()
-    const view = buildMarketView(world)
+    const world = createTestWorld();
+    const view = buildMarketView(world);
 
-    const silk = view.goods.find((g) => g.id === "silk")
-    expect(silk?.inCargo).toBe(5)
+    const silk = view.goods.find((g) => g.id === "silk");
+    expect(silk?.inCargo).toBe(5);
 
-    const timber = view.goods.find((g) => g.id === "timber")
-    expect(timber?.inCargo).toBe(0)
-  })
-})
+    const timber = view.goods.find((g) => g.id === "timber");
+    expect(timber?.inCargo).toBe(0);
+  });
+});
 
 describe("buildNavigationView", () => {
   it("lists destinations reachable from current port", () => {
-    const world = createTestWorld() // quanzhou
-    const view = buildNavigationView(world)
+    const world = createTestWorld(); // quanzhou
+    const view = buildNavigationView(world);
 
-    expect(view.currentPortName).toBe("泉州")
+    expect(view.currentPortName).toBe("泉州");
     // quanzhou routes: to malacca (dist 8) and nagasaki (dist 5)
-    expect(view.destinations).toHaveLength(2)
-  })
+    expect(view.destinations).toHaveLength(2);
+  });
 
   it("each destination has port info and travel days", () => {
-    const world = createTestWorld()
-    const view = buildNavigationView(world)
+    const world = createTestWorld();
+    const view = buildNavigationView(world);
 
     for (const dest of view.destinations) {
-      expect(dest.portId).toBeTruthy()
-      expect(dest.portName).toBeTruthy()
-      expect(dest.travelDays).toBeGreaterThan(0)
-      expect(dest.distance).toBeGreaterThan(0)
+      expect(dest.portId).toBeTruthy();
+      expect(dest.portName).toBeTruthy();
+      expect(dest.travelDays).toBeGreaterThan(0);
+      expect(dest.distance).toBeGreaterThan(0);
     }
-  })
-})
+  });
+});
 
 describe("buildCargoView", () => {
   it("lists cargo items", () => {
-    const world = createTestWorld()
-    const view = buildCargoView(world)
+    const world = createTestWorld();
+    const view = buildCargoView(world);
 
-    expect(view.shipName).toBe("单桅帆船")
-    expect(view.items).toHaveLength(2)
-  })
+    expect(view.shipName).toBe("单桅帆船");
+    expect(view.items).toHaveLength(2);
+  });
 
   it("shows used and max capacity", () => {
-    const world = createTestWorld()
-    const view = buildCargoView(world)
+    const world = createTestWorld();
+    const view = buildCargoView(world);
 
-    expect(view.usedCapacity).toBeGreaterThan(0)
-    expect(view.maxCapacity).toBe(30)
-  })
+    expect(view.usedCapacity).toBeGreaterThan(0);
+    expect(view.maxCapacity).toBe(30);
+  });
 
   it("empty cargo returns empty items", () => {
-    const world = createEmptyWorld()
-    const view = buildCargoView(world)
+    const world = createEmptyWorld();
+    const view = buildCargoView(world);
 
-    expect(view.items).toHaveLength(0)
-    expect(view.usedCapacity).toBe(0)
-  })
+    expect(view.items).toHaveLength(0);
+    expect(view.usedCapacity).toBe(0);
+  });
 
   it("each cargo item has price info", () => {
-    const world = createTestWorld()
-    const view = buildCargoView(world)
+    const world = createTestWorld();
+    const view = buildCargoView(world);
 
     for (const item of view.items) {
-      expect(item.goodId).toBeTruthy()
-      expect(item.goodName).toBeTruthy()
-      expect(item.quantity).toBeGreaterThan(0)
-      expect(item.buyPrice).toBeGreaterThan(0)
-      expect(item.sellPrice).toBeGreaterThan(0)
+      expect(item.goodId).toBeTruthy();
+      expect(item.goodName).toBeTruthy();
+      expect(item.quantity).toBeGreaterThan(0);
+      expect(item.buyPrice).toBeGreaterThan(0);
+      expect(item.sellPrice).toBeGreaterThan(0);
     }
-  })
-})
+  });
+});
 
 describe("buildShipView", () => {
   it("shows ship config and upgrade info", () => {
-    const world = createTestWorld()
-    const view = buildShipView(world)
+    const world = createTestWorld();
+    const view = buildShipView(world);
 
-    expect(view.shipName).toBe("单桅帆船")
-    expect(view.upgradeLevel).toBe(0)
-    expect(view.maxUpgradeLevel).toBeGreaterThan(0)
-    expect(view.capacity).toBe(30)
-    expect(view.speed).toBe(1.0)
-  })
+    expect(view.shipName).toBe("单桅帆船");
+    expect(view.upgradeLevel).toBe(0);
+    expect(view.maxUpgradeLevel).toBeGreaterThan(0);
+    expect(view.capacity).toBe(30);
+    expect(view.speed).toBe(1.0);
+  });
 
   it("upgradeCost is available when under max level and can afford", () => {
-    const world = createTestWorld()
-    const view = buildShipView(world)
+    const world = createTestWorld();
+    const view = buildShipView(world);
 
     // sloop level 0, cost = 500, player has 5000
-    expect(view.upgradeCost).toBe(500)
-    expect(view.canUpgrade).toBe(true)
-  })
+    expect(view.upgradeCost).toBe(500);
+    expect(view.canUpgrade).toBe(true);
+  });
 
   it("canUpgrade false when gold insufficient", () => {
     const world = createTestWorld({
       player: { name: "船长", gold: 100, currentPortId: "quanzhou", day: 1 },
-    })
-    const view = buildShipView(world)
+    });
+    const view = buildShipView(world);
 
-    expect(view.upgradeCost).toBe(500)
-    expect(view.canUpgrade).toBe(false)
-  })
+    expect(view.upgradeCost).toBe(500);
+    expect(view.canUpgrade).toBe(false);
+  });
 
   it("upgradeCost null at max level", () => {
     const world = createTestWorld({
       ship: { typeId: "sloop", upgradeLevel: 3, cargo: [] },
-    })
-    const view = buildShipView(world)
+    });
+    const view = buildShipView(world);
 
-    expect(view.upgradeCost).toBeNull()
-    expect(view.canUpgrade).toBe(false)
-  })
-})
+    expect(view.upgradeCost).toBeNull();
+    expect(view.canUpgrade).toBe(false);
+  });
+});
 
 describe("buildVoyageView", () => {
   it("returns default state when not traveling", () => {
-    const world = createTestWorld()
-    const view = buildVoyageView(world)
+    const world = createTestWorld();
+    const view = buildVoyageView(world);
 
-    expect(view.isUnderway).toBe(false)
-    expect(view.fromPortName).toBe("未知")
-    expect(view.toPortName).toBe("未知")
-    expect(view.travelDays).toBe(0)
-    expect(view.events).toHaveLength(0)
-  })
+    expect(view.isUnderway).toBe(false);
+    expect(view.fromPortName).toBe("未知");
+    expect(view.toPortName).toBe("未知");
+    expect(view.travelDays).toBe(0);
+    expect(view.events).toHaveLength(0);
+  });
 
   it("shows voyage info when underway", () => {
     const world = createTestWorld({
@@ -209,20 +212,25 @@ describe("buildVoyageView", () => {
         departureDay: 1,
         travelDays: 4,
         events: [
-          { day: 2, description: "遇到一群海豚，心情大好", goldChange: 50, cargoLoss: 0 },
+          {
+            day: 2,
+            description: "遇到一群海豚，心情大好",
+            goldChange: 50,
+            cargoLoss: 0,
+          },
         ],
       },
-    })
-    const view = buildVoyageView(world)
+    });
+    const view = buildVoyageView(world);
 
-    expect(view.isUnderway).toBe(true)
-    expect(view.fromPortName).toBe("泉州")
-    expect(view.toPortName).toBe("马六甲")
-    expect(view.travelDays).toBe(4)
-    expect(view.events).toHaveLength(1)
-    expect(view.events[0].description).toBe("遇到一群海豚，心情大好")
-    expect(view.events[0].effect).toContain("50 金币")
-  })
+    expect(view.isUnderway).toBe(true);
+    expect(view.fromPortName).toBe("泉州");
+    expect(view.toPortName).toBe("马六甲");
+    expect(view.travelDays).toBe(4);
+    expect(view.events).toHaveLength(1);
+    expect(view.events[0].description).toBe("遇到一群海豚，心情大好");
+    expect(view.events[0].effect).toContain("50 金币");
+  });
 
   it("handles unknown port gracefully", () => {
     const world = createTestWorld({
@@ -233,13 +241,13 @@ describe("buildVoyageView", () => {
         travelDays: 3,
         events: [],
       },
-    })
-    const view = buildVoyageView(world)
+    });
+    const view = buildVoyageView(world);
 
-    expect(view.isUnderway).toBe(true)
-    expect(view.fromPortName).toBe("未知")
-    expect(view.toPortName).toBe("未知")
-  })
+    expect(view.isUnderway).toBe(true);
+    expect(view.fromPortName).toBe("未知");
+    expect(view.toPortName).toBe("未知");
+  });
 
   it("event effect is empty when no gold or cargo change", () => {
     const world = createTestWorld({
@@ -253,12 +261,12 @@ describe("buildVoyageView", () => {
           { day: 2, description: "遇到海盗", goldChange: -30, cargoLoss: 2 },
         ],
       },
-    })
-    const view = buildVoyageView(world)
+    });
+    const view = buildVoyageView(world);
 
-    expect(view.events).toHaveLength(2)
-    expect(view.events[0].effect).toBe("无影响")
-    expect(view.events[1].effect).toContain("损失 30 金币")
-    expect(view.events[1].effect).toContain("丢失 2 单位货物")
-  })
-})
+    expect(view.events).toHaveLength(2);
+    expect(view.events[0].effect).toBe("无影响");
+    expect(view.events[1].effect).toContain("损失 30 金币");
+    expect(view.events[1].effect).toContain("丢失 2 单位货物");
+  });
+});

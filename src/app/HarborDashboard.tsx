@@ -1,4 +1,4 @@
-import type { HarborView } from "../types/game-view"
+import type { HarborView } from "../types/game-view";
 
 /** 港口总览页面的展示组件（纯渲染，无客户端交互） */
 export function HarborDashboard({ view }: { view: HarborView }) {
@@ -23,9 +23,7 @@ export function HarborDashboard({ view }: { view: HarborView }) {
 
       {/* 港口信息 */}
       <div className="rounded-lg border border-ocean-600 bg-ocean-800/80 p-4">
-        <h2 className="text-lg font-semibold text-gold-400">
-          {view.portName}
-        </h2>
+        <h2 className="text-lg font-semibold text-gold-400">{view.portName}</h2>
         <p className="mt-1 text-sm text-parchment-dark">
           {view.portDescription}
         </p>
@@ -70,5 +68,5 @@ export function HarborDashboard({ view }: { view: HarborView }) {
         </a>
       </div>
     </div>
-  )
+  );
 }

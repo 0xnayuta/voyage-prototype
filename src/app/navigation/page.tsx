@@ -1,19 +1,27 @@
-"use client"
+"use client";
 
-import { useActionState, useState, useTransition } from "react"
-import { Modal } from "../../components/ui/Modal"
-import { loadNavigationView } from "./actions"
-import { startTravel } from "../actions/travel"
-import type { NavigationView, DestinationView } from "../../types/game-view"
+import { useActionState, useState, useTransition } from "react";
+import { Modal } from "../../components/ui/Modal";
+import type { DestinationView } from "../../types/game-view";
+import { startTravel } from "../actions/travel";
+import { loadNavigationView } from "./actions";
 
 export default function NavigationPage() {
-  const [view, loadAction, isLoading] = useActionState(loadNavigationView, null)
-  const [isTravelPending, startTravelTransition] = useTransition()
-  const [selectedDest, setSelectedDest] = useState<DestinationView | null>(null)
+  const [view, loadAction, isLoading] = useActionState(
+    loadNavigationView,
+    null,
+  );
+  const [isTravelPending, startTravelTransition] = useTransition();
+  const [selectedDest, setSelectedDest] = useState<DestinationView | null>(
+    null,
+  );
 
   if (!view) {
     return (
-      <form action={loadAction} className="flex-1 flex items-center justify-center">
+      <form
+        action={loadAction}
+        className="flex-1 flex items-center justify-center"
+      >
         <button
           type="submit"
           disabled={isLoading}
@@ -22,9 +30,8 @@ export default function NavigationPage() {
           {isLoading ? "加载中..." : "打开航海图"}
         </button>
       </form>
-    )
+    );
   }
-
 
   return (
     <div className="flex-1 p-4 max-w-2xl mx-auto w-full space-y-4">
@@ -67,10 +74,7 @@ export default function NavigationPage() {
 
       {/* 确认出航弹窗 */}
       {selectedDest && (
-        <Modal
-          title="出航确认"
-          onClose={() => setSelectedDest(null)}
-        >
+        <Modal title="出航确认" onClose={() => setSelectedDest(null)}>
           <div className="space-y-2 text-sm text-parchment-dark">
             <div className="flex justify-between">
               <span>目的港</span>
@@ -80,12 +84,20 @@ export default function NavigationPage() {
             </div>
             <div className="flex justify-between">
               <span>航行天数</span>
-              <span className="text-gold-400">{selectedDest.travelDays} 天</span>
+              <span className="text-gold-400">
+                {selectedDest.travelDays} 天
+              </span>
             </div>
             {selectedDest.estimatedProfit !== 0 && (
               <div className="flex justify-between">
                 <span>预估利润</span>
-                <span className={selectedDest.estimatedProfit > 0 ? "text-gold-400" : "text-red-400"}>
+                <span
+                  className={
+                    selectedDest.estimatedProfit > 0
+                      ? "text-gold-400"
+                      : "text-red-400"
+                  }
+                >
                   {selectedDest.estimatedProfit > 0
                     ? `+${selectedDest.estimatedProfit.toLocaleString()}`
                     : selectedDest.estimatedProfit.toLocaleString()}
@@ -97,9 +109,9 @@ export default function NavigationPage() {
           <form
             action={async (formData) => {
               startTravelTransition(async () => {
-                await startTravel(formData)
-                window.location.href = "/voyage"
-              })
+                await startTravel(formData);
+                window.location.href = "/voyage";
+              });
             }}
             className="mt-4 flex gap-2"
           >
@@ -131,5 +143,5 @@ export default function NavigationPage() {
         </a>
       </div>
     </div>
-  )
+  );
 }

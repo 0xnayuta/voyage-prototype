@@ -1,10 +1,10 @@
-"use client"
-import type { ReactNode } from "react"
+"use client";
+import type { ReactNode } from "react";
 
 interface ModalProps {
-  title: string
-  onClose: () => void
-  children: ReactNode
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
 }
 
 /** 通用弹窗 — 半透明遮罩 + 居中面板 */
@@ -25,5 +25,5 @@ export function Modal({ title, onClose, children }: ModalProps) {
         {children}
       </div>
     </div>
-  )
+  );
 }

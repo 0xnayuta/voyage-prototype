@@ -1,39 +1,41 @@
-"use client"
+"use client";
 
-import { useState, useActionState } from "react"
-import { Modal } from "../../components/ui/Modal"
-import { QuantityInput } from "../../components/ui/QuantityInput"
-import { loadCargoView } from "./actions"
-import { sellGoods } from "../actions/trade"
-import type { CargoView, CargoItemView } from "../../types/game-view"
+import { useActionState, useState } from "react";
+import { Modal } from "../../components/ui/Modal";
+import { QuantityInput } from "../../components/ui/QuantityInput";
+import type { CargoItemView } from "../../types/game-view";
+import { sellGoods } from "../actions/trade";
+import { loadCargoView } from "./actions";
 
 export default function CargoPage() {
-  const [view, loadAction, isLoadPending] = useActionState(loadCargoView, null)
-  const [isSelling, setIsSelling] = useState(false)
-  const [selectedItem, setSelectedItem] = useState<CargoItemView | null>(null)
-  const [sellQuantity, setSellQuantity] = useState(1)
-  const [message, setMessage] = useState<string | null>(null)
-
+  const [view, loadAction, isLoadPending] = useActionState(loadCargoView, null);
+  const [isSelling, setIsSelling] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<CargoItemView | null>(null);
+  const [sellQuantity, setSellQuantity] = useState(1);
+  const [message, setMessage] = useState<string | null>(null);
 
   async function doSell(formData: FormData) {
-    setIsSelling(true)
-    setMessage(null)
+    setIsSelling(true);
+    setMessage(null);
     try {
-      await sellGoods(null, formData)
-      loadAction()
-      setMessage(`成功卖出`)
-      setSelectedItem(null)
-      setSellQuantity(1)
+      await sellGoods(null, formData);
+      loadAction();
+      setMessage(`成功卖出`);
+      setSelectedItem(null);
+      setSellQuantity(1);
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "卖出失败")
+      setMessage(e instanceof Error ? e.message : "卖出失败");
     } finally {
-      setIsSelling(false)
+      setIsSelling(false);
     }
   }
 
   if (!view) {
     return (
-      <form action={loadAction} className="flex-1 flex items-center justify-center">
+      <form
+        action={loadAction}
+        className="flex-1 flex items-center justify-center"
+      >
         <button
           type="submit"
           disabled={isLoadPending}
@@ -42,15 +44,13 @@ export default function CargoPage() {
           {isLoadPending ? "加载中..." : "查看船舱"}
         </button>
       </form>
-    )
+    );
   }
 
   return (
     <div className="flex-1 p-4 max-w-2xl mx-auto w-full space-y-4">
       <div className="flex items-center justify-between rounded-lg border border-ocean-600 bg-ocean-800/80 px-4 py-2 text-sm">
-        <span className="font-bold text-gold-400">
-          {view.shipName} - 船舱
-        </span>
+        <span className="font-bold text-gold-400">{view.shipName} - 船舱</span>
         <span className="text-parchment-dark">
           舱容 {view.usedCapacity}/{view.maxCapacity}
         </span>
@@ -105,9 +105,9 @@ export default function CargoPage() {
               <button
                 type="button"
                 onClick={() => {
-                  setSelectedItem(item)
-                  setSellQuantity(1)
-                  setMessage(null)
+                  setSelectedItem(item);
+                  setSellQuantity(1);
+                  setMessage(null);
                 }}
                 className="rounded bg-gold-500/20 px-2 py-1 text-xs text-gold-400 hover:bg-gold-500/30 transition-colors"
               >
@@ -122,8 +122,8 @@ export default function CargoPage() {
         <Modal
           title={`卖出 ${selectedItem.goodName}`}
           onClose={() => {
-            setSelectedItem(null)
-            setSellQuantity(1)
+            setSelectedItem(null);
+            setSellQuantity(1);
           }}
         >
           <div className="space-y-2 text-sm text-parchment-dark">
@@ -166,10 +166,10 @@ export default function CargoPage() {
             <button
               type="button"
               onClick={() => {
-                const fd = new FormData()
-                fd.set("goodId", selectedItem.goodId)
-                fd.set("quantity", String(sellQuantity))
-                doSell(fd)
+                const fd = new FormData();
+                fd.set("goodId", selectedItem.goodId);
+                fd.set("quantity", String(sellQuantity));
+                doSell(fd);
               }}
               disabled={isSelling}
               className="flex-1 rounded bg-gold-500 py-2 text-sm font-bold text-ocean-900 hover:bg-gold-400 transition-colors disabled:opacity-50"
@@ -179,8 +179,8 @@ export default function CargoPage() {
             <button
               type="button"
               onClick={() => {
-                setSelectedItem(null)
-                setSellQuantity(1)
+                setSelectedItem(null);
+                setSellQuantity(1);
               }}
               className="rounded bg-ocean-700 px-4 py-2 text-sm hover:bg-ocean-600 transition-colors"
             >
@@ -199,5 +199,5 @@ export default function CargoPage() {
         </a>
       </div>
     </div>
-  )
+  );
 }

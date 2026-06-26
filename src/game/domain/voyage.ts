@@ -1,4 +1,4 @@
-import type { World, VoyageState, VoyageEvent, CargoItem } from "./types"
+import type { CargoItem, VoyageEvent, VoyageState, World } from "./types";
 
 // ============================================================
 // 航行逻辑 — 纯函数
@@ -6,12 +6,12 @@ import type { World, VoyageState, VoyageEvent, CargoItem } from "./types"
 
 // 随机事件表
 interface EventTemplate {
-  readonly chance: number        // 每天触发概率
-  readonly minGold: number       // 金币变化范围（负=损失）
-  readonly maxGold: number
-  readonly cargoLossChance: number // 丢失货物的概率
-  readonly maxCargoLoss: number    // 最多丢多少单位
-  readonly description: string
+  readonly chance: number; // 每天触发概率
+  readonly minGold: number; // 金币变化范围（负=损失）
+  readonly maxGold: number;
+  readonly cargoLossChance: number; // 丢失货物的概率
+  readonly maxCargoLoss: number; // 最多丢多少单位
+  readonly description: string;
 }
 
 const VOYAGE_EVENTS: readonly EventTemplate[] = [
@@ -40,7 +40,7 @@ const VOYAGE_EVENTS: readonly EventTemplate[] = [
     description: "一阵狂风暴雨，甲板上有物品被吹落海中",
   },
   {
-    chance: 0.10,
+    chance: 0.1,
     minGold: 50,
     maxGold: 200,
     cargoLossChance: 0,
@@ -71,34 +71,33 @@ const VOYAGE_EVENTS: readonly EventTemplate[] = [
     maxCargoLoss: 0,
     description: "在海上发现一座无人小岛，找到了宝藏",
   },
-]
+];
 
 /** 每天最多一个事件：按权重随机选择并生成，返回 null 表示今日无事 */
 function generateSingleDayEvent(
   day: number,
   totalChance: number,
 ): VoyageEvent | null {
-  const roll = Math.random()
-  if (roll >= totalChance) return null
+  const roll = Math.random();
+  if (roll >= totalChance) return null;
 
-  let cumulative = 0
+  let cumulative = 0;
   for (const tmpl of VOYAGE_EVENTS) {
-    cumulative += tmpl.chance
+    cumulative += tmpl.chance;
     if (roll < cumulative) {
       const goldChange =
         tmpl.minGold +
-        Math.round(Math.random() * (tmpl.maxGold - tmpl.minGold))
+        Math.round(Math.random() * (tmpl.maxGold - tmpl.minGold));
       const cargoLoss =
         Math.random() < tmpl.cargoLossChance
           ? 1 + Math.floor(Math.random() * tmpl.maxCargoLoss)
-          : 0
+          : 0;
 
-      return { day, description: tmpl.description, goldChange, cargoLoss }
+      return { day, description: tmpl.description, goldChange, cargoLoss };
     }
   }
-  return null
+  return null;
 }
-
 
 /*
  * 生成航行事件（在出航时一次性确定）。
@@ -108,15 +107,15 @@ export function generateVoyageEvents(
   _world: World,
   travelDays: number,
 ): readonly VoyageEvent[] {
-  const events: VoyageEvent[] = []
-  const totalChance = VOYAGE_EVENTS.reduce((sum, t) => sum + t.chance, 0)
+  const events: VoyageEvent[] = [];
+  const totalChance = VOYAGE_EVENTS.reduce((sum, t) => sum + t.chance, 0);
 
   for (let day = 1; day <= travelDays; day++) {
-    const event = generateSingleDayEvent(day, totalChance)
-    if (event) events.push(event)
+    const event = generateSingleDayEvent(day, totalChance);
+    if (event) events.push(event);
   }
 
-  return events
+  return events;
 }
 
 /** 随机从 cargo 中扣除指定数量货物（支持超额跨摊分） */
@@ -124,22 +123,22 @@ function subtractCargoLoss(
   cargo: readonly CargoItem[],
   lossAmount: number,
 ): readonly CargoItem[] {
-  let remainingLoss = lossAmount
-  let result = [...cargo]
+  let remainingLoss = lossAmount;
+  let result = [...cargo];
   while (remainingLoss > 0 && result.length > 0) {
-    const idx = Math.floor(Math.random() * result.length)
-    const item = result[idx]
+    const idx = Math.floor(Math.random() * result.length);
+    const item = result[idx];
     if (item.quantity <= remainingLoss) {
-      remainingLoss -= item.quantity
-      result = result.filter((_, i) => i !== idx)
+      remainingLoss -= item.quantity;
+      result = result.filter((_, i) => i !== idx);
     } else {
       result = result.map((c, i) =>
         i === idx ? { ...c, quantity: c.quantity - remainingLoss } : c,
-      )
-      remainingLoss = 0
+      );
+      remainingLoss = 0;
     }
   }
-  return result
+  return result;
 }
 
 /**
@@ -150,7 +149,7 @@ export function applyVoyageEvents(
   world: World,
   events: readonly VoyageEvent[],
 ): World {
-  let result = world
+  let result = world;
 
   for (const event of events) {
     // 金币变化
@@ -161,7 +160,7 @@ export function applyVoyageEvents(
           ...result.player,
           gold: Math.max(0, result.player.gold + event.goldChange),
         },
-      }
+      };
     }
 
     if (event.cargoLoss > 0 && result.ship.cargo.length > 0) {
@@ -171,11 +170,11 @@ export function applyVoyageEvents(
           ...result.ship,
           cargo: subtractCargoLoss(result.ship.cargo, event.cargoLoss),
         },
-      }
+      };
     }
   }
 
-  return result
+  return result;
 }
 
 /** 创建航行状态（出航时调用） */
@@ -191,5 +190,5 @@ export function startVoyage(
     departureDay: world.player.day,
     travelDays,
     events: generateVoyageEvents(world, travelDays),
-  }
+  };
 }

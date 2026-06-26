@@ -22,23 +22,23 @@ const errors = [];
 // =============================================================================
 
 const DOC_META_RULES = {
-	defaultStatus: new Set(["current", "draft", "deprecated", "archived"]),
-	scoped: [
-		{
-			pattern: /^docs\/adr\/ADR-\d{4}-/,
-			status: new Set([
-				"proposed",
-				"accepted",
-				"rejected",
-				"deprecated",
-				"superseded",
-			]),
-		},
-		{
-			pattern: /^docs\/archive\//,
-			status: new Set(["archived"]),
-		},
-	],
+  defaultStatus: new Set(["current", "draft", "deprecated", "archived"]),
+  scoped: [
+    {
+      pattern: /^docs\/adr\/ADR-\d{4}-/,
+      status: new Set([
+        "proposed",
+        "accepted",
+        "rejected",
+        "deprecated",
+        "superseded",
+      ]),
+    },
+    {
+      pattern: /^docs\/archive\//,
+      status: new Set(["archived"]),
+    },
+  ],
 };
 
 // =============================================================================
@@ -46,62 +46,58 @@ const DOC_META_RULES = {
 // =============================================================================
 
 function read(file) {
-	return fs.readFileSync(path.join(root, file), "utf8");
+  return fs.readFileSync(path.join(root, file), "utf8");
 }
 
 function walk(dir) {
-	const result = [];
-	for (const entry of fs.readdirSync(path.join(root, dir), {
-		withFileTypes: true,
-	})) {
-		const rel = path.join(dir, entry.name);
-		if (entry.isDirectory()) result.push(...walk(rel));
-		else result.push(rel.replaceAll(path.sep, "/"));
-	}
-	return result;
+  const result = [];
+  for (const entry of fs.readdirSync(path.join(root, dir), {
+    withFileTypes: true,
+  })) {
+    const rel = path.join(dir, entry.name);
+    if (entry.isDirectory()) result.push(...walk(rel));
+    else result.push(rel.replaceAll(path.sep, "/"));
+  }
+  return result;
 }
 
 function parseFrontmatter(content) {
-	const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/);
-	if (!match) return null;
-	const data = {};
-	for (const line of match[1].split(/\r?\n/)) {
-		const index = line.indexOf(":");
-		if (index === -1) continue;
-		data[line.slice(0, index).trim()] = line.slice(index + 1).trim();
-	}
-	return data;
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/);
+  if (!match) return null;
+  const data = {};
+  for (const line of match[1].split(/\r?\n/)) {
+    const index = line.indexOf(":");
+    if (index === -1) continue;
+    data[line.slice(0, index).trim()] = line.slice(index + 1).trim();
+  }
+  return data;
 }
 
 function matchingRulesFor(file, key) {
-	return DOC_META_RULES.scoped.filter(
-		(rule) => rule.pattern.test(file) && rule[key],
-	);
+  return DOC_META_RULES.scoped.filter(
+    (rule) => rule.pattern.test(file) && rule[key],
+  );
 }
 
 function ruleFor(file, key) {
-	const matches = matchingRulesFor(file, key);
-	if (matches.length > 0) return matches[0][key];
-	return DOC_META_RULES.defaultStatus;
+  const matches = matchingRulesFor(file, key);
+  if (matches.length > 0) return matches[0][key];
+  return DOC_META_RULES.defaultStatus;
 }
 
 function scopeNameFor(file, key) {
-	const matches = matchingRulesFor(file, key);
-	return matches.length > 0
-		? matches[0].pattern.toString()
-		: "defaultStatus";
+  const matches = matchingRulesFor(file, key);
+  return matches.length > 0 ? matches[0].pattern.toString() : "defaultStatus";
 }
 
 function markdownFilesUnder(...dirs) {
-	const result = [];
-	for (const dir of dirs) {
-		if (fs.existsSync(path.join(root, dir))) {
-			result.push(
-				...walk(dir).filter((f) => f.endsWith(".md")),
-			);
-		}
-	}
-	return result.sort();
+  const result = [];
+  for (const dir of dirs) {
+    if (fs.existsSync(path.join(root, dir))) {
+      result.push(...walk(dir).filter((f) => f.endsWith(".md")));
+    }
+  }
+  return result.sort();
 }
 
 // =============================================================================
@@ -109,18 +105,18 @@ function markdownFilesUnder(...dirs) {
 // =============================================================================
 
 function checkDocMetaRuleConflicts() {
-	for (const file of markdownFilesUnder("docs")) {
-		for (const key of ["status"]) {
-			const matches = matchingRulesFor(file, key);
-			if (matches.length > 1) {
-				errors.push(
-					`${file}: conflicting ${key} rules matched (${matches
-						.map((rule) => rule.pattern.toString())
-						.join(" | ")})`,
-				);
-			}
-		}
-	}
+  for (const file of markdownFilesUnder("docs")) {
+    for (const key of ["status"]) {
+      const matches = matchingRulesFor(file, key);
+      if (matches.length > 1) {
+        errors.push(
+          `${file}: conflicting ${key} rules matched (${matches
+            .map((rule) => rule.pattern.toString())
+            .join(" | ")})`,
+        );
+      }
+    }
+  }
 }
 
 // =============================================================================
@@ -128,63 +124,63 @@ function checkDocMetaRuleConflicts() {
 // =============================================================================
 
 function validateStatusField(file, fm) {
-	if (!fm.status) {
-		errors.push(`${file}: missing required field 'status'`);
-		return;
-	}
+  if (!fm.status) {
+    errors.push(`${file}: missing required field 'status'`);
+    return;
+  }
 
-	const allowed = ruleFor(file, "status");
-	const scope = scopeNameFor(file, "status");
-	if (!allowed.has(fm.status)) {
-		errors.push(
-			`${file}: invalid status '${fm.status}' for scope '${scope}' (allowed: ${[...allowed].join(", ")})`,
-		);
-	}
+  const allowed = ruleFor(file, "status");
+  const scope = scopeNameFor(file, "status");
+  if (!allowed.has(fm.status)) {
+    errors.push(
+      `${file}: invalid status '${fm.status}' for scope '${scope}' (allowed: ${[...allowed].join(", ")})`,
+    );
+  }
 }
 
 function validateLastVerifiedField(file, fm) {
-	if (!fm.last_verified) {
-		errors.push(`${file}: missing required field 'last_verified'`);
-		return;
-	}
+  if (!fm.last_verified) {
+    errors.push(`${file}: missing required field 'last_verified'`);
+    return;
+  }
 
-	if (!/^\d{4}-\d{2}-\d{2}$/.test(fm.last_verified)) {
-		if (!(fm.status === "template" && fm.last_verified === "YYYY-MM-DD")) {
-			errors.push(
-				`${file}: invalid last_verified '${fm.last_verified}' (expected YYYY-MM-DD)`,
-			);
-		}
-	}
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fm.last_verified)) {
+    if (!(fm.status === "template" && fm.last_verified === "YYYY-MM-DD")) {
+      errors.push(
+        `${file}: invalid last_verified '${fm.last_verified}' (expected YYYY-MM-DD)`,
+      );
+    }
+  }
 }
 
 function validateNoExtraFields(file, fm) {
-	for (const key of Object.keys(fm)) {
-		if (key !== "status" && key !== "last_verified") {
-			errors.push(
-				`${file}: unexpected frontmatter field '${key}' (only status and last_verified allowed)`,
-			);
-		}
-	}
+  for (const key of Object.keys(fm)) {
+    if (key !== "status" && key !== "last_verified") {
+      errors.push(
+        `${file}: unexpected frontmatter field '${key}' (only status and last_verified allowed)`,
+      );
+    }
+  }
 }
 
 function checkDocFrontmatter() {
-	const files = markdownFilesUnder("docs");
-	if (files.length === 0) {
-		errors.push("no markdown files found under docs/");
-		return;
-	}
+  const files = markdownFilesUnder("docs");
+  if (files.length === 0) {
+    errors.push("no markdown files found under docs/");
+    return;
+  }
 
-	for (const file of files) {
-		const fm = parseFrontmatter(read(file));
-		if (!fm) {
-			errors.push(`${file}: missing frontmatter`);
-			continue;
-		}
+  for (const file of files) {
+    const fm = parseFrontmatter(read(file));
+    if (!fm) {
+      errors.push(`${file}: missing frontmatter`);
+      continue;
+    }
 
-		validateStatusField(file, fm);
-		validateLastVerifiedField(file, fm);
-		validateNoExtraFields(file, fm);
-	}
+    validateStatusField(file, fm);
+    validateLastVerifiedField(file, fm);
+    validateNoExtraFields(file, fm);
+  }
 }
 
 // =============================================================================
@@ -192,22 +188,22 @@ function checkDocFrontmatter() {
 // =============================================================================
 
 function checkLinks() {
-	for (const file of markdownFilesUnder("docs")) {
-		// Strip fenced code blocks before scanning for links
-		const content = read(file).replace(/```[\s\S]*?```/g, "");
-		for (const match of content.matchAll(
-			/\[[^\]]*\]\((?!https?:|mailto:|#|\.\.\/\.\.\/)([^)]+)\)/g,
-		)) {
-			const target = match[1].split("#")[0];
-			if (!target) continue;
-			const resolved = path.normalize(
-				path.join(root, path.dirname(file), target),
-			);
-			if (!fs.existsSync(resolved)) {
-				errors.push(`${file}: broken link '${match[1]}'`);
-			}
-		}
-	}
+  for (const file of markdownFilesUnder("docs")) {
+    // Strip fenced code blocks before scanning for links
+    const content = read(file).replace(/```[\s\S]*?```/g, "");
+    for (const match of content.matchAll(
+      /\[[^\]]*\]\((?!https?:|mailto:|#|\.\.\/\.\.\/)([^)]+)\)/g,
+    )) {
+      const target = match[1].split("#")[0];
+      if (!target) continue;
+      const resolved = path.normalize(
+        path.join(root, path.dirname(file), target),
+      );
+      if (!fs.existsSync(resolved)) {
+        errors.push(`${file}: broken link '${match[1]}'`);
+      }
+    }
+  }
 }
 
 // =============================================================================
@@ -219,9 +215,9 @@ checkDocFrontmatter();
 checkLinks();
 
 if (errors.length > 0) {
-	console.error("docs:check failed\n");
-	console.error(errors.join("\n"));
-	process.exit(1);
+  console.error("docs:check failed\n");
+  console.error(errors.join("\n"));
+  process.exit(1);
 }
 
 console.log("docs:check passed");

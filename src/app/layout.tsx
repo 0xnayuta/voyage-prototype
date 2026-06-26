@@ -1,16 +1,16 @@
-import Link from "next/link"
-import type { Metadata } from "next"
-import "./globals.css"
+import type { Metadata } from "next";
+import Link from "next/link";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "纵横四海 — Seaforge",
   description: "单人离线航海贸易经营游戏",
-}
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
     <html lang="zh-CN" className="h-full">
@@ -49,5 +49,5 @@ export default function RootLayout({
         <main className="flex-1 flex flex-col">{children}</main>
       </body>
     </html>
-  )
+  );
 }

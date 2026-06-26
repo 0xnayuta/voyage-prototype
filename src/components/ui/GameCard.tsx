@@ -1,7 +1,7 @@
 interface GameCardProps {
-  readonly title?: string
-  readonly children: React.ReactNode
-  readonly className?: string
+  readonly title?: string;
+  readonly children: React.ReactNode;
+  readonly className?: string;
 }
 
 export function GameCard({ title, children, className = "" }: GameCardProps) {
@@ -14,5 +14,5 @@ export function GameCard({ title, children, className = "" }: GameCardProps) {
       )}
       {children}
     </div>
-  )
+  );
 }

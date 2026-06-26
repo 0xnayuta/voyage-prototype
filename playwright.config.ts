@@ -1,4 +1,4 @@
-import { defineConfig, devices } from "@playwright/test"
+import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./src/e2e",
@@ -29,4 +29,4 @@ export default defineConfig({
       DATABASE_URL: "file:./prisma/e2e-test.db",
     },
   },
-})
+});

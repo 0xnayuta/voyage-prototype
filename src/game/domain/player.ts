@@ -1,14 +1,14 @@
-import type { World } from "./types"
-import { STARTING_GOLD, STARTING_DAY } from "../../data/formulas"
-import { SHIPS } from "../../data/ships"
-import { initMarketPrices, applyDayPass } from "./market"
+import { STARTING_DAY, STARTING_GOLD } from "../../data/formulas";
+import { SHIPS } from "../../data/ships";
+import { applyDayPass, initMarketPrices } from "./market";
+import type { World } from "./types";
 
 // ============================================================
 // 玩家 / 世界初始化的纯函数
 // ============================================================
 
 export function createDefaultWorld(): World {
-  const defaultShip = SHIPS[0] // sloop
+  const defaultShip = SHIPS[0]; // sloop
 
   return {
     player: {
@@ -24,7 +24,7 @@ export function createDefaultWorld(): World {
     },
     market: initMarketPrices(),
     voyage: null,
-  }
+  };
 }
 
 /**
@@ -38,12 +38,12 @@ export function advanceDay(world: World, days: number): World {
       ...world.player,
       day: world.player.day + days,
     },
-  }
+  };
 
   // 每过一天，价格推进一次
   for (let i = 0; i < days; i++) {
-    result = applyDayPass(result)
+    result = applyDayPass(result);
   }
 
-  return result
+  return result;
 }

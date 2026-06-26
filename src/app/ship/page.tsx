@@ -1,21 +1,24 @@
-"use client"
+"use client";
 
-import { useActionState } from "react"
-import { loadShipView, upgradeShipAction } from "./actions"
+import { useActionState } from "react";
+import { loadShipView, upgradeShipAction } from "./actions";
 
 export default function ShipPage() {
-  const [view, loadAction, isLoading] = useActionState(loadShipView, null)
+  const [view, loadAction, isLoading] = useActionState(loadShipView, null);
   const [afterView, upgradeAction, isUpgrading] = useActionState(
     upgradeShipAction,
     null,
-  )
+  );
 
   // 优先展示升级后的视图，否则用加载视图
-  const displayView = afterView ?? view
+  const displayView = afterView ?? view;
 
   if (!displayView) {
     return (
-      <form action={loadAction} className="flex-1 flex items-center justify-center">
+      <form
+        action={loadAction}
+        className="flex-1 flex items-center justify-center"
+      >
         <button
           type="submit"
           disabled={isLoading}
@@ -24,11 +27,11 @@ export default function ShipPage() {
           {isLoading ? "加载中..." : "进入造船厂"}
         </button>
       </form>
-    )
+    );
   }
 
-  const canUpgrade = displayView.canUpgrade
-  const blockedByVoyage = displayView.blockedByVoyage
+  const canUpgrade = displayView.canUpgrade;
+  const blockedByVoyage = displayView.blockedByVoyage;
 
   return (
     <div className="flex-1 p-4 max-w-2xl mx-auto w-full space-y-4">
@@ -72,11 +75,7 @@ export default function ShipPage() {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-parchment-dark">当前持有</span>
-              <span
-                className={
-                  canUpgrade ? "text-green-400" : "text-red-400"
-                }
-              >
+              <span className={canUpgrade ? "text-green-400" : "text-red-400"}>
                 {displayView.playerGold.toLocaleString()} 金币
               </span>
             </div>
@@ -112,5 +111,5 @@ export default function ShipPage() {
         </a>
       </div>
     </div>
-  )
+  );
 }

@@ -1,11 +1,11 @@
-"use server"
+"use server";
 
-import { prisma } from "../../lib/prisma"
-import { loadWorld } from "../../lib/repository"
-import { buildCargoView } from "../../game/view-builder/buildGameView"
-import type { CargoView } from "../../types/game-view"
+import { buildCargoView } from "../../game/view-builder/buildGameView";
+import { prisma } from "../../lib/prisma";
+import { loadWorld } from "../../lib/repository";
+import type { CargoView } from "../../types/game-view";
 
 export async function loadCargoView(): Promise<CargoView> {
-  const world = await loadWorld(prisma)
-  return buildCargoView(world)
+  const world = await loadWorld(prisma);
+  return buildCargoView(world);
 }
