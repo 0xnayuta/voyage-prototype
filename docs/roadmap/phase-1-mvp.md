@@ -196,58 +196,31 @@ Server Action（入口）
 
 ---
 
-### Phase 1.4：Cargo vs 战力取舍
+### Phase 1.4：Cargo vs 战力取舍（已完成）
 
-引入「货舱 vs 战力」的核心策略博弈。这是原版最深层的设计精髓——满舱利润高但海盗风险大，武装护航牺牲利润但安全。
+引入「货舱 vs 战力」的核心策略博弈。
 
-#### 1.4.1 船体耐久系统
+#### 交付物
 
-| 功能 | 说明 |
-|---|---|
-| 船体耐久（HP） | 每条船新增耐久属性，航行中风暴/海盗会降低耐久 |
-| 耐久恢复 | 在港口造船厂可付费维修 |
+| 模块 | 文件 | 状态 |
+|---|---|---|
+| **船体耐久** | `src/game/domain/types.ts` — `ShipState` 新增 `currentHp`/`maxHp` | ✅ |
+| | `src/data/ships.ts` — `ShipConfig` 新增 `baseHp`/`repairCostPerHp`/`armamentTiers` | ✅ |
+| | `src/data/formulas.ts` — HP/维修/战斗常量 | ✅ |
+| | `src/game/domain/ship.ts` — `takeDamage`/`repairShip`/`getNearestPort` | ✅ |
+| **战斗结算** | `src/game/domain/combat.ts` — `resolveCombat`/`applyCombatOutcome` | ✅ |
+| | `src/data/events.ts` — pirate event 增加 `type: "combat"` 标记 | ✅ |
+| | `src/game/domain/voyage.ts` — `generateSingleDayEvent` 战斗事件标记；`applyVoyageEvents` 接入 `resolveCombat` | ✅ |
+| | `src/app/voyage/actions.ts` — `completeVoyage` 全损分支处理（voyage→null 时跳过抵达流程） | ✅ |
+| **View Builder** | `src/game/view-builder/buildGameView.ts` — 所有 view 扩展新字段 | ✅ |
 
-**关联模块：** `src/game/domain/ship.ts`
-
-#### 1.4.2 货舱 vs 武装配置
-
-| 功能 | 说明 |
-|---|---|
-| 配置选项 | 出航前选择「满载货物」（最大利润）或「武装护航」（部分舱位改为防御） |
-| 战斗表现 | 不同配置影响海盗事件中的战斗结果概率 |
-| 收益权衡 | 武装减少货舱 → 利润降低，但大幅降低海盗损失风险 |
-
-**关联文件：** `src/game/domain/navigation.ts`（扩展出航配置）
-
-#### 1.4.3 战斗结算（纯数值）
-
-| 功能 | 说明 |
-|---|---|
-| 战斗流程 | 遭遇海盗 → 根据武装/货舱配置 + 随机因子 → 文字战报 |
-| 结果判定 | 胜利（无损失）、部分损失、全损（沉船回港，丢失所有货物） |
-| 战斗日志 | 文字战报展示攻击、防御、损失详情 |
-
-**关联模块：** `src/game/domain/` 新增 `combat.ts`
-
-#### 1.4.4 策略展示
-
-| 功能 | 说明 |
-|---|---|
-| 配置界面 | `/navigation` 页增加武装/货舱滑块或选择器 |
-| 预览 | 出发前显示当前配置下的战斗生存率和预计利润 |
-| 风险提示 | 高价值货物 + 低武装 → UI 提示高风险 |
-
-**关联文件：** `src/components/NavigationMap.tsx`
-
-#### 1.4.5 测试覆盖
-
-| 范围 | 内容 |
-|---|---|
-| 单元测试 | 不同配置的战斗结果分布 |
-| | 耐久消耗/恢复逻辑 |
-| | 全损边界场景 |
-
----
+- `bun run build` 无错误通过
+- `bun run lint` 无 warning/error
+- `bun test src/game/domain/__tests__/*.test.ts` 86 pass
+- `/navigation` 页展示 3 档武装配置选择，切换时实时更新生存率
+- `/ship` 页展示 HP 条，可维修
+- 出航后海盗事件触发战斗结算，战报写入航行日志
+- 全损：HP→1，所有货物丢失，回最近港口，航行日志展示惨败记录
 
 ### Phase 1.5：商品与港口数据补全
 
@@ -334,9 +307,9 @@ Server Action（入口）
 - [x] 升级后 UI 刷新
 
 #### 测试
-- [x] 游戏引擎纯函数单元测试（domain: 65 tests）
-- [x] View Builder 单元测试（18 tests）
-- [x] 总计 83 测试全部通过
+- [x] 游戏引擎纯函数单元测试（domain: 71 tests）
+- [x] View Builder 单元测试（15 tests）
+- [x] 总计 86 测试全部通过
 
 ### Phase 1.3：随机事件系统
 
@@ -358,32 +331,32 @@ Server Action（入口）
 - [x] 事件触发概率分布测试
 - [x] 事件效果对 World 影响的单元测试
 
-### Phase 1.4：Cargo vs 战力取舍
+### Phase 1.4：Cargo vs 战力取舍（已完成）
 
 #### 船体耐久系统
-- [ ] 船体耐久属性（HP）
-- [ ] 耐久消耗逻辑（风暴/海盗降低耐久）
-- [ ] 港口维修功能
+- [x] 船体耐久属性（HP）
+- [x] 耐久消耗逻辑（风暴/海盗降低耐久）
+- [x] 港口维修功能
 
 #### 货舱 vs 武装配置
-- [ ] 出航配置选项（满载 / 武装护航）
-- [ ] 不同配置影响海盗事件结果概率
-- [ ] 武装减少可用舱容
+- [x] 出航配置选项（满载 / 均衡 / 护航 3 档）
+- [x] 不同配置影响海盗事件结果概率
+- [x] 武装减少有效舱容（预览展示）
 
 #### 战斗结算
-- [ ] 海盗遭遇战斗流程
-- [ ] 结果判定（胜利 / 部分损失 / 全损）
-- [ ] 文字战报
+- [x] 海盗遭遇战斗流程（resolveCombat）
+- [x] 结果判定（胜利 / 部分损失 / 全损）
+- [x] 文字战报（combatLog）
 
 #### 策略展示
-- [ ] /navigation 页武装/货舱选择器
-- [ ] 出发前生存率预览
-- [ ] 高价值+低武装风险提示
+- [x] /navigation 页武装/货舱选择器
+- [x] 出发前生存率预览 + 风险提示
+- [x] 高价值+低武装风险警告
 
 #### 战斗测试
-- [ ] 各配置战斗结果分布单元测试
-- [ ] 耐久消耗/恢复逻辑测试
-- [ ] 全损边界场景测试
+- [x] 各配置战斗结果分布单元测试（7 tests）
+- [x] 耐久消耗/恢复逻辑测试（14 tests）
+- [x] 全损边界场景测试
 
 ### Phase 1.5：商品与港口数据补全
 

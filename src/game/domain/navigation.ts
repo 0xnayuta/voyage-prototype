@@ -46,3 +46,17 @@ export function arriveAtPort(
     // 天数已在 advanceDay 中推进，抵达后最终状态由外层统一保存
   };
 }
+
+/**
+ * 获取指定武装档次的有效舱容。
+ */
+export function getEffectiveCapacityForShip(
+  shipTypeId: string,
+  maxCapacity: number,
+  armamentLevel: 0 | 1 | 2,
+): number {
+  const shipConfig = SHIPS.find((s) => s.id === shipTypeId);
+  if (!shipConfig) return maxCapacity;
+  const cargoRatio = shipConfig.armamentTiers[armamentLevel][0];
+  return Math.floor(maxCapacity * cargoRatio);
+}

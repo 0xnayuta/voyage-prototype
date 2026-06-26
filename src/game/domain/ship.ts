@@ -1,3 +1,5 @@
+import { REPAIR_COST_MULTIPLIER } from "../../data/formulas";
+import { ROUTES } from "../../data/ports";
 import { SHIPS } from "../../data/ships";
 import type { World } from "./types";
 import { DomainError } from "./types";
@@ -5,6 +7,15 @@ import { DomainError } from "./types";
 // ============================================================
 // 船只逻辑 — 纯函数
 // ============================================================
+
+export type ArmamentLevel = 0 | 1 | 2;
+
+/** 武装档次标签 */
+export const ARMAMENT_LABELS: readonly string[] = [
+  "满载货物",
+  "均衡配置",
+  "武装护航",
+];
 
 /** 升级船只：扣金币 + 提升等级。返回新 World 或抛出错误。 */
 export function upgradeShip(world: World): World {
@@ -20,6 +31,9 @@ export function upgradeShip(world: World): World {
 
   if (world.voyage) throw new DomainError("IN_VOYAGE");
 
+  // 升级时按比例提升 maxHp（每升一级 +20%），并回复全 HP
+  const newMaxHp = Math.floor(world.ship.maxHp * 1.2);
+
   return {
     ...world,
     player: {
@@ -29,6 +43,71 @@ export function upgradeShip(world: World): World {
     ship: {
       ...world.ship,
       upgradeLevel: level + 1,
+      currentHp: newMaxHp,
+      maxHp: newMaxHp,
     },
   };
+}
+
+/**
+ * 船只受损：减少 currentHp，最低 0。
+ * 返回新 World。
+ */
+export function takeDamage(world: World, damage: number): World {
+  if (damage <= 0) return world;
+
+  return {
+    ...world,
+    ship: {
+      ...world.ship,
+      currentHp: Math.max(0, world.ship.currentHp - damage),
+    },
+  };
+}
+
+/**
+ * 维修船只：在港口付费修复 HP 至 maxHp。
+ * 检查：是否在港口（不在航行中）、是否有足够金币、是否缺 HP。
+ */
+export function repairShip(world: World): World {
+  if (world.voyage) throw new DomainError("IN_VOYAGE");
+
+  const shipConfig = SHIPS.find((s) => s.id === world.ship.typeId);
+  if (!shipConfig) throw new DomainError("INVALID_SHIP");
+
+  const missingHp = world.ship.maxHp - world.ship.currentHp;
+  if (missingHp <= 0) return world; // 无需维修
+
+  const repairCost = Math.ceil(
+    missingHp * shipConfig.repairCostPerHp * REPAIR_COST_MULTIPLIER,
+  );
+
+  if (world.player.gold < repairCost)
+    throw new DomainError("INSUFFICIENT_GOLD");
+
+  return {
+    ...world,
+    player: {
+      ...world.player,
+      gold: world.player.gold - repairCost,
+    },
+    ship: {
+      ...world.ship,
+      currentHp: world.ship.maxHp,
+    },
+  };
+}
+
+/**
+ * 获取最近港口 id（用于全损回港）。
+ * 在出发港和目的港中选择距离较短的。
+ */
+export function getNearestPort(fromPortId: string, toPortId: string): string {
+  const routeA = ROUTES.find((r) => r.from === fromPortId && r.to === toPortId);
+  const routeB = ROUTES.find((r) => r.from === toPortId && r.to === fromPortId);
+
+  const distA = routeA?.distance ?? Infinity;
+  const distB = routeB?.distance ?? Infinity;
+
+  return distA <= distB ? fromPortId : toPortId;
 }

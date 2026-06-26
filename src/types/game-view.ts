@@ -13,6 +13,8 @@ export interface HarborView {
   readonly cargoCapacity: number;
   readonly currentDay: number;
   readonly shipName: string;
+  readonly shipCurrentHp: number;
+  readonly shipMaxHp: number;
 }
 
 /** 交易所页（/market） */
@@ -33,11 +35,14 @@ export interface GoodView {
   readonly inCargo: number;
   readonly canAfford: boolean;
 }
-
-/** 航海图页（/navigation） */
-export interface NavigationView {
-  readonly currentPortName: string;
-  readonly destinations: DestinationView[];
+/** 武装配置选项 */
+export interface ArmamentOptionView {
+  readonly level: number;
+  readonly label: string;
+  readonly cargoRatio: number;
+  readonly defenseMultiplier: number;
+  readonly survivalRate: number;
+  readonly effectiveCapacity: number;
 }
 
 export interface DestinationView {
@@ -47,6 +52,15 @@ export interface DestinationView {
   readonly distance: number;
   readonly travelDays: number;
   readonly estimatedProfit: number;
+  readonly survivalRate: number;
+}
+
+/** 航海图页（/navigation） */
+export interface NavigationView {
+  readonly currentPortName: string;
+  readonly destinations: DestinationView[];
+  readonly armamentOptions: ArmamentOptionView[];
+  readonly currentCargoCount: number;
 }
 
 /** 船舱页（/cargo） */
@@ -65,8 +79,6 @@ export interface CargoItemView {
   readonly sellPrice: number;
   readonly estimatedProfit: number;
 }
-
-/** 造船厂页（/ship） */
 export interface ShipView {
   readonly shipName: string;
   readonly upgradeLevel: number;
@@ -77,6 +89,26 @@ export interface ShipView {
   readonly upgradeCost: number | null;
   readonly canUpgrade: boolean;
   readonly blockedByVoyage: boolean;
+  readonly currentHp: number;
+  readonly maxHp: number;
+  readonly repairCost: number;
+  readonly canRepair: boolean;
+  readonly canSail: boolean;
+}
+/** 航行中页（/voyage） */
+/** 战斗日志条目 */
+export interface CombatLogEntryView {
+  readonly result: string;
+  readonly description: string;
+  readonly hpDamage: number;
+  readonly cargoLoss: number;
+}
+
+export interface VoyageEventView {
+  readonly day: number;
+  readonly description: string;
+  readonly effect: string;
+  readonly combatLog?: CombatLogEntryView;
 }
 
 /** 航行中页（/voyage） */
@@ -84,12 +116,8 @@ export interface VoyageView {
   readonly fromPortName: string;
   readonly toPortName: string;
   readonly travelDays: number;
-  readonly isUnderway: boolean; // true=航行中, false=已抵达等待确认
+  readonly isUnderway: boolean;
   readonly events: VoyageEventView[];
-}
-
-export interface VoyageEventView {
-  readonly day: number;
-  readonly description: string;
-  readonly effect: string; // 文字描述效果
+  readonly armamentLevel: number;
+  readonly armamentLabel: string;
 }

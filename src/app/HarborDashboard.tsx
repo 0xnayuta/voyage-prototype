@@ -34,6 +34,26 @@ export function HarborDashboard({ view }: { view: HarborView }) {
       <div className="rounded-lg border border-ocean-600 bg-ocean-800/80 p-4">
         <h3 className="text-sm font-semibold text-gold-400">船只</h3>
         <p className="mt-1 text-sm">{view.shipName}</p>
+        <div className="mt-2 flex items-center gap-2">
+          <span className="text-xs text-parchment-dark">耐久</span>
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-ocean-700">
+            <div
+              className={`h-full rounded-full ${
+                view.shipCurrentHp / view.shipMaxHp > 0.6
+                  ? "bg-green-500"
+                  : view.shipCurrentHp / view.shipMaxHp > 0.3
+                    ? "bg-yellow-500"
+                    : "bg-red-500"
+              }`}
+              style={{
+                width: `${(view.shipCurrentHp / view.shipMaxHp) * 100}%`,
+              }}
+            />
+          </div>
+          <span className="text-xs text-parchment-dark/60">
+            {view.shipCurrentHp}/{view.shipMaxHp}
+          </span>
+        </div>
       </div>
 
       {/* 快捷操作 */}

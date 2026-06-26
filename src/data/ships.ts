@@ -5,11 +5,18 @@
 export interface ShipConfig {
   readonly id: string;
   readonly name: string;
-  readonly capacity: number; // 最大舱容
-  readonly speed: number; // 速度系数（越大越快）
-  readonly basePrice: number; // 购买价
+  readonly capacity: number;
+  readonly speed: number;
+  readonly basePrice: number;
   readonly maxUpgradeLevel: number;
-  readonly upgradeCosts: readonly number[]; // 每级升级费用
+  readonly upgradeCosts: readonly number[];
+  readonly baseHp: number;
+  readonly repairCostPerHp: number;
+  readonly armamentTiers: readonly [
+    [cargoRatio: number, defenseMultiplier: number],
+    [cargoRatio: number, defenseMultiplier: number],
+    [cargoRatio: number, defenseMultiplier: number],
+  ];
 }
 
 export const SHIPS: readonly ShipConfig[] = [
@@ -18,9 +25,16 @@ export const SHIPS: readonly ShipConfig[] = [
     name: "单桅帆船",
     capacity: 30,
     speed: 1.0,
-    basePrice: 0, // 初始免费赠送
+    basePrice: 0,
     maxUpgradeLevel: 3,
     upgradeCosts: [500, 1200, 3000],
+    baseHp: 50,
+    repairCostPerHp: 5,
+    armamentTiers: [
+      [1.0, 1.0],
+      [0.75, 1.5],
+      [0.5, 2.5],
+    ],
   },
   {
     id: "cog",
@@ -30,5 +44,12 @@ export const SHIPS: readonly ShipConfig[] = [
     basePrice: 3000,
     maxUpgradeLevel: 3,
     upgradeCosts: [1500, 3500, 6000],
+    baseHp: 80,
+    repairCostPerHp: 8,
+    armamentTiers: [
+      [1.0, 1.0],
+      [0.75, 1.5],
+      [0.5, 2.5],
+    ],
   },
 ] as const;

@@ -12,6 +12,12 @@ export async function startTravel(formData: FormData): Promise<VoyageView> {
   const targetPortId = formData.get("portId") as string;
   if (!targetPortId) throw new Error("未选择目的港");
 
+  const armamentStr = formData.get("armamentLevel") as string;
+  const armamentLevel = (armamentStr ? parseInt(armamentStr, 10) : 0) as
+    | 0
+    | 1
+    | 2;
+
   return await prisma.$transaction(async (tx: PrismaTransactionClient) => {
     const world = await loadWorld(tx);
     if (world.voyage) throw new Error("航行中，无法再次出航");
@@ -22,15 +28,19 @@ export async function startTravel(formData: FormData): Promise<VoyageView> {
     );
     if (!route) throw new Error("无法到达该港口");
 
+    // 检查 HP（HP 为 0 不能出航）
+    if (world.ship.currentHp <= 0) throw new Error("船体严重损坏，无法出航");
+
     // 计算航行天数
     const travelDays = calcTravelDays(route.distance, world);
 
-    // 创建航行状态（含预生成事件）
+    // 创建航行状态（含预生成事件 + 武装配置）
     const voyage = startVoyage(
       world,
       world.player.currentPortId,
       targetPortId,
       travelDays,
+      armamentLevel,
     );
 
     const newWorld: typeof world = {

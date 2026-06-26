@@ -39,8 +39,13 @@ export default async function VoyagePage() {
             {view.fromPortName} → {view.toPortName}
           </span>
         </div>
-        <div className="mt-1 text-xs text-ocean-500">
-          预计 {view.travelDays} 天后到达
+        <div className="mt-1 flex items-center justify-between">
+          <span className="text-xs text-ocean-500">
+            预计 {view.travelDays} 天后到达
+          </span>
+          <span className="text-xs text-gold-500/70">
+            配置：{view.armamentLabel}
+          </span>
         </div>
       </div>
 
@@ -67,7 +72,7 @@ export default async function VoyagePage() {
                   <span className="mt-0.5 text-xs text-ocean-500 whitespace-nowrap">
                     第 {event.day} 天
                   </span>
-                  <div>
+                  <div className="flex-1">
                     <p className="text-parchment">{event.description}</p>
                     {event.effect !== "无影响" && (
                       <p
@@ -80,6 +85,40 @@ export default async function VoyagePage() {
                       >
                         {event.effect}
                       </p>
+                    )}
+                    {/* 战斗日志 */}
+                    {event.combatLog && (
+                      <div className="mt-1 rounded border border-ocean-600 bg-ocean-800/60 px-2 py-1.5">
+                        <div className="flex items-center gap-2 text-xs">
+                          <span
+                            className={
+                              event.combatLog.result === "胜利"
+                                ? "text-green-400"
+                                : event.combatLog.result === "受损"
+                                  ? "text-yellow-400"
+                                  : "text-red-400"
+                            }
+                          >
+                            [{event.combatLog.result}]
+                          </span>
+                          <span className="text-parchment-dark">
+                            {event.combatLog.description}
+                          </span>
+                        </div>
+                        <div className="mt-1 text-xs text-parchment-dark/60">
+                          {event.combatLog.hpDamage > 0 && (
+                            <span>船体受损 -{event.combatLog.hpDamage} </span>
+                          )}
+                          {event.combatLog.cargoLoss > 0 && (
+                            <span>
+                              货物损失 {event.combatLog.cargoLoss} 单位
+                            </span>
+                          )}
+                          {event.combatLog.cargoLoss === -1 && (
+                            <span>所有货物全部丢失</span>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>

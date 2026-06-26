@@ -1,10 +1,12 @@
-import { EVENT_CONFIGS, type EventTemplate } from "../../data/events";
-import { PORTS } from "../../data/ports";
-import type { CargoItem, VoyageEvent, VoyageState, World } from "./types";
-
 // ============================================================
 // 航行逻辑 — 纯函数
 // ============================================================
+
+import { EVENT_CONFIGS, type EventTemplate } from "../../data/events";
+import { PORTS } from "../../data/ports";
+import { applyCombatOutcome, resolveCombat } from "./combat";
+import { getNearestPort } from "./ship";
+import type { CargoItem, VoyageEvent, VoyageState, World } from "./types";
 
 /**
  * 按区域调整事件概率权重。
@@ -35,6 +37,18 @@ function generateSingleDayEvent(
   for (const tmpl of events) {
     cumulative += tmpl.chance;
     if (roll < cumulative) {
+      // 战斗事件：标记 type=combat，数值由抵达时结算
+      if (tmpl.type === "combat") {
+        return {
+          day,
+          description: tmpl.triggerText,
+          goldChange: 0,
+          cargoLoss: 0,
+          type: "combat",
+        };
+      }
+
+      // 普通事件：按模板生成数值
       const goldChange =
         tmpl.minGold +
         Math.round(Math.random() * (tmpl.maxGold - tmpl.minGold));
@@ -91,6 +105,7 @@ function subtractCargoLoss(
 
 /**
  * 应用航行事件效果到 World（扣金币、丢失货物）。
+ * 战斗事件在抵达时实时解析（考虑之前事件造成的 HP 变化）。
  * 在抵达时统一处理。
  */
 export function applyVoyageEvents(
@@ -100,6 +115,24 @@ export function applyVoyageEvents(
   let result = world;
 
   for (const event of events) {
+    if (event.type === "combat") {
+      // 战斗事件：实时解析，考虑当前船体状态
+      const port = PORTS.find((p) => p.id === result.player.currentPortId);
+      const region = port?.region ?? "";
+      const outcome = resolveCombat(result, region);
+      const nearestPort = getNearestPort(
+        result.voyage?.fromPortId ?? result.player.currentPortId,
+        result.voyage?.toPortId ?? result.player.currentPortId,
+      );
+
+      // 将 combatOutcome 存入事件（view builder 读取展示）
+      (event as VoyageEvent & { combatOutcome: typeof outcome }).combatOutcome =
+        outcome;
+
+      result = applyCombatOutcome(result, outcome, nearestPort);
+      continue;
+    }
+
     // 金币变化
     if (event.goldChange !== 0) {
       result = {
@@ -131,6 +164,7 @@ export function startVoyage(
   fromPortId: string,
   toPortId: string,
   travelDays: number,
+  armamentLevel: 0 | 1 | 2 = 0,
 ): VoyageState {
   return {
     fromPortId,
@@ -138,5 +172,6 @@ export function startVoyage(
     departureDay: world.player.day,
     travelDays,
     events: generateVoyageEvents(world, travelDays),
+    armamentLevel,
   };
 }

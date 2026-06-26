@@ -1,3 +1,4 @@
+import type { CombatOutcome } from "./combat";
 // ============================================================
 // Domain Types — 游戏事实（World）
 // 所有类型定义在 src/game/domain/，不依赖 React / Next.js / Prisma
@@ -16,6 +17,8 @@ export interface CargoItem {
 export interface ShipState {
   readonly typeId: string;
   readonly upgradeLevel: number;
+  readonly currentHp: number;
+  readonly maxHp: number;
   readonly cargo: readonly CargoItem[];
 }
 
@@ -26,22 +29,21 @@ export interface MarketPriceState {
   /** portId → goodId → 当前价格 */
   readonly prices: Record<string, Record<string, number>>;
 }
-
-// ---- 航行 ----
-
 export interface VoyageEvent {
-  readonly day: number; // 航行第几天触发
+  readonly day: number;
   readonly description: string;
-  readonly goldChange: number; // 负=损失，0=无变化
-  readonly cargoLoss: number; // 随机丢失货物单位数，0=不丢失
+  readonly goldChange: number;
+  readonly cargoLoss: number;
+  readonly type?: "combat";
+  readonly combatOutcome?: CombatOutcome;
 }
-
 export interface VoyageState {
   readonly fromPortId: string;
   readonly toPortId: string;
   readonly departureDay: number;
   readonly travelDays: number;
   readonly events: readonly VoyageEvent[];
+  readonly armamentLevel: 0 | 1 | 2;
 }
 
 // ---- 玩家 ----

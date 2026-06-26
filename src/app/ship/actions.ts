@@ -21,3 +21,15 @@ export async function upgradeShipAction(
     return buildShipView(newWorld);
   });
 }
+
+export async function repairShipAction(
+  _prev: ShipView | null,
+): Promise<ShipView> {
+  return await prisma.$transaction(async (tx: PrismaTransactionClient) => {
+    const world = await loadWorld(tx);
+    const { repairShip } = await import("../../game/domain/ship");
+    const newWorld = repairShip(world);
+    await saveWorld(tx, newWorld);
+    return buildShipView(newWorld);
+  });
+}

@@ -7,8 +7,10 @@ import { CATEGORY_LABEL, GOODS } from "../../data/goods";
 import { PORTS } from "../../data/ports";
 import { SHIPS } from "../../data/ships";
 import type {
+  ArmamentOptionView,
   CargoItemView,
   CargoView,
+  CombatLogEntryView,
   DestinationView,
   GoodView,
   HarborView,
@@ -19,7 +21,12 @@ import type {
   VoyageView,
 } from "../../types/game-view";
 import { getPortGoods, getSellPrice } from "../domain/market";
-import { getReachablePorts } from "../domain/navigation";
+import {
+  getEffectiveCapacityForShip,
+  getReachablePorts,
+} from "../domain/navigation";
+import type { ArmamentLevel } from "../domain/ship";
+import { ARMAMENT_LABELS } from "../domain/ship";
 import { getMaxCapacity, getUsedCapacity } from "../domain/trade";
 import type { World } from "../domain/types";
 
@@ -40,6 +47,8 @@ export function buildHarborView(world: World): HarborView {
     cargoCapacity: getMaxCapacity(world),
     currentDay: world.player.day,
     shipName: ship?.name ?? "未知",
+    shipCurrentHp: world.ship.currentHp,
+    shipMaxHp: world.ship.maxHp,
   };
 }
 
@@ -76,11 +85,15 @@ export function buildNavigationView(world: World): NavigationView {
   const reachable = getReachablePorts(world);
 
   const destinations: DestinationView[] = reachable.map((r) => {
-    // 预估利润 = 当前 cargo 到目标港预估
     const estimatedProfit = world.ship.cargo.reduce((sum, c) => {
       const targetPrice = getSellPrice(c.goodId, r.port.id, world);
       return sum + (targetPrice - c.buyPrice) * c.quantity;
     }, 0);
+
+    // 简单生存率估算（基于船只当前 HP 和默认满载配置）
+    const hpRatio =
+      world.ship.maxHp > 0 ? world.ship.currentHp / world.ship.maxHp : 0;
+    const baseSurvival = Math.min(99, Math.floor(hpRatio * 100));
 
     return {
       portId: r.port.id,
@@ -89,12 +102,44 @@ export function buildNavigationView(world: World): NavigationView {
       distance: r.distance,
       travelDays: r.travelDays,
       estimatedProfit,
+      survivalRate: baseSurvival,
     };
   });
+
+  // 武装配置选项
+  const shipConfig = SHIPS.find((s) => s.id === world.ship.typeId);
+  const maxCap = getMaxCapacity(world);
+  const armamentOptions: ArmamentOptionView[] = shipConfig
+    ? shipConfig.armamentTiers.map(([cargoRatio, defenseMultiplier], i) => {
+        const effectiveCapacity = getEffectiveCapacityForShip(
+          world.ship.typeId,
+          maxCap,
+          i as ArmamentLevel,
+        );
+        // 生存率 = min(99, HP比 × 防御乘数 × 75)
+        const hpRatio =
+          world.ship.maxHp > 0 ? world.ship.currentHp / world.ship.maxHp : 0;
+        const survivalRate = Math.min(
+          99,
+          Math.floor(hpRatio * defenseMultiplier * 75),
+        );
+
+        return {
+          level: i,
+          label: ARMAMENT_LABELS[i],
+          cargoRatio,
+          defenseMultiplier,
+          survivalRate,
+          effectiveCapacity,
+        };
+      })
+    : [];
 
   return {
     currentPortName: port?.name ?? "未知",
     destinations,
+    armamentOptions,
+    currentCargoCount: getUsedCapacity(world),
   };
 }
 
@@ -130,6 +175,10 @@ export function buildShipView(world: World): ShipView {
   const canUpgrade = level < shipConfig.maxUpgradeLevel;
   const upgradeCost = canUpgrade ? shipConfig.upgradeCosts[level] : null;
 
+  const missingHp = world.ship.maxHp - world.ship.currentHp;
+  const repairCost =
+    missingHp > 0 ? Math.ceil(missingHp * shipConfig.repairCostPerHp * 1.0) : 0;
+
   return {
     shipName: shipConfig.name,
     upgradeLevel: level,
@@ -143,6 +192,12 @@ export function buildShipView(world: World): ShipView {
       canUpgrade &&
       world.player.gold >= (upgradeCost ?? Infinity) &&
       !world.voyage,
+    currentHp: world.ship.currentHp,
+    maxHp: world.ship.maxHp,
+    repairCost,
+    canRepair:
+      missingHp > 0 && world.player.gold >= repairCost && !world.voyage,
+    canSail: world.ship.currentHp > 0 && !world.voyage,
   };
 }
 
@@ -155,6 +210,8 @@ export function buildVoyageView(world: World): VoyageView {
       travelDays: 0,
       isUnderway: false,
       events: [],
+      armamentLevel: 0,
+      armamentLabel: "",
     };
   }
 
@@ -171,10 +228,29 @@ export function buildVoyageView(world: World): VoyageView {
     if (e.cargoLoss > 0) {
       parts.push(`丢失 ${e.cargoLoss} 单位货物`);
     }
+
+    // 战斗日志
+    let combatLog: CombatLogEntryView | undefined;
+    if (e.combatOutcome) {
+      const resultLabel =
+        e.combatOutcome.result === "victory"
+          ? "胜利"
+          : e.combatOutcome.result === "partialLoss"
+            ? "受损"
+            : "惨败";
+      combatLog = {
+        result: resultLabel,
+        description: e.combatOutcome.description,
+        hpDamage: e.combatOutcome.hpDamage,
+        cargoLoss: e.combatOutcome.cargoLoss,
+      };
+    }
+
     return {
       day: e.day,
       description: e.description,
-      effect: parts.length > 0 ? parts.join("，") : "无影响",
+      effect: parts.length > 0 ? parts.join("，") : combatLog ? "" : "无影响",
+      combatLog,
     };
   });
 
@@ -184,5 +260,7 @@ export function buildVoyageView(world: World): VoyageView {
     travelDays: voyage.travelDays,
     isUnderway: true,
     events,
+    armamentLevel: voyage.armamentLevel,
+    armamentLabel: ARMAMENT_LABELS[voyage.armamentLevel],
   };
 }

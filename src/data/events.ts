@@ -11,6 +11,7 @@
  * - maxCargoLoss: 最多丢失货物单位数
  * - triggerText: 触发时显示的文字（叙事描述）
  * - resultText: 结果文本（效果概述），为空时由 view builder 从数值计算
+ * - type: 事件类型，"combat" 表示需接入战斗结算
  * - regionProbMultiplier: 区域概率乘数，key=区域名，0=从不触发，不列=1.0
  */
 export interface EventTemplate {
@@ -21,6 +22,7 @@ export interface EventTemplate {
   readonly maxCargoLoss: number;
   readonly triggerText: string;
   readonly resultText: string;
+  readonly type?: "combat";
   readonly regionProbMultiplier?: Readonly<Record<string, number>>;
 }
 
@@ -62,10 +64,11 @@ export const EVENT_CONFIGS: readonly EventTemplate[] = [
     chance: 0.1,
     minGold: 0,
     maxGold: 0,
-    cargoLossChance: 0.6,
-    maxCargoLoss: 5,
+    cargoLossChance: 0,
+    maxCargoLoss: 0,
     triggerText: "前方出现海盗船，高高挂起黑色骷髅旗！",
     resultText: "",
+    type: "combat",
     regionProbMultiplier: {
       南洋: 1.6,
       闽南: 1.2,

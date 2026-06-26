@@ -25,13 +25,19 @@ export async function completeVoyage(): Promise<void> {
     // 1. 推进天数（市场价格回归 + 波动）
     const afterDays = advanceDay(world, travelDays);
 
-    // 2. 应用航行事件效果
+    // 2. 应用航行事件效果（战斗事件可能触发全损，voyage 置 null）
     const afterEvents = applyVoyageEvents(afterDays, events);
 
-    // 3. 抵达目的港
+    // 3. 全损：voyage 已置 null，currentPortId 已更新，跳过后续流程
+    if (!afterEvents.voyage) {
+      await saveWorld(tx, afterEvents);
+      return;
+    }
+
+    // 4. 正常抵达
     const arrived = arriveAtPort(afterEvents, toPortId, travelDays);
 
-    // 4. 清空航行状态
+    // 5. 清空航行状态
     const finalWorld: typeof world = {
       ...arrived,
       voyage: null,
