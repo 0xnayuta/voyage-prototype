@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useState, useTransition } from "react"
+import { Modal } from "../../components/ui/Modal"
 import { loadNavigationView } from "./actions"
 import { startTravel } from "../actions/travel"
 import type { NavigationView, DestinationView } from "../../types/game-view"
@@ -66,61 +67,59 @@ export default function NavigationPage() {
 
       {/* 确认出航弹窗 */}
       {selectedDest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="w-80 rounded-lg border border-ocean-600 bg-ocean-800 p-6 shadow-xl">
-            <h3 className="mb-2 text-lg font-semibold text-gold-400">
-              出航确认
-            </h3>
-            <div className="space-y-2 text-sm text-parchment-dark">
+        <Modal
+          title="出航确认"
+          onClose={() => setSelectedDest(null)}
+        >
+          <div className="space-y-2 text-sm text-parchment-dark">
+            <div className="flex justify-between">
+              <span>目的港</span>
+              <span className="font-medium text-parchment">
+                {selectedDest.portName}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>航行天数</span>
+              <span className="text-gold-400">{selectedDest.travelDays} 天</span>
+            </div>
+            {selectedDest.estimatedProfit !== 0 && (
               <div className="flex justify-between">
-                <span>目的港</span>
-                <span className="font-medium text-parchment">
-                  {selectedDest.portName}
+                <span>预估利润</span>
+                <span className={selectedDest.estimatedProfit > 0 ? "text-gold-400" : "text-red-400"}>
+                  {selectedDest.estimatedProfit > 0
+                    ? `+${selectedDest.estimatedProfit.toLocaleString()}`
+                    : selectedDest.estimatedProfit.toLocaleString()}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span>航行天数</span>
-                <span className="text-gold-400">{selectedDest.travelDays} 天</span>
-              </div>
-              {selectedDest.estimatedProfit !== 0 && (
-                <div className="flex justify-between">
-                  <span>预估利润</span>
-                  <span className={selectedDest.estimatedProfit > 0 ? "text-gold-400" : "text-red-400"}>
-                    {selectedDest.estimatedProfit > 0
-                      ? `+${selectedDest.estimatedProfit.toLocaleString()}`
-                      : selectedDest.estimatedProfit.toLocaleString()}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <form
-              action={async (formData) => {
-                startTravelTransition(async () => {
-                  await startTravel(formData)
-                  window.location.href = "/voyage"
-                })
-              }}
-              className="mt-4 flex gap-2"
-            >
-              <input type="hidden" name="portId" value={selectedDest.portId} />
-              <button
-                type="submit"
-                disabled={isTravelPending}
-                className="flex-1 rounded bg-gold-500 py-2 text-sm font-bold text-ocean-900 hover:bg-gold-400 transition-colors disabled:opacity-50"
-              >
-                {isTravelPending ? "出航中..." : "确认出航"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedDest(null)}
-                className="rounded bg-ocean-700 px-4 py-2 text-sm hover:bg-ocean-600 transition-colors"
-              >
-                取消
-              </button>
-            </form>
+            )}
           </div>
-        </div>
+
+          <form
+            action={async (formData) => {
+              startTravelTransition(async () => {
+                await startTravel(formData)
+                window.location.href = "/voyage"
+              })
+            }}
+            className="mt-4 flex gap-2"
+          >
+            <input type="hidden" name="portId" value={selectedDest.portId} />
+            <button
+              type="submit"
+              disabled={isTravelPending}
+              className="flex-1 rounded bg-gold-500 py-2 text-sm font-bold text-ocean-900 hover:bg-gold-400 transition-colors disabled:opacity-50"
+            >
+              {isTravelPending ? "出航中..." : "确认出航"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedDest(null)}
+              className="rounded bg-ocean-700 px-4 py-2 text-sm hover:bg-ocean-600 transition-colors"
+            >
+              取消
+            </button>
+          </form>
+        </Modal>
       )}
 
       <div className="text-center">

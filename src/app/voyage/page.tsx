@@ -1,19 +1,17 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useActionState, useEffect } from "react"
 import { loadVoyageView, completeVoyage } from "./actions"
 import type { VoyageView } from "../../types/game-view"
 
 export default function VoyagePage() {
-  const [view, setView] = useState<VoyageView | null>(null)
+  const [view, loadAction] = useActionState(loadVoyageView, null)
   const [arriving, setArriving] = useState(false)
   const [arrived, setArrived] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    loadVoyageView()
-      .then(setView)
-      .catch((e) => setError(e instanceof Error ? e.message : "加载失败"))
+    loadAction()
   }, [])
 
   async function doArrive() {
