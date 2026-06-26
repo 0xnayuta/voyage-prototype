@@ -79,6 +79,14 @@ export const GOODS: readonly GoodConfig[] = [
     volume: 4,
     tier: 0,
   },
+  {
+    id: "linen",
+    name: "亚麻布",
+    category: "textile",
+    basePrice: 55,
+    volume: 3,
+    tier: 0,
+  },
   // ---- 工艺 ----
   {
     id: "porcelain",
@@ -151,6 +159,22 @@ export const GOODS: readonly GoodConfig[] = [
     category: "material",
     basePrice: 80,
     volume: 3,
+    tier: 0,
+  },
+  {
+    id: "copper",
+    name: "铜",
+    category: "material",
+    basePrice: 90,
+    volume: 3,
+    tier: 0,
+  },
+  {
+    id: "frankincense",
+    name: "乳香",
+    category: "material",
+    basePrice: 180,
+    volume: 1,
     tier: 0,
   },
 ] as const;
