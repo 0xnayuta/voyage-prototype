@@ -1,10 +1,11 @@
 import { prisma } from "../lib/prisma"
-import { createDefaultWorld } from "../game/domain/player"
 import { initMarketPrices } from "../game/domain/market"
 import { buildHarborView } from "../game/view-builder/buildGameView"
 import type { World } from "../game/domain/types"
 import { NewGameForm } from "./NewGameForm"
 import { HarborDashboard } from "./HarborDashboard"
+
+export const dynamic = "force-dynamic"
 
 export default async function HarborPage() {
   const save = await prisma.save.findUnique({

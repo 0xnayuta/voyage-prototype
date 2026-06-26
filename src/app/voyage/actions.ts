@@ -1,4 +1,5 @@
 "use server"
+import { redirect } from "next/navigation"
 import type { PrismaTransactionClient } from "../../types/prisma"
 
 import { prisma } from "../../lib/prisma"
@@ -6,8 +7,8 @@ import { loadWorld, saveWorld } from "../../lib/repository"
 import { advanceDay } from "../../game/domain/player"
 import { arriveAtPort } from "../../game/domain/navigation"
 import { applyVoyageEvents } from "../../game/domain/voyage"
-import { buildVoyageView, buildHarborView } from "../../game/view-builder/buildGameView"
-import type { VoyageView, HarborView } from "../../types/game-view"
+import type { VoyageView } from "../../types/game-view"
+import { buildVoyageView } from "../../game/view-builder/buildGameView"
 
 export async function loadVoyageView(): Promise<VoyageView> {
   const world = await loadWorld(prisma)
@@ -15,8 +16,8 @@ export async function loadVoyageView(): Promise<VoyageView> {
 }
 
 /** 完成航行：推进天数 + 应用事件效果 + 抵达 + 清空航行状态 */
-export async function completeVoyage(): Promise<HarborView> {
-  return await prisma.$transaction(async (tx: PrismaTransactionClient) => {
+export async function completeVoyage(): Promise<void> {
+  await prisma.$transaction(async (tx: PrismaTransactionClient) => {
     const world = await loadWorld(tx)
     if (!world.voyage) throw new Error("没有进行中的航行")
 
@@ -38,6 +39,7 @@ export async function completeVoyage(): Promise<HarborView> {
     }
 
     await saveWorld(tx, finalWorld)
-    return buildHarborView(finalWorld)
   })
+
+  redirect("/")
 }
