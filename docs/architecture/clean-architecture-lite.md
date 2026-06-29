@@ -78,16 +78,15 @@ Server Action → UseCase → Domain (纯函数) → return newWorld
 用户点击「购买10个丝绸」
   │
   ▼
-Server Action (actions/trade.ts)
-  │ readWorld(tx) + buyUseCase(tx, input) + buildGameView(newWorld)
+Server Action (app/actions/trade.ts)
+  │ loadWorld(tx) + executeBuy + saveWorld(tx) + buildMarketView
   │
-  ├── UseCase (game/application/buy.usecase.ts)
-  │     └── validateBuy(world, input)     // 校验：钱够吗？容量够吗？
-  │     └── executeBuy(world, input)      // 执行：扣钱、加货
+  ├── Domain (game/domain/trade.ts)
+  │     └── executeBuy(world, input)       // 纯函数：扣钱、加货、价格冲击
   │
-  ├── Repository (lib/prisma.ts)
+  ├── Repository (lib/repository.ts)
   │     └── saveWorld(tx, newWorld)
   │
   └── View Builder (game/view-builder/buildGameView.ts)
-        └── buildGameView(newWorld)
+        └── buildMarketView(newWorld)
 ```

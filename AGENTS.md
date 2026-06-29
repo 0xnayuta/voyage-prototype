@@ -31,50 +31,68 @@
 src/
 ├── app/                          # Next.js App Router（路由 + Server Actions）
 │   ├── page.tsx                  # 港口总览 (/)
-│   ├── market/page.tsx           # 交易所 (/market)
-│   ├── ship/page.tsx             # 造船厂 (/ship)
-│   ├── cargo/page.tsx            # 船舱 (/cargo)
-│   ├── navigation/page.tsx       # 航海图 (/navigation)
-│   ├── voyage/page.tsx           # 航行中 (/voyage)
+│   ├── layout.tsx                # 根布局（导航栏 + 主内容区）
+│   ├── HarborDashboard.tsx       # 港口总览 UI 组件
+│   ├── NewGameForm.tsx           # 无存档时的"开始航海"按钮
+│   ├── market/
+│   │   ├── page.tsx              # 交易所 (/market)
+│   │   └── actions.ts            # loadMarketView
+│   ├── ship/
+│   │   ├── page.tsx              # 造船厂 (/ship)
+│   │   └── actions.ts            # loadShipView / upgradeShipAction / repairShipAction
+│   ├── cargo/
+│   │   ├── page.tsx              # 船舱 (/cargo)
+│   │   └── actions.ts            # loadCargoView
+│   ├── navigation/
+│   │   ├── page.tsx              # 航海图 (/navigation)
+│   │   └── actions.ts            # loadNavigationView / updateArmamentLevel
+│   ├── voyage/
+│   │   ├── page.tsx              # 航行中 (/voyage)
+│   │   └── actions.ts            # loadVoyageView / completeVoyage
 │   └── actions/
-│       ├── save.ts               # 读档/存档 Server Actions
-│       ├── trade.ts              # 买卖 Server Actions
-│       └── travel.ts             # 航行 Server Actions
+│       ├── trade.ts              # 买卖 Server Actions (buyGoods / sellGoods)
+│       ├── travel.ts             # 航行 Server Action (startTravel)
+│       └── new-game.ts           # 新游戏 Server Action (createNewGame)
 ├── components/                   # React 组件（纯渲染，不含游戏规则）
-│   ├── ui/                       # 通用 UI 组件（Button, Modal, QuantityInput, Toast）
-│   ├── StatusBar.tsx
-│   ├── MarketPanel.tsx
+│   ├── ui/                       # 通用 UI 组件
+│   │   ├── GameCard.tsx
+│   │   ├── Modal.tsx
+│   │   └── QuantityInput.tsx
 │   ├── CargoHold.tsx
-│   ├── NavigationMap.tsx
+│   ├── MarketPanel.tsx
+│   ├── NavigationPanel.tsx
+│   ├── ShipyardPanel.tsx
 │   └── VoyageScreen.tsx
 ├── game/                         # 游戏引擎（纯函数领域逻辑，不依赖 React/Next.js/Prisma）
 │   ├── domain/                   # 领域层：纯函数 + 类型定义
 │   │   ├── types.ts              # World、领域类型、DomainError
-│   │   ├── player.ts             # 玩家逻辑
-│   │   ├── market.ts             # 价格计算
-│   │   ├── trade.ts              # 买卖逻辑
-│   │   ├── navigation.ts         # 航行逻辑
-│   │   └── ship.ts               # 船只升级
-│   ├── application/              # UseCase 编排层
-│   │   ├── buy.usecase.ts        # 购买 UseCase
-│   │   ├── sell.usecase.ts       # 卖出 UseCase
-│   │   └── travel.usecase.ts     # 航行 UseCase
+│   │   ├── player.ts             # 玩家逻辑（createDefaultWorld / advanceDay）
+│   │   ├── market.ts             # 价格计算（初始化、读取、买卖冲击、每日回归）
+│   │   ├── trade.ts              # 买卖逻辑（executeBuy / executeSell）
+│   │   ├── navigation.ts         # 航行逻辑（getReachablePorts / calcTravelDays / arriveAtPort）
+│   │   ├── ship.ts               # 船只逻辑（upgradeShip / repairShip / takeDamage / setArmamentLevel）
+│   │   ├── voyage.ts             # 航行中逻辑（startVoyage / generateVoyageEvents / applyVoyageEvents）
+│   │   ├── combat.ts             # 战斗逻辑（resolveCombat / applyCombatOutcome）
+│   │   └── __tests__/
 │   └── view-builder/             # World → GameView 转换器
 │       ├── buildGameView.ts      # 入口
 │       └── __tests__/
 ├── data/                         # 游戏内容配置（数据化，可调参数）
-│   ├── ports.ts                  # 港口配置（3 港口：泉州、长崎、马六甲）
-│   ├── goods.ts                  # 商品配置（5 商品：丝绸、瓷器、香料、木材、玉石）
+│   ├── ports.ts                  # 港口配置（12 港口 × 5 区域）
+│   ├── goods.ts                  # 商品配置（16 商品，四大品类）
 │   ├── ships.ts                  # 船只配置（2 船只）
 │   ├── events.ts                 # 随机事件配置
-│   └── formulas.ts               # 公式常量（航速系数、价格波动系数、回归率）
+│   ├── formulas.ts               # 公式常量（航速系数、价格波动系数、回归率）
+│   ├── regions.ts                # 区域配置（5 区域：东亚、印度洋、非洲、地中海、北海）
+│   └── __tests__/
 ├── lib/                          # 基础设施
 │   ├── prisma.ts                 # Prisma 单例
 │   ├── repository.ts             # loadWorld / saveWorld
-│   └── domain-errors.ts          # DomainError → 中文消息映射
+│   ├── domain-errors.ts          # DomainError → 中文消息映射
+│   └── with-transaction.ts       # HOF 事务管道（withActionState / withTransaction）
 ├── types/                        # 共享类型
 │   ├── game-view.ts              # GameView 类型
-│   └── actions.ts                # Server Action 入参/出参类型
+│   └── prisma.ts                 # PrismaTransactionClient 类型
 └── e2e/                          # Playwright E2E 测试
 prisma/
 ├── schema.prisma                 # 存档表（Save + JSON 列模式）
@@ -88,7 +106,6 @@ prisma/
 | `app/` | 路由 + Server Actions（只编排，不实现业务规则） | 否 | 是 |
 | `components/` | React UI 组件（纯渲染） | 否 | 是 |
 | `game/domain/` | 纯函数 + 类型定义 | **是** | **否**（不依赖任何框架） |
-| `game/application/` | UseCase 编排 | 否 | 否 |
 | `game/view-builder/` | World → GameView 转换 | 否 | 否 |
 | `data/` | 配置数据 | 否（数据不是规则） | 否 |
 | `lib/` | 基础设施（Prisma、repository） | 否 | 是 |
@@ -361,7 +378,6 @@ Q3: 只是当前操作过程中的临时选择？
 | `app/actions/` | kebab-case | `trade.ts` |
 | `components/` | PascalCase | `MarketPanel.tsx` |
 | `game/domain/` | kebab-case | `market.ts` |
-| `game/application/` | kebab-case + `.usecase.ts` | `buy.usecase.ts` |
 | `game/view-builder/` | PascalCase + `View` | `buildMarketView.ts` |
 | `data/` | kebab-case + plural | `ports.ts`、`goods.ts` |
 | `lib/` | kebab-case | `prisma.ts` |
