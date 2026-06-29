@@ -9,8 +9,9 @@ import {
 } from "../data/formulas";
 import { calcDefenseScore } from "../game/domain/ship";
 import type { NavigationView } from "../types/game-view";
-import { Modal } from "./ui/Modal";
-import { useSort } from "./ui/useSort";
+import { ArmamentConfig } from "./ArmamentConfig";
+import { DepartureConfirmModal } from "./DepartureConfirmModal";
+import { DestinationsTable } from "./DestinationsTable";
 
 interface NavigationPanelProps {
   readonly view: NavigationView;
@@ -26,37 +27,9 @@ export function NavigationPanel({ view }: NavigationPanelProps) {
     baseDangerScore: number;
   } | null>(null);
 
-  // L3: 当前选择的武装配置
   const [selectedArmament, setSelectedArmament] = useState(
     view.currentArmament,
   );
-
-  const { sortColumn, sortDir, toggleSort, sortIndicator } = useSort();
-  const sortedDestinations = [...view.destinations].sort((a, b) => {
-    if (!sortColumn || !sortDir) return 0;
-    let cmp = 0;
-    switch (sortColumn) {
-      case "portName":
-        cmp = a.portName.localeCompare(b.portName);
-        break;
-      case "region":
-        cmp = a.region.localeCompare(b.region);
-        break;
-      case "distance":
-        cmp = a.distance - b.distance;
-        break;
-      case "travelDays":
-        cmp = a.travelDays - b.travelDays;
-        break;
-      case "survivalRate":
-        cmp = a.baseDangerScore - b.baseDangerScore;
-        break;
-      case "estimatedProfit":
-        cmp = a.estimatedProfit - b.estimatedProfit;
-        break;
-    }
-    return sortDir === "desc" ? -cmp : cmp;
-  });
 
   const selectedOption = view.armamentOptions[selectedArmament];
   const isOverCargo =
@@ -82,7 +55,6 @@ export function NavigationPanel({ view }: NavigationPanelProps) {
         </span>
       </div>
 
-      {/* 武装配置选择 */}
       <ArmamentConfig
         options={view.armamentOptions}
         selectedIndex={selectedArmament}
@@ -96,108 +68,12 @@ export function NavigationPanel({ view }: NavigationPanelProps) {
         }}
       />
 
-      {/* 目的地列表 */}
-      <div className="rounded-lg border border-ocean-600 bg-ocean-800/80 overflow-hidden">
-        <div className="grid grid-cols-8 gap-2 border-b border-ocean-600 bg-ocean-700/60 px-4 py-2 text-xs font-semibold text-parchment-dark uppercase tracking-wider">
-          <button
-            type="button"
-            onClick={() => toggleSort("portName")}
-            className="col-span-2 text-left cursor-pointer hover:text-gold-400 transition-colors"
-          >
-            目的地{sortIndicator("portName")}
-          </button>
-          <button
-            type="button"
-            onClick={() => toggleSort("region")}
-            className="text-left cursor-pointer hover:text-gold-400 transition-colors"
-          >
-            地区{sortIndicator("region")}
-          </button>
-          <button
-            type="button"
-            onClick={() => toggleSort("distance")}
-            className="text-center cursor-pointer hover:text-gold-400 transition-colors"
-          >
-            距离{sortIndicator("distance")}
-          </button>
-          <button
-            type="button"
-            onClick={() => toggleSort("travelDays")}
-            className="text-center cursor-pointer hover:text-gold-400 transition-colors"
-          >
-            天数{sortIndicator("travelDays")}
-          </button>
-          <button
-            type="button"
-            onClick={() => toggleSort("survivalRate")}
-            className="text-center cursor-pointer hover:text-gold-400 transition-colors"
-          >
-            生存率{sortIndicator("survivalRate")}
-          </button>
-          <button
-            type="button"
-            onClick={() => toggleSort("estimatedProfit")}
-            className="text-center cursor-pointer hover:text-gold-400 transition-colors"
-          >
-            预估利润{sortIndicator("estimatedProfit")}
-          </button>
-          <span />
-        </div>
-        {sortedDestinations.map((dest) => (
-          <div
-            key={dest.portId}
-            className="grid grid-cols-8 gap-2 items-center border-b border-ocean-700/30 px-4 py-3 text-sm hover:bg-ocean-700/40 transition-colors last:border-b-0"
-          >
-            <span className="col-span-2 font-medium">{dest.portName}</span>
-            <span className="text-xs text-parchment-dark">{dest.region}</span>
-            <span className="text-center text-parchment-dark">
-              {dest.distance}
-            </span>
-            <span className="text-center text-gold-400">{dest.travelDays}</span>
-            <span
-              className={`text-center ${
-                getSurvivalRate(dest.baseDangerScore) >= 70
-                  ? "text-green-400"
-                  : getSurvivalRate(dest.baseDangerScore) >= 40
-                    ? "text-yellow-400"
-                    : "text-red-400"
-              }`}
-            >
-              {getSurvivalRate(dest.baseDangerScore)}%
-            </span>
-            <span
-              className={`text-center ${
-                dest.estimatedProfit > 0
-                  ? "text-green-400"
-                  : dest.estimatedProfit < 0
-                    ? "text-red-400"
-                    : "text-parchment-dark"
-              }`}
-            >
-              {dest.estimatedProfit > 0
-                ? `+${dest.estimatedProfit.toLocaleString()}`
-                : dest.estimatedProfit.toLocaleString()}
-            </span>
-            <button
-              type="button"
-              onClick={() =>
-                setSelectedDest({
-                  portId: dest.portId,
-                  portName: dest.portName,
-                  travelDays: dest.travelDays,
-                  estimatedProfit: dest.estimatedProfit,
-                  baseDangerScore: dest.baseDangerScore,
-                })
-              }
-              className="rounded bg-gold-500/20 px-2 py-1 text-xs text-gold-400 hover:bg-gold-500/30 transition-colors"
-            >
-              前往
-            </button>
-          </div>
-        ))}
-      </div>
+      <DestinationsTable
+        destinations={view.destinations}
+        getSurvivalRate={getSurvivalRate}
+        onSelectDestination={setSelectedDest}
+      />
 
-      {/* 确认出航弹窗 */}
       {selectedDest && (
         <DepartureConfirmModal
           dest={selectedDest}
@@ -225,160 +101,5 @@ export function NavigationPanel({ view }: NavigationPanelProps) {
         </a>
       </div>
     </div>
-  );
-}
-
-// ---- 子组件 ----
-
-interface ArmamentConfigProps {
-  readonly options: NavigationView["armamentOptions"];
-  readonly selectedIndex: number;
-  readonly isOverCargo: boolean;
-  readonly riskLevel: number;
-  readonly currentCargoCount: number;
-  readonly onChange: (index: number) => void;
-}
-function ArmamentConfig({
-  options,
-  selectedIndex,
-  isOverCargo,
-  riskLevel,
-  currentCargoCount,
-  onChange,
-}: ArmamentConfigProps) {
-  return (
-    <div className="rounded-lg border border-ocean-600 bg-ocean-800/80 p-4">
-      <h3 className="text-sm font-semibold text-gold-400 mb-3">出航配置</h3>
-      <div className="space-y-2">
-        {options.map((opt) => (
-          <label
-            key={opt.level}
-            className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${
-              selectedIndex === opt.level
-                ? "border-gold-500 bg-gold-500/10"
-                : "border-ocean-600 hover:border-ocean-500"
-            }`}
-          >
-            <input
-              type="radio"
-              name="armamentLevel"
-              value={opt.level}
-              checked={selectedIndex === opt.level}
-              onChange={() => onChange(opt.level)}
-              className="mt-0.5 accent-gold-500"
-            />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-parchment">
-                  {opt.label}
-                </span>
-              </div>
-              <div className="mt-1 flex gap-3 text-xs text-parchment-dark">
-                <span>舱容 {opt.effectiveCapacity}</span>
-                <span>{Math.round(opt.cargoRatio * 100)}%</span>
-                <span>防御 {opt.defenseMultiplier.toFixed(1)}x</span>
-              </div>
-            </div>
-          </label>
-        ))}
-      </div>
-
-      {/* 风险提示 */}
-      {riskLevel < 1.5 && currentCargoCount > 0 && (
-        <div className="mt-3 rounded border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-400">
-          ⚠ 当前配置防御较低，高价值货物面临较高风险
-        </div>
-      )}
-      {isOverCargo && (
-        <div className="mt-2 rounded border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 text-xs text-yellow-400">
-          ⚠ 当前货物量超出该配置有效舱容，建议换装满载
-        </div>
-      )}
-    </div>
-  );
-}
-
-interface DepartureConfirmModalProps {
-  readonly dest: {
-    portId: string;
-    portName: string;
-    travelDays: number;
-    estimatedProfit: number;
-  };
-  readonly armamentLabel: string;
-  readonly survivalRate: number;
-  readonly isTravelPending: boolean;
-  readonly isOverCargo: boolean;
-  readonly onConfirm: () => void;
-  readonly onClose: () => void;
-}
-
-function DepartureConfirmModal({
-  dest,
-  armamentLabel,
-  survivalRate,
-  isTravelPending,
-  isOverCargo,
-  onConfirm,
-  onClose,
-}: DepartureConfirmModalProps) {
-  return (
-    <Modal title="出航确认" onClose={onClose}>
-      <div className="space-y-2 text-sm text-parchment-dark">
-        <div className="flex justify-between">
-          <span>目的港</span>
-          <span className="font-medium text-parchment">{dest.portName}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>航行天数</span>
-          <span className="text-gold-400">{dest.travelDays} 天</span>
-        </div>
-        <div className="flex justify-between">
-          <span>出航配置</span>
-          <span className="text-parchment">{armamentLabel}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>生存率</span>
-          <span className="text-green-400">{survivalRate}%</span>
-        </div>
-        {dest.estimatedProfit !== 0 && (
-          <div className="flex justify-between">
-            <span>预估利润</span>
-            <span
-              className={
-                dest.estimatedProfit > 0 ? "text-gold-400" : "text-red-400"
-              }
-            >
-              {dest.estimatedProfit > 0
-                ? `+${dest.estimatedProfit.toLocaleString()}`
-                : dest.estimatedProfit.toLocaleString()}
-            </span>
-          </div>
-        )}
-        {isOverCargo && (
-          <div className="rounded border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 text-xs text-yellow-400 text-center">
-            ⚠ 当前货物量超出有效舱容，请卸货或换装满载配置
-          </div>
-        )}
-      </div>
-
-      <div className="mt-4 flex gap-2">
-        <button
-          type="button"
-          onClick={onConfirm}
-          disabled={isTravelPending || isOverCargo}
-          className="flex-1 rounded bg-gold-500 py-2 text-sm font-bold text-ocean-900 hover:bg-gold-400 transition-colors disabled:opacity-50"
-        >
-          {isTravelPending ? "出航中..." : "确认出航"}
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded bg-ocean-700 px-4 py-2 text-sm hover:bg-ocean-600 transition-colors"
-        >
-          取消
-        </button>
-      </div>
-    </Modal>
   );
 }
