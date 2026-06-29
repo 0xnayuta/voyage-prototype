@@ -11,6 +11,20 @@ export function HarborDashboard({ view }: { view: HarborView }) {
           <span className="text-parchment-dark">第 {view.currentDay} 天</span>
         </div>
         <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gold-400">Lv.{view.playerLevel}</span>
+            <div className="h-1.5 w-16 overflow-hidden rounded-full bg-ocean-700">
+              <div
+                className="h-full rounded-full bg-gold-500"
+                style={{
+                  width: `${Math.min(100, (view.playerExp / view.playerExpToNext) * 100)}%`,
+                }}
+              />
+            </div>
+            <span className="text-xs text-parchment-dark/60">
+              {Math.round((view.playerExp / view.playerExpToNext) * 100)}%
+            </span>
+          </div>
           <span className="text-gold-400">
             <span className="text-parchment-dark">金币</span>{" "}
             {view.playerGold.toLocaleString()}

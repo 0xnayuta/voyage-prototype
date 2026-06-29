@@ -59,6 +59,9 @@ export function buildHarborView(world: World): HarborView {
     shipName: ship?.name ?? "未知",
     shipCurrentHp: world.ship.currentHp,
     shipMaxHp: world.ship.maxHp,
+    playerLevel: world.player.level,
+    playerExp: world.player.exp,
+    playerExpToNext: world.player.expToNext,
   };
 }
 

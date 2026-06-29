@@ -15,6 +15,9 @@ export interface HarborView {
   readonly shipName: string;
   readonly shipCurrentHp: number;
   readonly shipMaxHp: number;
+  readonly playerLevel: number;
+  readonly playerExp: number;
+  readonly playerExpToNext: number;
 }
 
 /** 交易所页（/market） */
