@@ -1,22 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import type { CargoView } from "../types/game-view";
+import { useSort } from "./ui/useSort";
 
 export function CargoHold({ view }: { readonly view: CargoView }) {
-  // L3: 排序状态
-  const [sortColumn, setSortColumn] = useState<string | null>(null);
-  const [sortDir, setSortDir] = useState<"asc" | "desc" | null>(null);
-  function toggleSort(col: string) {
-    if (sortColumn === col) {
-      setSortDir((prev) =>
-        prev === "asc" ? "desc" : prev === "desc" ? null : "asc",
-      );
-    } else {
-      setSortColumn(col);
-      setSortDir("asc");
-    }
-  }
+  const { sortColumn, sortDir, toggleSort, sortIndicator } = useSort();
   const sortedItems = [...view.items].sort((a, b) => {
     if (!sortColumn || !sortDir) return 0;
     let cmp = 0;
@@ -42,15 +30,6 @@ export function CargoHold({ view }: { readonly view: CargoView }) {
     }
     return sortDir === "desc" ? -cmp : cmp;
   });
-  function sortIndicator(col: string): string {
-    return sortColumn === col
-      ? sortDir === "asc"
-        ? " ▲"
-        : sortDir === "desc"
-          ? " ▼"
-          : ""
-      : "";
-  }
 
   return (
     <div className="flex-1 p-4 max-w-2xl mx-auto w-full space-y-4">

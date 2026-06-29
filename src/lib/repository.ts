@@ -16,7 +16,12 @@ export async function loadWorld(tx: PrismaTransactionClient): Promise<World> {
   });
   if (!save) return createDefaultWorld();
 
-  return JSON.parse(save.data) as World;
+  try {
+    return JSON.parse(save.data) as World;
+  } catch {
+    // 存档数据损坏，重置为新世界
+    return createDefaultWorld();
+  }
 }
 export async function saveWorld(
   tx: PrismaTransactionClient,

@@ -10,6 +10,7 @@ import {
 import { calcDefenseScore } from "../game/domain/ship";
 import type { NavigationView } from "../types/game-view";
 import { Modal } from "./ui/Modal";
+import { useSort } from "./ui/useSort";
 
 interface NavigationPanelProps {
   readonly view: NavigationView;
@@ -30,28 +31,7 @@ export function NavigationPanel({ view }: NavigationPanelProps) {
     view.currentArmament,
   );
 
-  // L3: 排序状态
-  const [sortColumn, setSortColumn] = useState<string | null>(null);
-  const [sortDir, setSortDir] = useState<"asc" | "desc" | null>(null);
-  function toggleSort(col: string) {
-    if (sortColumn === col) {
-      setSortDir((prev) =>
-        prev === "asc" ? "desc" : prev === "desc" ? null : "asc",
-      );
-    } else {
-      setSortColumn(col);
-      setSortDir("asc");
-    }
-  }
-  function sortIndicator(col: string): string {
-    return sortColumn === col
-      ? sortDir === "asc"
-        ? " ▲"
-        : sortDir === "desc"
-          ? " ▼"
-          : ""
-      : "";
-  }
+  const { sortColumn, sortDir, toggleSort, sortIndicator } = useSort();
   const sortedDestinations = [...view.destinations].sort((a, b) => {
     if (!sortColumn || !sortDir) return 0;
     let cmp = 0;

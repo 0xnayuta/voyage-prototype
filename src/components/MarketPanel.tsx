@@ -5,6 +5,7 @@ import { buyGoods, sellGoods } from "../app/actions/trade";
 import type { MarketView } from "../types/game-view";
 import { Modal } from "./ui/Modal";
 import { QuantityInput } from "./ui/QuantityInput";
+import { useSort } from "./ui/useSort";
 
 interface MarketPanelProps {
   readonly view: MarketView;
@@ -23,19 +24,7 @@ export function MarketPanel({ view: initialView, loadView }: MarketPanelProps) {
     null,
   );
   const [sellQuantity, setSellQuantity] = useState(1);
-  // L3: 排序状态
-  const [sortColumn, setSortColumn] = useState<string | null>(null);
-  const [sortDir, setSortDir] = useState<"asc" | "desc" | null>(null);
-  function toggleSort(col: string) {
-    if (sortColumn === col) {
-      setSortDir((prev) =>
-        prev === "asc" ? "desc" : prev === "desc" ? null : "asc",
-      );
-    } else {
-      setSortColumn(col);
-      setSortDir("asc");
-    }
-  }
+  const { sortColumn, sortDir, toggleSort, sortIndicator } = useSort();
   const sortedGoods = [...view.goods].sort((a, b) => {
     if (!sortColumn || !sortDir) return 0;
     let cmp = 0;
@@ -52,27 +41,9 @@ export function MarketPanel({ view: initialView, loadView }: MarketPanelProps) {
       case "sellPrice":
         cmp = a.sellPrice - b.sellPrice;
         break;
-      case "estimatedProfit":
-        cmp = (a.estimatedProfit ?? 0) - (b.estimatedProfit ?? 0);
-        break;
-      case "inCargo":
-        cmp = a.inCargo - b.inCargo;
-        break;
-      case "volume":
-        cmp = a.volume - b.volume;
-        break;
     }
     return sortDir === "desc" ? -cmp : cmp;
   });
-  function sortIndicator(col: string): string {
-    return sortColumn === col
-      ? sortDir === "asc"
-        ? " ▲"
-        : sortDir === "desc"
-          ? " ▼"
-          : ""
-      : "";
-  }
 
   async function doBuy(formData: FormData) {
     setIsBuying(true);
