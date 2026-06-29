@@ -5,7 +5,7 @@ import { CargoHold } from "../../components/CargoHold";
 import { loadCargoView } from "./actions";
 
 export default function CargoPage() {
-  const [view, loadAction, isLoadPending] = useActionState(loadCargoView, null);
+  const [view, loadAction, isPending] = useActionState(loadCargoView, null);
 
   if (!view) {
     return (
@@ -15,10 +15,10 @@ export default function CargoPage() {
       >
         <button
           type="submit"
-          disabled={isLoadPending}
+          disabled={isPending}
           className="rounded-lg bg-gold-500 px-6 py-3 text-lg font-bold text-ocean-900 hover:bg-gold-400 transition-colors disabled:opacity-50"
         >
-          {isLoadPending ? "加载中..." : "查看船舱"}
+          {isPending ? "加载中..." : "查看船舱"}
         </button>
       </form>
     );

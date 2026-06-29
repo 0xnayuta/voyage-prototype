@@ -5,7 +5,7 @@ import { MarketPanel } from "../../components/MarketPanel";
 import { loadMarketView } from "./actions";
 
 export default function MarketPage() {
-  const [view, loadAction, isLoadPending] = useActionState(
+  const [view, loadAction, isPending] = useActionState(
     loadMarketView,
     null,
   );
@@ -18,10 +18,10 @@ export default function MarketPage() {
       >
         <button
           type="submit"
-          disabled={isLoadPending}
+          disabled={isPending}
           className="rounded-lg bg-gold-500 px-6 py-3 text-lg font-bold text-ocean-900 hover:bg-gold-400 transition-colors disabled:opacity-50"
         >
-          {isLoadPending ? "加载中..." : "进入交易所"}
+          {isPending ? "加载中..." : "进入交易所"}
         </button>
       </form>
     );

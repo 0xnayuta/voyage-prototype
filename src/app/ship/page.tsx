@@ -5,7 +5,7 @@ import { ShipyardPanel } from "../../components/ShipyardPanel";
 import { loadShipView, repairShipAction, upgradeShipAction } from "./actions";
 
 export default function ShipPage() {
-  const [view, loadAction, isLoading] = useActionState(loadShipView, null);
+  const [view, loadAction, isPending] = useActionState(loadShipView, null);
   const [afterUpgrade, doUpgrade] = useActionState(upgradeShipAction, null);
   const [afterRepair, doRepair] = useActionState(repairShipAction, null);
 
@@ -17,10 +17,10 @@ export default function ShipPage() {
       >
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isPending}
           className="rounded-lg bg-gold-500 px-6 py-3 text-lg font-bold text-ocean-900 hover:bg-gold-400 transition-colors disabled:opacity-50"
         >
-          {isLoading ? "加载中..." : "进入造船厂"}
+          {isPending ? "加载中..." : "进入造船厂"}
         </button>
       </form>
     );
