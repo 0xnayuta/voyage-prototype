@@ -93,6 +93,11 @@ describe("repairShip", () => {
     const result = repairShip(world, getActiveShip(world).id);
     expect(result).toBe(world);
   });
+
+  it("throws INVALID_SHIP for non-existent shipId", () => {
+    const world = createTestWorld();
+    expect(() => repairShip(world, "nonexistent-ship")).toThrow("INVALID_SHIP");
+  });
 });
 
 describe("getNearestPort", () => {
@@ -158,8 +163,48 @@ describe("upgradeComponent", () => {
       upgradeComponent(voyaging, getActiveShip(voyaging).id, "hull"),
     ).toThrow("IN_VOYAGE");
   });
-});
+  it("upgrades sail component", () => {
+    const world = createTestWorld();
+    const result = upgradeComponent(world, getActiveShip(world).id, "sail");
+    expect(result.fleet.ships[0].equipment.sailLevel).toBe(1);
+    expect(result.fleet.gold).toBe(5000 - 300); // sloop sail Lv0 cost
+  });
 
+  it("upgrades armor component (recalculates maxDurability)", () => {
+    const world = createTestWorld();
+    const result = upgradeComponent(world, getActiveShip(world).id, "armor");
+    // armor Lv0→1 for sloop: baseDurability 50 + armorLevel * 10
+    expect(result.fleet.ships[0].equipment.armorLevel).toBe(1);
+    expect(result.fleet.ships[0].maxDurability).toBe(60);
+    expect(result.fleet.ships[0].durability).toBe(60);
+  });
+
+  it("upgrades cannon component", () => {
+    const world = createTestWorld();
+    const result = upgradeComponent(world, getActiveShip(world).id, "cannon");
+    expect(result.fleet.ships[0].equipment.cannonLevel).toBe(1);
+    expect(result.fleet.gold).toBe(5000 - 600); // sloop cannon Lv0 cost
+  });
+
+  it("throws INVALID_SHIP for non-existent shipId", () => {
+    const world = createTestWorld();
+    expect(() => upgradeComponent(world, "nonexistent-ship", "hull")).toThrow(
+      "INVALID_SHIP",
+    );
+  });
+
+  it("throws INSUFFICIENT_GOLD when cannot afford", () => {
+    const world = createTestWorld({
+      fleet: {
+        ...createTestWorld().fleet,
+        gold: 50,
+      },
+    });
+    expect(() =>
+      upgradeComponent(world, getActiveShip(world).id, "hull"),
+    ).toThrow("INSUFFICIENT_GOLD");
+  });
+});
 describe("setArmamentLevel", () => {
   it("sets armament level on the ship", () => {
     const world = createTestWorld();

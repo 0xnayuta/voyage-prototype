@@ -1,7 +1,6 @@
 "use client";
-
 import { useActionState } from "react";
-import type { ShipView } from "../types/game-view";
+import type { ComponentView, ShipView } from "../types/game-view";
 
 interface ShipyardPanelProps {
   readonly view: ShipView;
@@ -122,15 +121,7 @@ export function ShipyardPanel({
 // ---- 部件卡片 ----
 
 interface ComponentCardProps {
-  readonly component: {
-    readonly id: string;
-    readonly label: string;
-    readonly level: number;
-    readonly maxLevel: number;
-    readonly nextCost: number | null;
-    readonly canUpgrade: boolean;
-    readonly upgradeDescription: string;
-  };
+  readonly component: ComponentView;
   readonly blockedByVoyage: boolean;
   readonly onUpgrade: (formData: FormData) => void;
 }

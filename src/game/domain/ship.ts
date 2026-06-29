@@ -35,10 +35,11 @@ export const ARMAMENT_LABELS: readonly string[] = [
 
 /** 获取当前操作船只 */
 export function getActiveShip(world: World): ShipInstance {
-  return (
+  const ship =
     world.fleet.ships.find((s) => s.id === world.fleet.activeShipId) ??
-    world.fleet.ships[0]
-  );
+    world.fleet.ships[0];
+  if (!ship) throw new DomainError("INVALID_SHIP");
+  return ship;
 }
 
 /**
@@ -63,25 +64,6 @@ export function calcMaxDurability(
   return Math.floor(
     shipConfig.baseDurability * (1 + equipment.armorLevel * 0.2),
   );
-}
-
-/** 计算船只有效舱容（考虑 hullLevel + armamentLevel） */
-export function calcEffectiveCapacity(
-  shipConfig: (typeof SHIPS)[number],
-  hullLevel: number,
-  armamentLevel: ArmamentLevel,
-): number {
-  const baseCap = Math.floor(shipConfig.capacity * (1 + hullLevel * 0.2));
-  const cargoRatio = shipConfig.armamentTiers[armamentLevel][0];
-  return Math.floor(baseCap * cargoRatio);
-}
-
-/** 计算船只实际速度（考虑 sailLevel） */
-export function calcShipSpeed(
-  shipConfig: (typeof SHIPS)[number],
-  sailLevel: number,
-): number {
-  return shipConfig.speed * (1 + sailLevel * 0.05);
 }
 
 /** 升级指定部件 */

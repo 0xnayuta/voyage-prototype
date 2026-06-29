@@ -160,7 +160,7 @@ describe("ships data integrity", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("every ship has positive speed and capacity", () => {
+  it("every ship has positive speed, capacity and durability", () => {
     for (const ship of SHIPS) {
       expect(ship.speed).toBeGreaterThan(0);
       expect(ship.capacity).toBeGreaterThan(0);
@@ -168,14 +168,33 @@ describe("ships data integrity", () => {
     }
   });
 
-  it("every ship has armamentTiers with valid ratios", () => {
+  it("every ship has positive baseCrew and repairCostPerDurability", () => {
     for (const ship of SHIPS) {
-      expect(ship.armamentTiers.length).toBe(3);
-      for (const [cargoRatio, combatBonus] of ship.armamentTiers) {
-        expect(cargoRatio).toBeGreaterThan(0);
-        expect(cargoRatio).toBeLessThanOrEqual(1);
-        expect(combatBonus).toBeGreaterThanOrEqual(0);
-      }
+      expect(ship.baseCrew).toBeGreaterThan(0);
+      expect(ship.repairCostPerDurability).toBeGreaterThan(0);
+    }
+  });
+
+  it("every ship has positive maxComponentLevel", () => {
+    for (const ship of SHIPS) {
+      expect(ship.maxComponentLevel).toBeGreaterThan(0);
+    }
+  });
+
+  it("every ship has upgradeCosts arrays matching maxComponentLevel", () => {
+    for (const ship of SHIPS) {
+      expect(ship.upgradeCosts.hull).toHaveLength(ship.maxComponentLevel);
+      expect(ship.upgradeCosts.sail).toHaveLength(ship.maxComponentLevel);
+      expect(ship.upgradeCosts.armor).toHaveLength(ship.maxComponentLevel);
+      expect(ship.upgradeCosts.cannon).toHaveLength(ship.maxComponentLevel);
+      for (const cost of ship.upgradeCosts.hull)
+        expect(cost).toBeGreaterThan(0);
+      for (const cost of ship.upgradeCosts.sail)
+        expect(cost).toBeGreaterThan(0);
+      for (const cost of ship.upgradeCosts.armor)
+        expect(cost).toBeGreaterThan(0);
+      for (const cost of ship.upgradeCosts.cannon)
+        expect(cost).toBeGreaterThan(0);
     }
   });
 });

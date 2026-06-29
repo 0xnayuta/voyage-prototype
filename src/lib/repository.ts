@@ -18,9 +18,11 @@ function migrateOldShipToFleet(parsed: Record<string, unknown>): World {
       name: player.name as string,
       currentPortId: player.currentPortId as string,
       day: (player.day as number) ?? 1,
-      level: hasLevel ? (player.level as number) : 1,
-      exp: hasLevel ? (player.exp as number) : 0,
-      expToNext: hasLevel ? (player.expToNext as number) : BASE_EXP,
+      level: hasLevel ? ((player.level as number) ?? 1) : 1,
+      exp: hasLevel ? ((player.exp as number) ?? 0) : 0,
+      expToNext: hasLevel
+        ? ((player.expToNext as number) ?? BASE_EXP)
+        : BASE_EXP,
     },
     fleet: {
       ships: [
