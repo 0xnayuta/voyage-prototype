@@ -118,7 +118,7 @@ export function CargoHold({ view }: { readonly view: CargoView }) {
               className="grid grid-cols-6 gap-2 items-center border-b border-ocean-700/30 px-4 py-3 text-sm hover:bg-ocean-700/40 transition-colors last:border-b-0"
             >
               <span className="text-left font-medium">{item.goodName}</span>
-              <span className="text-left text-parchment-dark">
+              <span className="text-left text-xs text-parchment-dark">
                 {item.category}
               </span>
               <span className="text-center text-parchment-dark">
