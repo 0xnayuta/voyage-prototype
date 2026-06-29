@@ -102,8 +102,14 @@ export function MarketPanel({ view: initialView, loadView }: MarketPanelProps) {
 
       <GoodsTable
         goods={view.goods}
-        onBuy={setBuyingGoodId}
-        onSell={setSellingGoodId}
+        onBuy={(id) => {
+          setMessage(null);
+          setBuyingGoodId(id);
+        }}
+        onSell={(id) => {
+          setMessage(null);
+          setSellingGoodId(id);
+        }}
         isSelling={isSelling}
       />
 
