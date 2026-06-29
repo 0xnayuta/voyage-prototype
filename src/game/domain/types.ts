@@ -54,6 +54,9 @@ export interface PlayerState {
   readonly gold: number;
   readonly currentPortId: string;
   readonly day: number;
+  readonly level: number;
+  readonly exp: number;
+  readonly expToNext: number;
 }
 
 // ---- World（事实集合） ----
@@ -93,4 +96,5 @@ export type DomainErrorCode =
   | "UNKNOWN_REGION"
   | "NO_PRICE_DATA"
   | "NOT_AT_PORT"
-  | "CARGO_EXCEEDS_CAPACITY";
+  | "CARGO_EXCEEDS_CAPACITY"
+  | "LEVEL_EXP_REQUIRED";
