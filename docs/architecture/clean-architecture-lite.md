@@ -23,13 +23,10 @@ Next.js (App Router)
   │     └── 纯渲染层。只渲染 GameView，不包含任何游戏规则。
   │         用户操作通过 Server Action 提交。
   │
-  ├── Server Actions (Application Entry)
-  │     └── 应用入口。接收用户请求、调用 UseCase、保存存档、返回 GameView。
-  │         职责是编排，不是计算。
-  │
-  ├── Application Layer (UseCases)
-  │     └── 用例编排层。调用一个或多个 Domain 函数完成操作。
-  │         涉及事务边界。不实现游戏规则本身。
+  ├── Server Actions + UseCase Orchestration
+  │     └── 应用入口 + 用例编排。接收用户请求，调用一个或多个
+  │         Domain 函数完成操作，保存存档，返回 GameView。
+  │         职责是编排，不是计算。位于 app/actions/ 中。
   │
   ├── Domain / Game Engine (src/game/)
   │     └── 纯函数集合。World → Action → new World。
@@ -50,9 +47,9 @@ Next.js (App Router)
 外层依赖内层，内层不感知外层。
 
 ```
-UI → Server Actions → Application → Domain (核心)
-                                    → View Builder (只读 World)
-                                    → Repository (Prisma)
+UI → Server Actions (含编排) → Domain (核心)
+                              → View Builder (只读 World)
+                              → Repository (Prisma)
 ```
 
 ## 关键约束
@@ -65,11 +62,10 @@ UI → Server Actions → Application → Domain (核心)
 - Repository **不能**包含 if/else 业务判断
 
 ### 允许的调用链
-
 ```
-Server Action → UseCase → Domain (纯函数) → return newWorld
-                                          → Repository → SQLite
-                                          → View Builder → GameView
+Server Action (含编排) → Domain (纯函数) → return newWorld
+                                         → Repository → SQLite
+                                         → View Builder → GameView
 ```
 
 ## 示例：买操作的调用链

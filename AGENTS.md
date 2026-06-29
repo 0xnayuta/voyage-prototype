@@ -184,13 +184,10 @@ Electron Shell → Next.js (App Router)
   ├── React Components (UI Layer)
   │     └── 纯渲染层，只渲染 GameView，不包含任何游戏规则
   │
-  ├── Server Actions (Application Entry)
-  │     └── 应用入口，接收请求、调用 UseCase、保存存档、返回 GameView
-  │         职责是编排，不是计算
-  │
-  ├── Application Layer (UseCases)
-  │     └── 用例编排层，调用一个或多个 Domain 函数完成操作
-  │         涉及事务边界，不实现游戏规则本身
+  ├── Server Actions + UseCase Orchestration
+  │     └── 应用入口 + 用例编排。接收请求，调用一个或多个 Domain 函数
+  │         完成操作（纯函数），保存存档，返回 GameView。
+  │         职责是编排，不是计算。位于 app/actions/ 中。
   │
   ├── Domain / Game Engine (src/game/)
   │     └── 纯函数集合：World → Action → new World
@@ -207,10 +204,8 @@ Electron Shell → Next.js (App Router)
 ```
 
 **依赖方向：** 外层依赖内层，内层不感知外层。
-`UI → Server Actions → Application → Domain（核心）`
+`UI → Server Actions (含编排) → Domain（核心）`
 `Domain → View Builder（只读 World）→ Repository（Prisma）`
-
-详见：`docs/architecture/clean-architecture-lite.md`
 
 ### 2.3 架构一致性决策偏好
 
