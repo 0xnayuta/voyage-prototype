@@ -3,11 +3,12 @@ import {
   COMBAT_BASE_DAMAGE_MIN,
   COMBAT_CARGO_LOSS_MAX,
   COMBAT_CARGO_LOSS_MIN,
+  COMBAT_DEFENSE_BONUS_FACTOR,
+  COMBAT_HP_PENALTY_FACTOR,
   TOTAL_LOSS_THRESHOLD,
 } from "../../data/formulas";
-import { REGIONS } from "../../data/regions";
 import { SHIPS } from "../../data/ships";
-import { takeDamage } from "./ship";
+import { calcDefenseScore, takeDamage } from "./ship";
 import type { CargoItem, World } from "./types";
 
 /** 战斗结果类型 */
@@ -30,7 +31,7 @@ export type RngSource = () => number;
  */
 export function resolveCombat(
   world: World,
-  region: string,
+  difficulty: number,
   rng: RngSource = Math.random,
 ): CombatOutcome {
   const shipConfig = SHIPS.find((s) => s.id === world.ship.typeId);
@@ -38,20 +39,19 @@ export function resolveCombat(
     return { result: "victory", hpDamage: 0, cargoLoss: 0, description: "" };
   }
 
-  const score = calcCombatScore(world, region, rng, shipConfig);
+  const score = calcCombatScore(world, difficulty, rng, shipConfig);
 
   if (score < TOTAL_LOSS_THRESHOLD) return buildTotalLossOutcome(world);
   if (score < 50) return buildPartialLossOutcome(rng);
   return buildVictoryOutcome(rng);
 }
-
 /**
- * 计算战斗评分：基于武装防御倍率、HP 比例、随机波动和区域危险度。
- * 评分越低，损失越严重。
+ * 计算战斗评分。
+ * score = defScore × random(±40%) / difficulty
  */
 function calcCombatScore(
   world: World,
-  region: string,
+  difficulty: number,
   rng: RngSource,
   shipConfig: (typeof SHIPS)[number],
 ): number {
@@ -61,21 +61,21 @@ function calcCombatScore(
   const hpRatio =
     world.ship.maxHp > 0 ? world.ship.currentHp / world.ship.maxHp : 0;
 
-  let score = defenseMultiplier * hpRatio * 100;
+  let score = calcDefenseScore(
+    defenseMultiplier,
+    hpRatio,
+    COMBAT_DEFENSE_BONUS_FACTOR,
+    COMBAT_HP_PENALTY_FACTOR,
+  );
 
   // 随机波动 ±40%
   score = score * (0.6 + rng() * 0.8);
 
-  // 区域影响 — 从配置读取危险度系数
-  const regionCfg = REGIONS.find((r) => r.id === region);
-  if (regionCfg) {
-    score = score * regionCfg.dangerModifier;
-  }
+  // 难度系数（越高越难）
+  score = score / difficulty;
 
   return score;
 }
-
-/** 全损结果：HP→0，清空 cargo */
 function buildTotalLossOutcome(world: World): CombatOutcome {
   return {
     result: "totalLoss",

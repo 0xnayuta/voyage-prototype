@@ -9,7 +9,7 @@
     "lint": "biome check",
     "format": "biome format --write",
     "docs:check": "node scripts/check-docs.mjs",
-    "test": "bash -O globstar -c 'bun test src/**/*.test.ts'"
+    "test": "bun test src/**/*.test.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",

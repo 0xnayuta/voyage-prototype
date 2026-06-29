@@ -4,6 +4,7 @@
 
 import { EVENT_CONFIGS, type EventTemplate } from "../../data/events";
 import { PORTS } from "../../data/ports";
+import { REGIONS } from "../../data/regions";
 import { applyCombatOutcome, resolveCombat } from "./combat";
 import { getEffectiveCapacityForShip } from "./navigation";
 import { getNearestPort } from "./ship";
@@ -122,12 +123,37 @@ function subtractCargoLoss(
   }
   return result;
 }
+/** 断言查找结果不为空（配置数据必须存在） */
+function findOrThrow<T extends { id: string }>(
+  items: readonly T[],
+  id: string,
+  code: string,
+): T {
+  const item = items.find((i) => i.id === id);
+  if (!item) throw new DomainError(code);
+  return item;
+}
 
 /** 解析战斗事件并应用结果 */
 function applyCombatEvent(world: World, event: VoyageEvent): World {
-  const port = PORTS.find((p) => p.id === world.player.currentPortId);
-  const region = port?.regionId ?? "";
-  const outcome = resolveCombat(world, region);
+  const voyage = world.voyage;
+  if (!voyage) throw new DomainError("IN_VOYAGE");
+
+  const progress = event.day / voyage.travelDays;
+
+  // 线性插值：当前海域危险度 × 港口危险度
+  const depPort = findOrThrow(PORTS, voyage.fromPortId, "UNKNOWN_PORT");
+  const arrPort = findOrThrow(PORTS, voyage.toPortId, "UNKNOWN_PORT");
+  const depRegion = findOrThrow(REGIONS, depPort.regionId, "UNKNOWN_REGION");
+  const arrRegion = findOrThrow(REGIONS, arrPort.regionId, "UNKNOWN_REGION");
+  const curMod =
+    depRegion.dangerModifier +
+    (arrRegion.dangerModifier - depRegion.dangerModifier) * progress;
+  const curDanger =
+    depPort.danger + (arrPort.danger - depPort.danger) * progress;
+  const difficulty = curMod * curDanger;
+
+  const outcome = resolveCombat(world, difficulty);
   const nearestPort = getNearestPort(
     world.voyage?.fromPortId ?? world.player.currentPortId,
     world.voyage?.toPortId ?? world.player.currentPortId,

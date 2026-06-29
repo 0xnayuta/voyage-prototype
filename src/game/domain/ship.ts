@@ -16,6 +16,26 @@ export const ARMAMENT_LABELS: readonly string[] = [
   "武装护航",
 ];
 
+/**
+ * 计算防御分 — 生存率与战斗判定共用同一公式结构。
+ *
+ * score = 100 + (defenseMultiplier - 1) × defFactor - (1 - hpRatio) × hpFactor
+ *
+ * 生存率调用: defFactor=SURVIVAL_DEFENSE_FACTOR(10), hpFactor=SURVIVAL_HP_PENALTY_FACTOR(20)
+ *            survival = clamp(score - baseDangerScore, 5, 99)
+ *
+ * 战斗判定调用: defFactor=COMBAT_DEFENSE_BONUS_FACTOR(20), hpFactor=COMBAT_HP_PENALTY_FACTOR(100)
+ *             combatScore = score × random(±40%) × regionModifier → 判阈值
+ */
+export function calcDefenseScore(
+  defenseMultiplier: number,
+  hpRatio: number,
+  defFactor: number,
+  hpFactor: number,
+): number {
+  return 100 + (defenseMultiplier - 1) * defFactor - (1 - hpRatio) * hpFactor;
+}
+
 /** 升级船只：扣金币 + 提升等级。返回新 World 或抛出错误。 */
 export function upgradeShip(world: World): World {
   const shipConfig = SHIPS.find((s) => s.id === world.ship.typeId);

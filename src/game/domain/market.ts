@@ -1,7 +1,9 @@
 import {
+  BID_ASK_SPREAD,
   PRICE_REGRESSION_RATE,
   PRICE_VOLATILITY,
   TRADE_IMPACT,
+  TRADE_IMPACT_DECAY,
 } from "../../data/formulas";
 import { GOODS, type GoodConfig } from "../../data/goods";
 import { PORTS } from "../../data/ports";
@@ -47,13 +49,13 @@ export function getCurrentPrice(
   if (price === undefined) throw new DomainError("NO_PRICE_DATA");
   return price;
 }
-
 export function getBuyPrice(
   goodId: string,
   portId: string,
   world: World,
 ): number {
-  return getCurrentPrice(goodId, portId, world);
+  const mid = getCurrentPrice(goodId, portId, world);
+  return Math.max(1, Math.round(mid * (1 + BID_ASK_SPREAD / 2)));
 }
 
 export function getSellPrice(
@@ -61,7 +63,8 @@ export function getSellPrice(
   portId: string,
   world: World,
 ): number {
-  return getCurrentPrice(goodId, portId, world);
+  const mid = getCurrentPrice(goodId, portId, world);
+  return Math.max(1, Math.round(mid * (1 - BID_ASK_SPREAD / 2)));
 }
 
 /** 该港口售卖的所有商品（带当前价格） */
@@ -122,9 +125,8 @@ export function applyTradeImpact(
   isBuy: boolean,
 ): World {
   if (quantity <= 0) return world;
-
+  const impact = TRADE_IMPACT * quantity ** TRADE_IMPACT_DECAY;
   const currentPrice = getCurrentPrice(goodId, portId, world);
-  const impact = TRADE_IMPACT * quantity;
   const factor = isBuy ? 1 + impact : 1 - impact;
   const newPrice = Math.round(currentPrice * factor);
 
