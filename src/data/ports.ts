@@ -13,6 +13,8 @@ export interface PortConfig {
   readonly localPriceModifiers: Record<string, number> | null;
   readonly x: number; // 坐标 — 用于计算航线距离
   readonly y: number;
+  /// 港口危险度（0~1.5，越高越危险），用于计算航线生存率
+  readonly danger: number;
 }
 
 export const PORTS: readonly PortConfig[] = [
@@ -26,6 +28,7 @@ export const PORTS: readonly PortConfig[] = [
     description: "宋元时期东方第一大港，商贾云集",
     specialties: ["silk", "porcelain", "tea"],
     localPriceModifiers: { silk: 0.85, porcelain: 0.85, tea: 0.8, pepper: 0.9 },
+    danger: 0.5,
     x: 48,
     y: 32,
   },
@@ -38,6 +41,7 @@ export const PORTS: readonly PortConfig[] = [
     localPriceModifiers: { jade: 0.8, gold: 1.2, copper: 0.85, pepper: 0.9 },
     x: 51,
     y: 35,
+    danger: 0.7,
   },
   {
     id: "malacca",
@@ -48,6 +52,7 @@ export const PORTS: readonly PortConfig[] = [
     localPriceModifiers: { spice: 0.85, pepper: 0.8 },
     x: 44,
     y: 26,
+    danger: 0.9,
   },
   // ========================
   // 印度洋
@@ -61,6 +66,7 @@ export const PORTS: readonly PortConfig[] = [
     localPriceModifiers: { pepper: 0.8, cotton: 0.85, frankincense: 0.9 },
     x: 34,
     y: 22,
+    danger: 0.8,
   },
   {
     id: "calicut",
@@ -71,6 +77,7 @@ export const PORTS: readonly PortConfig[] = [
     localPriceModifiers: { pepper: 0.75, spice: 0.85, frankincense: 0.9 },
     x: 33,
     y: 20,
+    danger: 0.9,
   },
   {
     id: "aden",
@@ -81,6 +88,7 @@ export const PORTS: readonly PortConfig[] = [
     localPriceModifiers: { dried_fruit: 0.8, frankincense: 0.8, pepper: 0.85 },
     x: 26,
     y: 23,
+    danger: 1.1,
   },
   // ========================
   // 非洲
@@ -94,6 +102,7 @@ export const PORTS: readonly PortConfig[] = [
     localPriceModifiers: { ivory: 0.75, gold: 0.8 },
     x: 22,
     y: 14,
+    danger: 0.7,
   },
   {
     id: "sofala",
@@ -104,6 +113,7 @@ export const PORTS: readonly PortConfig[] = [
     localPriceModifiers: { gold: 0.75, ivory: 0.8 },
     x: 21,
     y: 10,
+    danger: 0.9,
   },
   // ========================
   // 地中海
@@ -117,6 +127,7 @@ export const PORTS: readonly PortConfig[] = [
     localPriceModifiers: { glassware: 0.85, linen: 0.85 },
     x: 18,
     y: 24,
+    danger: 0.9,
   },
   {
     id: "venice",
@@ -127,6 +138,7 @@ export const PORTS: readonly PortConfig[] = [
     localPriceModifiers: { glassware: 0.8, silk: 0.9 },
     x: 13,
     y: 25,
+    danger: 0.6,
   },
   // ========================
   // 北海
@@ -140,6 +152,7 @@ export const PORTS: readonly PortConfig[] = [
     localPriceModifiers: { wool: 0.8, tin: 0.85 },
     x: 8,
     y: 30,
+    danger: 0.8,
   },
   {
     id: "hamburg",
@@ -150,5 +163,6 @@ export const PORTS: readonly PortConfig[] = [
     localPriceModifiers: { timber: 0.8, dried_fruit: 0.9, wool: 0.85 },
     x: 6,
     y: 27,
+    danger: 0.6,
   },
 ] as const;
