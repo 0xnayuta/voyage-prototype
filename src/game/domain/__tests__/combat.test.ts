@@ -21,7 +21,7 @@ describe("resolveCombat", () => {
     });
 
     // RNG=0.8 高分 → 胜利
-    const outcome = resolveCombat(world, "east_asia", fixedRng(0.8));
+    const outcome = resolveCombat(world, 1.0, fixedRng(0.8));
     expect(outcome.result).toBe("victory");
     expect(outcome.hpDamage).toBeLessThan(5);
   });
@@ -40,7 +40,7 @@ describe("resolveCombat", () => {
     damaged.ship.currentHp = 5; // 残血
 
     // RNG=0 → 最低分 → 全损
-    const outcome = resolveCombat(damaged, "east_asia", fixedRng(0));
+    const outcome = resolveCombat(damaged, 1.0, fixedRng(0));
     expect(outcome.result).toBe("totalLoss");
     expect(outcome.cargoLoss).toBe(0);
     expect(outcome.allCargoLost).toBe(true);
@@ -60,7 +60,7 @@ describe("resolveCombat", () => {
     world.ship.currentHp = 25; // 半血
 
     // RNG low → 部分损失
-    const outcome = resolveCombat(world, "east_asia", fixedRng(0.05));
+    const outcome = resolveCombat(world, 1.0, fixedRng(0.05));
     expect(outcome.hpDamage).toBeGreaterThanOrEqual(0);
     expect(outcome.cargoLoss).toBeGreaterThanOrEqual(0);
   });
@@ -68,12 +68,12 @@ describe("resolveCombat", () => {
   it("returns victory with no damage for invalid ship", () => {
     const invalid = createTestWorld();
     invalid.ship.typeId = "nonexistent";
-    const outcome = resolveCombat(invalid, "east_asia", fixedRng(0));
+    const outcome = resolveCombat(invalid, 1.0, fixedRng(0));
     expect(outcome.result).toBe("victory");
     expect(outcome.hpDamage).toBe(0);
   });
 
-  it("Nanyang region multiplies difficulty", () => {
+  it("high difficulty produces worse combat outcomes", () => {
     const world = createTestWorld({
       voyage: {
         fromPortId: "quanzhou",
@@ -85,24 +85,24 @@ describe("resolveCombat", () => {
       },
     });
 
-    // 非洲（危险 0.7）比地中海（安全 1.2）更容易翻船
-    const dangerousOutcome = resolveCombat(world, "africa", fixedRng(0));
-    const safeOutcome = resolveCombat(world, "mediterranean", fixedRng(0));
+    // 高难度（2.0）比低难度（0.5）更容易翻船
+    const hardOutcome = resolveCombat(world, 2.0, fixedRng(0));
+    const easyOutcome = resolveCombat(world, 0.5, fixedRng(0));
 
-    // 危险区域得分更低，至少不会比安全区域好
-    const dangerousScore =
-      dangerousOutcome.result === "victory"
+    // 低难度结果至少不比高难度差
+    const hardScore =
+      hardOutcome.result === "victory"
         ? 2
-        : dangerousOutcome.result === "partialLoss"
+        : hardOutcome.result === "partialLoss"
           ? 1
           : 0;
-    const safeScore =
-      safeOutcome.result === "victory"
+    const easyScore =
+      easyOutcome.result === "victory"
         ? 2
-        : safeOutcome.result === "partialLoss"
+        : easyOutcome.result === "partialLoss"
           ? 1
           : 0;
-    expect(safeScore).toBeGreaterThanOrEqual(dangerousScore);
+    expect(easyScore).toBeGreaterThanOrEqual(hardScore);
   });
 });
 

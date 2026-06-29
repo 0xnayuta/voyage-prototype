@@ -66,15 +66,15 @@ describe("buildMarketView", () => {
     const view = buildMarketView(world);
 
     const silk = view.goods.find((g) => g.id === "silk");
-    expect(silk?.buyPrice).toBe(82);
+    expect(silk?.buyPrice).toBe(84);
   });
 
-  it("sell price equals buy price (no spread)", () => {
+  it("sell price is lower than buy price due to spread", () => {
     const world = createTestWorld();
     const view = buildMarketView(world);
 
     for (const good of view.goods) {
-      expect(good.sellPrice).toBe(good.buyPrice);
+      expect(good.sellPrice).toBeLessThan(good.buyPrice);
     }
   });
 

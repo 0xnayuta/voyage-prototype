@@ -11,6 +11,7 @@ const ERROR_MAP: Record<string, string> = {
   IN_VOYAGE: "航行中无法进行此操作",
   UNKNOWN_PORT: "未知港口",
   NO_PRICE_DATA: "该商品暂无价格数据",
+  UNKNOWN_REGION: "未知海域",
   CARGO_EXCEEDS_CAPACITY: "当前货物量超出该配置有效舱容，无法出航",
 };
 
