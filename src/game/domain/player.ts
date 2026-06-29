@@ -1,4 +1,9 @@
-import { STARTING_DAY, STARTING_GOLD } from "../../data/formulas";
+import {
+  BASE_EXP,
+  LEVEL_EXP_GROWTH,
+  STARTING_DAY,
+  STARTING_GOLD,
+} from "../../data/formulas";
 import { SHIPS } from "../../data/ships";
 import { applyDayPass, initMarketPrices } from "./market";
 import type { World } from "./types";
@@ -16,6 +21,9 @@ export function createDefaultWorld(): World {
       gold: STARTING_GOLD,
       currentPortId: "quanzhou",
       day: STARTING_DAY,
+      level: 1,
+      exp: 0,
+      expToNext: BASE_EXP,
     },
     ship: {
       typeId: defaultShip.id,
@@ -49,4 +57,38 @@ export function advanceDay(world: World, days: number): World {
   }
 
   return result;
+}
+
+/**
+ * 给玩家增加经验，触发自动升级（可多级连升）。
+ * 纯函数，返回新 World。
+ */
+export function gainExp(world: World, amount: number): World {
+  if (amount <= 0) return world;
+  return levelUp({
+    ...world,
+    player: { ...world.player, exp: world.player.exp + amount },
+  });
+}
+
+/**
+ * 递归升级：exp >= expToNext 则升级，溢出经验保留到下一级。
+ */
+function levelUp(world: World): World {
+  const { level, exp, expToNext } = world.player;
+  if (exp < expToNext) return world;
+  const nextExp = exp - expToNext;
+  const nextLevel = level + 1;
+  const nextExpToNext = Math.floor(
+    BASE_EXP * (1 + nextLevel * LEVEL_EXP_GROWTH),
+  );
+  return levelUp({
+    ...world,
+    player: {
+      ...world.player,
+      level: nextLevel,
+      exp: nextExp,
+      expToNext: nextExpToNext,
+    },
+  });
 }

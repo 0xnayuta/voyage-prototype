@@ -3,10 +3,12 @@
 // ============================================================
 
 import { EVENT_CONFIGS, type EventTemplate } from "../../data/events";
+import { EVENT_EXP } from "../../data/formulas";
 import { PORTS } from "../../data/ports";
 import { REGIONS } from "../../data/regions";
 import { applyCombatOutcome, resolveCombat } from "./combat";
 import { getEffectiveCapacityForShip } from "./navigation";
+import { gainExp } from "./player";
 import { getNearestPort } from "./ship";
 import { getMaxCapacity, getUsedCapacity } from "./trade";
 import type { CargoItem, VoyageEvent, VoyageState, World } from "./types";
@@ -193,7 +195,6 @@ export function applyVoyageEvents(
   events: readonly VoyageEvent[],
 ): World {
   let result = world;
-
   for (const event of events) {
     if (event.type === "combat") {
       result = applyCombatEvent(result, event);
@@ -201,8 +202,8 @@ export function applyVoyageEvents(
       result = applyGoldChange(result, event.goldChange);
       result = applyCargoLoss(result, event.cargoLoss);
     }
+    result = gainExp(result, EVENT_EXP);
   }
-
   return result;
 }
 

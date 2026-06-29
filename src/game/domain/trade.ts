@@ -1,6 +1,8 @@
+import { LEVEL_EXP_RATIO } from "../../data/formulas";
 import { GOODS } from "../../data/goods";
 import { SHIPS } from "../../data/ships";
 import { applyTradeImpact, getBuyPrice, getSellPrice } from "./market";
+import { gainExp } from "./player";
 import type { CargoItem, World } from "./types";
 import { DomainError } from "./types";
 
@@ -148,9 +150,14 @@ export function executeSell(world: World, input: SellInput): SellResult {
     quantity,
     false, // isBuy
   );
+  const profitAmount = Math.max(0, profit);
+  const worldAfterExp = gainExp(
+    worldAfterTrade,
+    Math.floor(profitAmount * LEVEL_EXP_RATIO),
+  );
 
   return {
-    world: worldAfterTrade,
+    world: worldAfterExp,
     totalRevenue,
     profit,
   };

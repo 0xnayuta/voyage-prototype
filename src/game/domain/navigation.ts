@@ -1,4 +1,4 @@
-import { SPEED_BASE } from "../../data/formulas";
+import { LEVEL_SPEED_PER_LEVEL, SPEED_BASE } from "../../data/formulas";
 import { PORTS, type PortConfig } from "../../data/ports";
 import { SHIPS } from "../../data/ships";
 import type { World } from "./types";
@@ -36,7 +36,8 @@ export function getReachablePorts(
 export function calcTravelDays(distance: number, world: World): number {
   const ship = SHIPS.find((s) => s.id === world.ship.typeId);
   if (!ship) return Infinity;
-  return Math.ceil(distance / (ship.speed * SPEED_BASE));
+  const speedBonus = 1 + world.player.level * LEVEL_SPEED_PER_LEVEL;
+  return Math.ceil(distance / (ship.speed * speedBonus * SPEED_BASE));
 }
 
 /** 执行到达：更新当前港口。天数推进由 advanceDay 处理 */
