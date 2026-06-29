@@ -120,35 +120,35 @@ export function NavigationPanel({ view }: NavigationPanelProps) {
           <button
             type="button"
             onClick={() => toggleSort("region")}
-            className="text-right cursor-pointer hover:text-gold-400 transition-colors"
+            className="text-left cursor-pointer hover:text-gold-400 transition-colors"
           >
             地区{sortIndicator("region")}
           </button>
           <button
             type="button"
             onClick={() => toggleSort("distance")}
-            className="text-right cursor-pointer hover:text-gold-400 transition-colors"
+            className="text-center cursor-pointer hover:text-gold-400 transition-colors"
           >
             距离{sortIndicator("distance")}
           </button>
           <button
             type="button"
             onClick={() => toggleSort("travelDays")}
-            className="text-right cursor-pointer hover:text-gold-400 transition-colors"
+            className="text-center cursor-pointer hover:text-gold-400 transition-colors"
           >
             天数{sortIndicator("travelDays")}
           </button>
           <button
             type="button"
             onClick={() => toggleSort("survivalRate")}
-            className="text-right cursor-pointer hover:text-gold-400 transition-colors"
+            className="text-center cursor-pointer hover:text-gold-400 transition-colors"
           >
             生存率{sortIndicator("survivalRate")}
           </button>
           <button
             type="button"
             onClick={() => toggleSort("estimatedProfit")}
-            className="text-right cursor-pointer hover:text-gold-400 transition-colors"
+            className="text-center cursor-pointer hover:text-gold-400 transition-colors"
           >
             预估利润{sortIndicator("estimatedProfit")}
           </button>
@@ -160,15 +160,13 @@ export function NavigationPanel({ view }: NavigationPanelProps) {
             className="grid grid-cols-8 gap-2 items-center border-b border-ocean-700/30 px-4 py-3 text-sm hover:bg-ocean-700/40 transition-colors last:border-b-0"
           >
             <span className="col-span-2 font-medium">{dest.portName}</span>
-            <span className="text-right text-xs text-parchment-dark">
-              {dest.region}
-            </span>
-            <span className="text-right text-parchment-dark">
+            <span className="text-xs text-parchment-dark">{dest.region}</span>
+            <span className="text-center text-parchment-dark">
               {dest.distance}
             </span>
-            <span className="text-right text-gold-400">{dest.travelDays}</span>
+            <span className="text-center text-gold-400">{dest.travelDays}</span>
             <span
-              className={`text-right ${
+              className={`text-center ${
                 getSurvivalRate(dest.baseDangerScore) >= 70
                   ? "text-green-400"
                   : getSurvivalRate(dest.baseDangerScore) >= 40
@@ -179,7 +177,7 @@ export function NavigationPanel({ view }: NavigationPanelProps) {
               {getSurvivalRate(dest.baseDangerScore)}%
             </span>
             <span
-              className={`text-right ${
+              className={`text-center ${
                 dest.estimatedProfit > 0
                   ? "text-green-400"
                   : dest.estimatedProfit < 0
