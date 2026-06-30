@@ -22,6 +22,16 @@ export interface HarborView {
   readonly maxCrew: number;
 }
 
+export interface AvailableEquipmentView {
+  readonly id: string;
+  readonly name: string;
+  readonly type: string;
+  readonly typeLabel: string;
+  readonly effectDescription: string;
+  readonly price: number;
+  readonly canAfford: boolean;
+}
+
 /** 交易所页（/market） */
 export interface MarketView {
   readonly portName: string;
@@ -29,6 +39,8 @@ export interface MarketView {
   readonly playerGold: number;
   readonly cargoCount: number;
   readonly cargoCapacity: number;
+  readonly availableEquipments: readonly AvailableEquipmentView[];
+  readonly fleetInventory: readonly string[];
 }
 
 export interface GoodView {
@@ -94,6 +106,14 @@ export interface ComponentView {
   readonly upgradeDescription: string;
 }
 
+export interface EquippedItemView {
+  readonly id: string;
+  readonly name: string;
+  readonly type: string;
+  readonly typeLabel: string;
+  readonly effectDescription: string;
+}
+
 export interface ShipView {
   readonly shipName: string;
   readonly fleetGold: number;
@@ -103,6 +123,8 @@ export interface ShipView {
   readonly canRepair: boolean;
   readonly blockedByVoyage: boolean;
   readonly components: ComponentView[];
+  readonly equippedItems: readonly EquippedItemView[];
+  readonly fleetInventory: readonly EquippedItemView[];
 }
 
 /** 舰队中单艘船只摘要 */

@@ -40,6 +40,7 @@ export interface FleetState {
   readonly crew: number;
   readonly maxCrew: number;
   readonly gold: number;
+  readonly inventory: readonly string[];
 }
 
 // ---- 市场 ----
@@ -114,4 +115,8 @@ export type DomainErrorCode =
   | "EMPTY_FLEET_SELECTION"
   | "SHIP_ZERO_DURABILITY"
   | "CREW_EXCEEDS_CAPACITY"
-  | "INSUFFICIENT_CREW";
+  | "INSUFFICIENT_CREW"
+  | "EQUIPMENT_NOT_FOUND"
+  | "EQUIPMENT_SLOT_FULL"
+  | "DUPLICATE_EQUIPMENT_TYPE"
+  | "SHIP_HAS_EQUIPMENT";
