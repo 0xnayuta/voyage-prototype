@@ -188,22 +188,20 @@ export function applyCombatOutcome(
       voyage: null,
     };
   } else if (outcome.cargoLoss > 0) {
-    // Split cargo loss across fleet ships
+    // 单次 map 遍历舰队船只，消除 O(N²) 嵌套
     const cargoLossPerShip = Math.ceil(outcome.cargoLoss / fleetSize);
-    for (const shipId of fleetShipIds) {
-      const ship = result.fleet.ships.find((s) => s.id === shipId);
-      if (!ship || ship.cargo.length === 0) continue;
-      const remainingCargo = subtractCargoLoss(ship.cargo, cargoLossPerShip);
-      result = {
-        ...result,
-        fleet: {
-          ...result.fleet,
-          ships: result.fleet.ships.map((s) =>
-            s.id === shipId ? { ...s, cargo: remainingCargo } : s,
-          ),
-        },
-      };
-    }
+    const shipSet = new Set(fleetShipIds);
+    result = {
+      ...result,
+      fleet: {
+        ...result.fleet,
+        ships: result.fleet.ships.map((s) =>
+          shipSet.has(s.id) && s.cargo.length > 0
+            ? { ...s, cargo: subtractCargoLoss(s.cargo, cargoLossPerShip) }
+            : s,
+        ),
+      },
+    };
   }
 
   // 扣除船员损失
