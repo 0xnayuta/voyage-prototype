@@ -20,9 +20,9 @@ export async function switchActiveShipAction(
 
   return await prisma.$transaction(async (tx: PrismaTransactionClient) => {
     const world = await loadWorld(tx);
+    if (world.voyage) throw new Error("航行中无法更换旗舰");
     const shipExists = world.fleet.ships.some((s) => s.id === shipId);
     if (!shipExists) throw new Error("无效船只");
-
     const newWorld: typeof world = {
       ...world,
       fleet: {
@@ -40,11 +40,16 @@ export async function setArmamentAction(
 ): Promise<FleetView> {
   const levelRaw = formData.get("level");
   const level = parseInt(levelRaw as string, 10) as 0 | 1 | 2;
+  const shipId = formData.get("shipId") as string;
   if (![0, 1, 2].includes(level)) throw new Error("无效武装等级");
 
   return await prisma.$transaction(async (tx: PrismaTransactionClient) => {
     const world = await loadWorld(tx);
-    const newWorld = setArmamentLevel(world, getActiveShip(world).id, level);
+    const targetShipId = shipId || getActiveShip(world).id;
+    const shipExists = world.fleet.ships.some((s) => s.id === targetShipId);
+    if (!shipExists) throw new Error("无效船只");
+
+    const newWorld = setArmamentLevel(world, targetShipId, level);
     await saveWorld(tx, newWorld);
     return buildFleetView(newWorld);
   });

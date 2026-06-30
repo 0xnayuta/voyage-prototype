@@ -2,6 +2,17 @@ import type { HarborView } from "../types/game-view";
 
 /** 港口总览页面的展示组件（纯渲染，无客户端交互） */
 export function HarborDashboard({ view }: { view: HarborView }) {
+  const hpPercent =
+    view.shipMaxHp > 0
+      ? Math.round((view.shipCurrentHp / view.shipMaxHp) * 100)
+      : 0;
+  const hpColor =
+    hpPercent > 60
+      ? "bg-green-500"
+      : hpPercent > 30
+        ? "bg-yellow-500"
+        : "bg-red-500";
+
   return (
     <div className="flex-1 p-4 max-w-2xl mx-auto w-full space-y-4">
       {/* 状态栏 */}
@@ -54,9 +65,9 @@ export function HarborDashboard({ view }: { view: HarborView }) {
         <div className="mt-2 flex items-center gap-2">
           <div className="h-2 flex-1 overflow-hidden rounded-full bg-ocean-700">
             <div
-              className="h-full rounded-full bg-green-500"
+              className={`h-full rounded-full ${hpColor}`}
               style={{
-                width: `${view.shipMaxHp > 0 ? Math.round((view.shipCurrentHp / view.shipMaxHp) * 100) : 0}%`,
+                width: `${hpPercent}%`,
               }}
             />
           </div>

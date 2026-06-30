@@ -278,7 +278,7 @@ function buildFleetShipSummaryView(
   const shipConfig = SHIPS.find((s) => s.id === ship.typeId);
   const typeName = shipConfig?.name ?? "未知";
   const cargoCapacity = shipConfig
-    ? Math.floor(shipConfig.capacity * (1 + ship.equipment.hullLevel * 0.1))
+    ? Math.floor(shipConfig.capacity * (1 + ship.equipment.hullLevel * 0.2))
     : 0;
 
   const cargoUsed = ship.cargo.reduce((sum, c) => {

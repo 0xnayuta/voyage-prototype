@@ -252,7 +252,7 @@ export function startVoyage(
     const shipConfig = SHIPS.find((s) => s.id === ship.typeId);
     if (!shipConfig) throw new DomainError("INVALID_SHIP");
     const maxCapForShip = Math.floor(
-      shipConfig.capacity * (1 + ship.equipment.hullLevel * 0.1),
+      shipConfig.capacity * (1 + ship.equipment.hullLevel * 0.2),
     );
     const effectiveCapacity = getEffectiveCapacityForShip(
       ship.typeId,

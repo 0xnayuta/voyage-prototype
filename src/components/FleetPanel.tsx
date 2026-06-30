@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import type { FleetView } from "../types/game-view";
 
 interface FleetPanelProps {
@@ -15,19 +15,22 @@ export function FleetPanel({
 }: FleetPanelProps) {
   const [displayView, setDisplayView] = useState(view);
   const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const handleAction = (
     action: (formData: FormData) => Promise<FleetView>,
     errorPrefix: string,
   ) => {
-    return async (formData: FormData) => {
+    return (formData: FormData) => {
       setError(null);
-      try {
-        const nextView = await action(formData);
-        setDisplayView(nextView);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : `${errorPrefix}失败`);
-      }
+      startTransition(async () => {
+        try {
+          const nextView = await action(formData);
+          setDisplayView(nextView);
+        } catch (e) {
+          setError(e instanceof Error ? e.message : `${errorPrefix}失败`);
+        }
+      });
     };
   };
 
@@ -191,7 +194,7 @@ export function FleetPanel({
                     <input type="hidden" name="shipId" value={ship.id} />
                     <button
                       type="submit"
-                      disabled={blockedByVoyage}
+                      disabled={blockedByVoyage || isPending}
                       className="rounded border border-ocean-600 px-3 py-1 text-xs text-parchment-dark hover:border-gold-500 hover:text-gold-400 transition-colors disabled:opacity-50"
                     >
                       设为旗舰
@@ -246,13 +249,15 @@ export function FleetPanel({
                   </span>
                   {!blockedByVoyage && (
                     <form action={handleSetArmament} className="flex gap-1.5">
+                      <input type="hidden" name="shipId" value={ship.id} />
                       {[0, 1, 2].map((level) => (
                         <button
                           key={level}
                           type="submit"
                           name="level"
                           value={level}
-                          className={`rounded px-2.5 py-0.5 text-[11px] transition-colors ${
+                          disabled={isPending}
+                          className={`rounded px-2.5 py-0.5 text-[11px] transition-colors disabled:opacity-50 ${
                             ship.armamentLevel === level
                               ? "bg-gold-500 text-ocean-900 font-bold"
                               : "border border-ocean-600 text-parchment-dark hover:border-gold-500"

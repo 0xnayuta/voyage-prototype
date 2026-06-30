@@ -14,7 +14,6 @@ describe("startVoyage", () => {
       fromPortId: "quanzhou",
       toPortId: "malacca",
       travelDays: 5,
-      armamentLevel: 0,
     });
 
     expect(result.fromPortId).toBe("quanzhou");
@@ -29,7 +28,6 @@ describe("startVoyage", () => {
       fromPortId: "quanzhou",
       toPortId: "malacca",
       travelDays: 0,
-      armamentLevel: 0,
     });
 
     expect(Array.isArray(result.events)).toBe(true);
