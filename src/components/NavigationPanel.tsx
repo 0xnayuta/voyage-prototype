@@ -232,10 +232,16 @@ export function NavigationPanel({ view }: NavigationPanelProps) {
           isSingleShip={view.fleetShips.length <= 1}
           onConfirm={() => {
             startTravelTransition(async () => {
-              const fd = new FormData();
-              fd.set("portId", selectedDest.portId);
-              fd.set("shipIds", JSON.stringify(selectedShipIds));
-              await startTravel(fd);
+              try {
+                const fd = new FormData();
+                fd.set("portId", selectedDest.portId);
+                fd.set("shipIds", JSON.stringify(selectedShipIds));
+                await startTravel(fd);
+              } catch {
+                // startTravel 成功后 redirect 到 /voyage，
+                // 抛异常时关闭弹窗由用户重试
+                setSelectedDest(null);
+              }
             });
           }}
           onClose={() => setSelectedDest(null)}

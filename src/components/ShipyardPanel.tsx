@@ -34,8 +34,8 @@ export function ShipyardPanel({
   const [displayView, setDisplayView] = useState(view);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-
   const [isEquipmentPending, setIsEquipmentPending] = useState(false);
+
   const handleAction = (
     action: (formData: FormData) => Promise<ShipyardView>,
     errorPrefix: string,
@@ -80,70 +80,38 @@ export function ShipyardPanel({
     });
   };
 
-  const handleEquipItem = async (equipmentId: string) => {
+  /** 装备操作通用处理器：组装 FormData → 调用 action → 更新视图 */
+  const runEquipmentAction = (
+    action: (fd: FormData) => Promise<ShipyardView>,
+    equipmentId: string,
+    errorMsg: string,
+    usePending?: boolean,
+  ) => {
+    if (usePending) setIsEquipmentPending(true);
     setError(null);
     startTransition(async () => {
       try {
         const fd = new FormData();
         fd.set("shipId", selectedShipId);
         fd.set("equipmentId", equipmentId);
-        const nextView = await equipItemAction(fd);
+        const nextView = await action(fd);
         setDisplayView(nextView);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "装备失败");
+        setError(e instanceof Error ? e.message : `${errorMsg}失败`);
+      } finally {
+        if (usePending) setIsEquipmentPending(false);
       }
     });
   };
 
-  const handleUnequipItem = async (equipmentId: string) => {
-    setError(null);
-    startTransition(async () => {
-      try {
-        const fd = new FormData();
-        fd.set("shipId", selectedShipId);
-        fd.set("equipmentId", equipmentId);
-        const nextView = await unequipItemAction(fd);
-        setDisplayView(nextView);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "卸下失败");
-      }
-    });
-  };
-  const handleBuyEquipment = async (equipmentId: string) => {
-    setIsEquipmentPending(true);
-    setError(null);
-    startTransition(async () => {
-      try {
-        const fd = new FormData();
-        fd.set("equipmentId", equipmentId);
-        fd.set("shipId", selectedShipId);
-        const nextView = await buyEquipmentAction(fd);
-        setDisplayView(nextView);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "购买装备失败");
-      } finally {
-        setIsEquipmentPending(false);
-      }
-    });
-  };
-
-  const handleSellEquipment = async (equipmentId: string) => {
-    setIsEquipmentPending(true);
-    setError(null);
-    startTransition(async () => {
-      try {
-        const fd = new FormData();
-        fd.set("equipmentId", equipmentId);
-        fd.set("shipId", selectedShipId);
-        const nextView = await sellEquipmentAction(fd);
-        setDisplayView(nextView);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "出售装备失败");
-      } finally {
-        setIsEquipmentPending(false);
-      }
-    });
-  };
+  const handleEquipItem = (id: string) =>
+    runEquipmentAction(equipItemAction, id, "装备");
+  const handleUnequipItem = (id: string) =>
+    runEquipmentAction(unequipItemAction, id, "卸下");
+  const handleBuyEquipment = (id: string) =>
+    runEquipmentAction(buyEquipmentAction, id, "购买装备", true);
+  const handleSellEquipment = (id: string) =>
+    runEquipmentAction(sellEquipmentAction, id, "出售装备", true);
 
   const selectedShipId = displayView.selectedShipId;
   const selectedShipSummary = displayView.ships.find(
