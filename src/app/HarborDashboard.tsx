@@ -52,22 +52,15 @@ export function HarborDashboard({ view }: { view: HarborView }) {
         <h3 className="text-sm font-semibold text-gold-400">船只</h3>
         <p className="mt-1 text-sm">{view.shipName}</p>
         <div className="mt-2 flex items-center gap-2">
-          <span className="text-xs text-parchment-dark">耐久</span>
-          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-ocean-700">
+          <div className="h-2 flex-1 overflow-hidden rounded-full bg-ocean-700">
             <div
-              className={`h-full rounded-full ${
-                view.shipCurrentHp / view.shipMaxHp > 0.6
-                  ? "bg-green-500"
-                  : view.shipCurrentHp / view.shipMaxHp > 0.3
-                    ? "bg-yellow-500"
-                    : "bg-red-500"
-              }`}
+              className="h-full rounded-full bg-green-500"
               style={{
-                width: `${(view.shipCurrentHp / view.shipMaxHp) * 100}%`,
+                width: `${view.shipMaxHp > 0 ? Math.round((view.shipCurrentHp / view.shipMaxHp) * 100) : 0}%`,
               }}
             />
           </div>
-          <span className="text-xs text-parchment-dark/60">
+          <span className="text-xs text-parchment-dark">
             {view.shipCurrentHp}/{view.shipMaxHp}
           </span>
         </div>
@@ -90,18 +83,18 @@ export function HarborDashboard({ view }: { view: HarborView }) {
           <div className="mt-1 text-xs text-parchment-dark">选择目的港</div>
         </a>
         <a
-          href="/cargo"
-          className="rounded-lg border border-ocean-600 bg-ocean-700/60 p-3 text-center text-sm hover:bg-ocean-700 transition-colors"
-        >
-          <div className="font-semibold text-gold-400">船舱</div>
-          <div className="mt-1 text-xs text-parchment-dark">查看货物</div>
-        </a>
-        <a
           href="/ship"
           className="rounded-lg border border-ocean-600 bg-ocean-700/60 p-3 text-center text-sm hover:bg-ocean-700 transition-colors"
         >
           <div className="font-semibold text-gold-400">造船厂</div>
-          <div className="mt-1 text-xs text-parchment-dark">升级船只</div>
+          <div className="mt-1 text-xs text-parchment-dark">维护与买卖船只</div>
+        </a>
+        <a
+          href="/fleet"
+          className="rounded-lg border border-ocean-600 bg-ocean-700/60 p-3 text-center text-sm hover:bg-ocean-700 transition-colors"
+        >
+          <div className="font-semibold text-gold-400">舰队</div>
+          <div className="mt-1 text-xs text-parchment-dark">管理舰队</div>
         </a>
       </div>
     </div>

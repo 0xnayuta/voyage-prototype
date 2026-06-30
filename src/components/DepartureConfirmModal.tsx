@@ -9,20 +9,24 @@ interface DepartureConfirmModalProps {
     travelDays: number;
     estimatedProfit: number;
   };
-  readonly armamentLabel: string;
+  readonly selectedShipNames: string;
   readonly survivalRate: number;
   readonly isTravelPending: boolean;
   readonly isOverCargo: boolean;
+  readonly selectedShipCount: number;
+  readonly isSingleShip: boolean;
   readonly onConfirm: () => void;
   readonly onClose: () => void;
 }
 
 export function DepartureConfirmModal({
   dest,
-  armamentLabel,
+  selectedShipNames,
   survivalRate,
   isTravelPending,
   isOverCargo,
+  selectedShipCount,
+  isSingleShip,
   onConfirm,
   onClose,
 }: DepartureConfirmModalProps) {
@@ -37,9 +41,21 @@ export function DepartureConfirmModal({
           <span>航行天数</span>
           <span className="text-gold-400">{dest.travelDays} 天</span>
         </div>
-        <div className="flex justify-between">
-          <span>出航配置</span>
-          <span className="text-parchment">{armamentLabel}</span>
+        <div className="flex flex-col gap-1 border-t border-ocean-700/40 pt-2 pb-1">
+          <div className="flex justify-between">
+            <span>出航船只</span>
+            <span className="text-parchment font-medium">
+              {isSingleShip ? selectedShipNames : `${selectedShipCount} 艘`}
+            </span>
+          </div>
+          {!isSingleShip && (
+            <div
+              className="text-xs text-parchment-dark text-right truncate"
+              title={selectedShipNames}
+            >
+              {selectedShipNames}
+            </div>
+          )}
         </div>
         <div className="flex justify-between">
           <span>生存率</span>
@@ -61,7 +77,7 @@ export function DepartureConfirmModal({
         )}
         {isOverCargo && (
           <div className="rounded border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 text-xs text-yellow-400 text-center">
-            ⚠ 当前货物量超出有效舱容，请卸货或换装满载配置
+            ⚠ 当前货物量超出有效舱容，请先到舰队页面调整配置或卸货
           </div>
         )}
       </div>

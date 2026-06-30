@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN" className="h-full">
+    <html lang="zh-CN" className="h-full" suppressHydrationWarning>
       <body className="min-h-full flex flex-col">
         <nav className="flex items-center justify-between bg-ocean-800 border-b border-ocean-600 px-4 py-2 text-sm">
           <span className="text-gold-400 font-bold tracking-wider">
@@ -33,10 +33,16 @@ export default function RootLayout({
               交易所
             </Link>
             <Link
-              href="/cargo"
+              href="/ship"
               className="hover:text-gold-400 focus-visible:text-gold-400 transition-colors outline-none"
             >
-              船舱
+              造船厂
+            </Link>
+            <Link
+              href="/fleet"
+              className="hover:text-gold-400 focus-visible:text-gold-400 transition-colors outline-none"
+            >
+              舰队
             </Link>
             <Link
               href="/navigation"

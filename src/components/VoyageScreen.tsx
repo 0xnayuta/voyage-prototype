@@ -13,7 +13,7 @@ export function VoyageScreen({ view }: VoyageScreenProps) {
         fromPortName={view.fromPortName}
         toPortName={view.toPortName}
         travelDays={view.travelDays}
-        armamentLabel={view.armamentLabel}
+        fleetShipCount={view.fleetShipCount}
       />
 
       <VoyageRoute
@@ -32,14 +32,14 @@ interface VoyageStatusBarProps {
   readonly fromPortName: string;
   readonly toPortName: string;
   readonly travelDays: number;
-  readonly armamentLabel: string;
+  readonly fleetShipCount: number;
 }
 
 function VoyageStatusBar({
   fromPortName,
   toPortName,
   travelDays,
-  armamentLabel,
+  fleetShipCount,
 }: VoyageStatusBarProps) {
   return (
     <div className="rounded-lg border border-ocean-600 bg-ocean-800/80 px-4 py-3 text-sm">
@@ -53,7 +53,9 @@ function VoyageStatusBar({
         <span className="text-xs text-ocean-500">
           预计 {travelDays} 天后到达
         </span>
-        <span className="text-xs text-gold-500/70">配置：{armamentLabel}</span>
+        <span className="text-xs text-gold-500/70">
+          编队：{fleetShipCount} 艘
+        </span>
       </div>
     </div>
   );
