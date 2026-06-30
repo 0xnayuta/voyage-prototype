@@ -13,6 +13,7 @@ interface DepartureConfirmModalProps {
   readonly survivalRate: number;
   readonly isTravelPending: boolean;
   readonly isOverCargo: boolean;
+  readonly isCrewInsufficient?: boolean;
   readonly selectedShipCount: number;
   readonly isSingleShip: boolean;
   readonly onConfirm: () => void;
@@ -25,6 +26,7 @@ export function DepartureConfirmModal({
   survivalRate,
   isTravelPending,
   isOverCargo,
+  isCrewInsufficient = false,
   selectedShipCount,
   isSingleShip,
   onConfirm,
@@ -80,13 +82,18 @@ export function DepartureConfirmModal({
             ⚠ 当前货物量超出有效舱容，请先到舰队页面调整配置或卸货
           </div>
         )}
+        {isCrewInsufficient && (
+          <div className="rounded border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-400 text-center">
+            ⚠ 拥有船员不足最低起航需求，请先前往酒馆招募！
+          </div>
+        )}
       </div>
 
       <div className="mt-4 flex gap-2">
         <button
           type="button"
           onClick={onConfirm}
-          disabled={isTravelPending || isOverCargo}
+          disabled={isTravelPending || isOverCargo || isCrewInsufficient}
           className="flex-1 rounded bg-gold-500 py-2 text-sm font-bold text-ocean-900 hover:bg-gold-400 transition-colors disabled:opacity-50"
         >
           {isTravelPending ? "出航中..." : "确认出航"}

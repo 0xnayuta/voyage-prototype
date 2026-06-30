@@ -5,12 +5,15 @@ import {
   COMBAT_CARGO_LOSS_MIN,
   COMBAT_DEFENSE_BONUS_FACTOR,
   COMBAT_HP_PENALTY_FACTOR,
+  COMBAT_PARTIAL_LOSS_CREW_LOSS_MAX,
+  COMBAT_PARTIAL_LOSS_CREW_LOSS_MIN,
+  COMBAT_VICTORY_CREW_LOSS_CHANCE,
   TOTAL_LOSS_THRESHOLD,
 } from "../../data/formulas";
 import { SHIPS } from "../../data/ships";
+import { calcMinCrewForFleet } from "./crew";
 import { calcDefenseScore, getActiveShip, takeDamage } from "./ship";
 import type { CargoItem, ShipInstance, World } from "./types";
-
 /** 战斗结果类型 */
 export type CombatResult = "victory" | "partialLoss" | "totalLoss";
 
@@ -20,9 +23,9 @@ export interface CombatOutcome {
   readonly hpDamage: number;
   readonly cargoLoss: number;
   readonly allCargoLost?: true;
+  readonly crewLoss?: number;
   readonly description: string;
 }
-
 /** 随机因子来源（允许测试注入确定性值） */
 export type RngSource = () => number;
 
@@ -35,14 +38,21 @@ export function resolveCombat(
   const activeShip = getActiveShip(world);
   const shipConfig = SHIPS.find((s) => s.id === activeShip.typeId);
   if (!shipConfig) {
-    return { result: "victory", hpDamage: 0, cargoLoss: 0, description: "" };
+    return {
+      result: "victory",
+      hpDamage: 0,
+      cargoLoss: 0,
+      crewLoss: 0,
+      description: "",
+    };
   }
 
   const score = calcCombatScore(world, difficulty, rng);
 
-  if (score < TOTAL_LOSS_THRESHOLD) return buildTotalLossOutcome(activeShip);
-  if (score < 50) return buildPartialLossOutcome(rng);
-  return buildVictoryOutcome(rng);
+  if (score < TOTAL_LOSS_THRESHOLD)
+    return buildTotalLossOutcome(activeShip, world);
+  if (score < 50) return buildPartialLossOutcome(rng, world);
+  return buildVictoryOutcome(rng, world);
 }
 
 /** 计算战斗评分 */
@@ -81,24 +91,34 @@ function calcCombatScore(
     COMBAT_HP_PENALTY_FACTOR,
   );
 
+  // 船员战斗加成
+  const minCrew = calcMinCrewForFleet(world, fleetShipIds);
+  const extraCrew = Math.max(0, world.fleet.crew - minCrew);
+  const combatBonus = Math.min(0.3, extraCrew * 0.005);
+  score = score * (1 + combatBonus);
+
   score = score * (0.6 + rng() * 0.8);
   score = score / difficulty;
 
   return score;
 }
 
-function buildTotalLossOutcome(activeShip: ShipInstance): CombatOutcome {
+function buildTotalLossOutcome(
+  activeShip: ShipInstance,
+  world: World,
+): CombatOutcome {
   return {
     result: "totalLoss",
     hpDamage: activeShip.durability,
     cargoLoss: 0,
     allCargoLost: true,
-    description: "海盗登船洗劫一空，船体严重损毁，勉强漂回港口……",
+    crewLoss: world.fleet.crew,
+    description: "海盗登船洗劫一空，船员全数失踪，船体严重损毁，勉强漂回港口……",
   };
 }
 
 /** 部分损失结果 */
-function buildPartialLossOutcome(rng: RngSource): CombatOutcome {
+function buildPartialLossOutcome(rng: RngSource, world: World): CombatOutcome {
   const hpDamage = Math.floor(
     COMBAT_BASE_DAMAGE_MIN +
       rng() * (COMBAT_BASE_DAMAGE_MAX - COMBAT_BASE_DAMAGE_MIN),
@@ -107,22 +127,33 @@ function buildPartialLossOutcome(rng: RngSource): CombatOutcome {
     COMBAT_CARGO_LOSS_MIN +
       rng() * (COMBAT_CARGO_LOSS_MAX - COMBAT_CARGO_LOSS_MIN),
   );
+  const minLoss = Math.min(world.fleet.crew, COMBAT_PARTIAL_LOSS_CREW_LOSS_MIN);
+  const maxLoss = Math.min(world.fleet.crew, COMBAT_PARTIAL_LOSS_CREW_LOSS_MAX);
+  const crewLoss =
+    minLoss <= maxLoss
+      ? Math.floor(rng() * (maxLoss - minLoss + 1)) + minLoss
+      : 0;
+
   return {
     result: "partialLoss",
     hpDamage,
     cargoLoss,
-    description: `激战后击退海盗，船上损失 ${cargoLoss > 0 ? `${cargoLoss} 单位货物` : "部分物资"}，船体受损。`,
+    crewLoss,
+    description: `激战后击退海盗，船体受损，损失 ${cargoLoss > 0 ? `${cargoLoss} 单位货物` : "部分物资"}${crewLoss > 0 ? `及 ${crewLoss} 名船员` : ""}。`,
   };
 }
 
 /** 胜利结果 */
-function buildVictoryOutcome(rng: RngSource): CombatOutcome {
+function buildVictoryOutcome(rng: RngSource, world: World): CombatOutcome {
   const hpDamage = Math.floor(rng() * 5);
+  const crewLoss =
+    rng() < COMBAT_VICTORY_CREW_LOSS_CHANCE ? Math.min(1, world.fleet.crew) : 0;
   return {
     result: "victory",
     hpDamage,
     cargoLoss: 0,
-    description: "船员奋力作战，成功击退海盗！",
+    crewLoss,
+    description: `船员奋力作战，成功击退海盗！${crewLoss > 0 ? "（损失 1 名船员）" : ""}`,
   };
 }
 
@@ -172,6 +203,17 @@ export function applyCombatOutcome(
         },
       };
     }
+  }
+
+  // 扣除船员损失
+  if (outcome.crewLoss && outcome.crewLoss > 0) {
+    result = {
+      ...result,
+      fleet: {
+        ...result.fleet,
+        crew: Math.max(0, result.fleet.crew - outcome.crewLoss),
+      },
+    };
   }
 
   return result;

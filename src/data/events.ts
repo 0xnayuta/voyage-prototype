@@ -20,7 +20,7 @@ export interface EventTemplate {
   readonly cargoLossChance: number;
   readonly maxCargoLoss: number;
   readonly triggerText: string;
-  readonly type?: "combat";
+  readonly type?: "combat" | "storm";
   readonly regionProbMultiplier?: Readonly<Record<string, number>>;
 }
 
@@ -52,6 +52,7 @@ export const EVENT_CONFIGS: readonly EventTemplate[] = [
     cargoLossChance: 0.3,
     maxCargoLoss: 3,
     triggerText: "天色骤变，狂风裹着巨浪劈头盖脸地砸来！",
+    type: "storm",
     regionProbMultiplier: {
       north_sea: 1.4,
       east_asia: 1.3,

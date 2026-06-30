@@ -165,4 +165,62 @@ describe("applyCombatOutcome", () => {
       world.fleet.ships[0].cargo.length,
     );
   });
+
+  it("deducts crew correctly on crewLoss", () => {
+    const world = createTestWorld({
+      fleet: {
+        ships: [createTestWorld().fleet.ships[0]],
+        activeShipId: "ship-1",
+        maxShips: 1,
+        crew: 5,
+        maxCrew: 10,
+        gold: 1000,
+      },
+    });
+
+    const outcome = {
+      result: "partialLoss" as const,
+      hpDamage: 5,
+      cargoLoss: 0,
+      crewLoss: 2,
+      description: "",
+    };
+
+    const result = applyCombatOutcome(world, outcome, "quanzhou");
+    expect(result.fleet.crew).toBe(3); // 5 - 2 = 3
+  });
+
+  it("applies crew combat bonus to combat score (higher victory rate)", () => {
+    const worldMin = createTestWorld({
+      fleet: {
+        ships: [createTestWorld().fleet.ships[0]], // Sloop: baseCrew 3
+        activeShipId: "ship-1",
+        maxShips: 1,
+        crew: 3, // Minimum crew
+        maxCrew: 10,
+        gold: 1000,
+      },
+    });
+
+    const worldExtra = createTestWorld({
+      fleet: {
+        ships: [createTestWorld().fleet.ships[0]],
+        activeShipId: "ship-1",
+        maxShips: 1,
+        crew: 10, // 7 extra crew -> +3.5% score
+        maxCrew: 10,
+        gold: 1000,
+      },
+    });
+
+    // Run resolveCombat with a marginal RNG value to see difference
+    // Sloop full HP, diff 2.0, RNG = 0.475.
+    // Minimum crew gets partialLoss, extra crew gets victory.
+    const outcomeMin = resolveCombat(worldMin, 2.0, fixedRng(0.475));
+    const outcomeExtra = resolveCombat(worldExtra, 2.0, fixedRng(0.475));
+
+    // Confirm that the extra crew's bonus resulted in a better outcome
+    expect(outcomeMin.result).toBe("partialLoss");
+    expect(outcomeExtra.result).toBe("victory");
+  });
 });

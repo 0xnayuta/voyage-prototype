@@ -19,6 +19,8 @@ const ERROR_MAP: Record<string, string> = {
   SHIP_NOT_AT_PORT: "当前港口无法购买该船只",
   EMPTY_FLEET_SELECTION: "请至少选择一艘船出航",
   SHIP_ZERO_DURABILITY: "船体严重损坏，无法出航",
+  CREW_EXCEEDS_CAPACITY: "招募失败，船员人数超出舰队容量上限",
+  INSUFFICIENT_CREW: "船员不足，无法出海",
 };
 
 /** 将领域层的 DomainError 转为用户可读的中文错误消息 */

@@ -141,6 +141,104 @@ describe("applyVoyageEvents", () => {
     const result = applyVoyageEvents(world, events);
     expect(result.player.exp).toBe(10); // 2 events × EVENT_EXP
   });
+
+  it("storm event reduces durability of active ships and potentially loses crew", () => {
+    // Mock Math.random to trigger crew loss
+    // 1st random for crew loss chance (need < STORM_CREW_LOSS_CHANCE = 0.3) -> 0.1
+    // 2nd random for crew loss quantity (STORM_CREW_LOSS_MIN + Math.random * (STORM_CREW_LOSS_MAX - STORM_CREW_LOSS_MIN + 1)) -> 0.0 (losses STORM_CREW_LOSS_MIN = 1)
+    // 3rd random for cargoLossChance (not storm, but standard defaults if any, wait, storm uses createDefaultEvent which uses Math.random, but we pass pre-generated events here, so Math.random inside applyStormEvent only calls Math.random twice for crew loss and once for HP damage range)
+    const randomSpy = vi.spyOn(Math, "random");
+    randomSpy.mockReturnValueOnce(0.1); // crew loss triggers
+    randomSpy.mockReturnValueOnce(0.0); // loses 1 crew member
+    randomSpy.mockReturnValue(0.0); // min damage for HP = STORM_HP_DAMAGE_MIN = 5
+
+    const world = createTestWorld({
+      fleet: {
+        ships: [createTestWorld().fleet.ships[0]],
+        activeShipId: "ship-1",
+        maxShips: 1,
+        crew: 5,
+        maxCrew: 10,
+        gold: 1000,
+      },
+      voyage: {
+        fromPortId: "quanzhou",
+        toPortId: "malacca",
+        departureDay: 1,
+        travelDays: 5,
+        events: [],
+        fleetShipIds: ["ship-1"],
+      },
+    });
+
+    const events: VoyageEvent[] = [
+      {
+        day: 1,
+        description: "狂风巨浪",
+        goldChange: 0,
+        cargoLoss: 0,
+        type: "storm",
+      },
+    ];
+
+    const result = applyVoyageEvents(world, events);
+    expect(result.fleet.ships[0].durability).toBe(44); // 50 - 6 = 44 (RNG = 0.1)
+    expect(result.fleet.crew).toBe(4); // 5 - 1 = 4
+
+    randomSpy.mockRestore();
+  });
+
+  it("storm event sinking triggers total loss when flagship durability reaches 0", () => {
+    // Mock Math.random to return 1.0 (no crew loss) and 1.0 (max damage = STORM_HP_DAMAGE_MAX = 20)
+    const randomSpy = vi.spyOn(Math, "random");
+    randomSpy.mockReturnValueOnce(0.9); // no crew loss triggers
+    randomSpy.mockReturnValueOnce(1.0); // max damage = 20
+
+    const world = createTestWorld({
+      fleet: {
+        ships: [
+          {
+            ...createTestWorld().fleet.ships[0],
+            durability: 15, // will drop below 0 with 20 damage!
+          },
+        ],
+        activeShipId: "ship-1",
+        maxShips: 1,
+        crew: 5,
+        maxCrew: 10,
+        gold: 1000,
+      },
+      voyage: {
+        fromPortId: "quanzhou",
+        toPortId: "malacca",
+        departureDay: 1,
+        travelDays: 5,
+        events: [],
+        fleetShipIds: ["ship-1"],
+      },
+    });
+
+    const events: VoyageEvent[] = [
+      {
+        day: 1,
+        description: "狂风暴雨",
+        goldChange: 0,
+        cargoLoss: 0,
+        type: "storm",
+      },
+    ];
+
+    const result = applyVoyageEvents(world, events);
+
+    // Should trigger total loss:
+    expect(result.voyage).toBeNull(); // voyage cleared
+    expect(result.fleet.ships[0].durability).toBe(1); // HP set to 1
+    expect(result.fleet.ships[0].cargo).toHaveLength(0); // cargo cleared
+    expect(result.fleet.crew).toBe(0); // crew set to 0
+    expect(result.player.currentPortId).toBe("quanzhou"); // teleported back to source (nearest port)
+
+    randomSpy.mockRestore();
+  });
 });
 
 describe("generateVoyageEvents", () => {

@@ -42,6 +42,11 @@ export function NavigationPanel({ view }: NavigationPanelProps) {
   );
   const totalCargoUsed = selectedShips.reduce((sum, s) => sum + s.cargoUsed, 0);
   const isOverCargo = totalCargoUsed > totalCargoCapacity;
+  const totalCrewRequired = selectedShips.reduce(
+    (sum, s) => sum + s.baseCrew,
+    0,
+  );
+  const isCrewInsufficient = view.crew < totalCrewRequired;
   const slowestSpeed =
     selectedShips.length > 0
       ? Math.min(...selectedShips.map((s) => s.speed))
@@ -79,11 +84,21 @@ export function NavigationPanel({ view }: NavigationPanelProps) {
 
   return (
     <div className="flex-1 p-4 max-w-2xl mx-auto w-full space-y-4">
-      <div className="rounded-lg border border-ocean-600 bg-ocean-800/80 px-4 py-2 text-sm">
+      <div className="rounded-lg border border-ocean-600 bg-ocean-800/80 px-4 py-2 text-sm flex items-center justify-between">
         <span className="font-bold text-gold-400">
           航海图 - 当前港口：{view.currentPortName}
         </span>
+        <span className="text-xs text-parchment-dark">
+          拥有船员：{view.crew}/{view.maxCrew} 人
+        </span>
       </div>
+
+      {isCrewInsufficient && view.fleetShips.length <= 1 && (
+        <div className="rounded-lg border border-red-500 bg-red-500/10 p-3 text-sm text-red-400 text-center">
+          ⚠ 拥有船员不足最低起航需求（需要 {totalCrewRequired} 人，当前拥有{" "}
+          {view.crew} 人），请先前往酒馆招募！
+        </div>
+      )}
 
       {/* 舰队选择 */}
       {view.fleetShips.length > 1 && (
@@ -161,12 +176,34 @@ export function NavigationPanel({ view }: NavigationPanelProps) {
 
           {/* 舰队统计 */}
           {selectedShips.length > 0 && (
-            <div className="mt-3 flex gap-4 text-xs text-parchment-dark border-t border-ocean-700 pt-3">
-              <span>出航船只：{selectedShips.length} 艘</span>
-              <span>
-                舱容：{totalCargoUsed}/{totalCargoCapacity}
-              </span>
-              <span>最慢速度：{slowestSpeed}</span>
+            <div className="mt-3 space-y-1.5 border-t border-ocean-700 pt-3 text-xs text-parchment-dark">
+              <div className="flex gap-4">
+                <span>出航船只：{selectedShips.length} 艘</span>
+                <span>
+                  舱容：{totalCargoUsed}/{totalCargoCapacity}
+                </span>
+                <span>最慢速度：{slowestSpeed}</span>
+              </div>
+              <div className="flex gap-4 items-center">
+                <span>
+                  船员需求：
+                  <span
+                    className={
+                      isCrewInsufficient
+                        ? "text-red-400 font-bold"
+                        : "text-parchment"
+                    }
+                  >
+                    {totalCrewRequired}
+                  </span>{" "}
+                  / 拥有：{view.crew} 人
+                </span>
+                {isCrewInsufficient && (
+                  <span className="text-red-400 font-medium">
+                    ⚠ 船员不足，无法起航！
+                  </span>
+                )}
+              </div>
             </div>
           )}
           {selectedShips.length === 0 && (
@@ -185,6 +222,7 @@ export function NavigationPanel({ view }: NavigationPanelProps) {
         <DepartureConfirmModal
           dest={selectedDest}
           isOverCargo={isOverCargo}
+          isCrewInsufficient={isCrewInsufficient}
           selectedShipNames={selectedShips
             .map((s) => `${s.name} (${s.armamentLabel})`)
             .join(", ")}

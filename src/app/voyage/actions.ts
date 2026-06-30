@@ -1,5 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
+import { deductCrewUpkeep } from "../../game/domain/crew";
 import { arriveAtPort } from "../../game/domain/navigation";
 import { advanceDay } from "../../game/domain/player";
 import { applyVoyageEvents } from "../../game/domain/voyage";
@@ -37,9 +38,12 @@ export async function completeVoyage(): Promise<void> {
     // 4. 正常抵达
     const arrived = arriveAtPort(afterEvents, toPortId, travelDays);
 
-    // 5. 清空航行状态
+    // 5. 扣除船员维护费
+    const afterUpkeep = deductCrewUpkeep(arrived, travelDays);
+
+    // 6. 清空航行状态
     const finalWorld: typeof world = {
-      ...arrived,
+      ...afterUpkeep,
       voyage: null,
     };
 

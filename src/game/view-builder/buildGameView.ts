@@ -4,6 +4,7 @@
 // ============================================================
 
 import {
+  BASE_HIRE_COST,
   REPAIR_COST_MULTIPLIER,
   SURVIVAL_DISTANCE_FACTOR,
 } from "../../data/formulas";
@@ -31,6 +32,7 @@ import type {
   NavigationView,
   ShipView,
   ShipyardView,
+  TavernView,
   VoyageEventView,
   VoyageView,
 } from "../../types/game-view";
@@ -71,6 +73,8 @@ export function buildHarborView(world: World): HarborView {
     playerLevel: world.player.level,
     playerExp: world.player.exp,
     playerExpToNext: world.player.expToNext,
+    crew: world.fleet.crew,
+    maxCrew: world.fleet.maxCrew,
   };
 }
 
@@ -160,6 +164,8 @@ export function buildNavigationView(world: World): NavigationView {
     fleetShips: world.fleet.ships.map((ship) =>
       buildFleetShipSummaryView(world, ship),
     ),
+    crew: world.fleet.crew,
+    maxCrew: world.fleet.maxCrew,
   };
 }
 
@@ -328,6 +334,7 @@ function buildFleetShipSummaryView(
     armamentLabel: ARMAMENT_LABELS[ship.armamentLevel],
     defenseMultiplier,
     cargo,
+    baseCrew: shipConfig?.baseCrew ?? 0,
   };
 }
 
@@ -456,5 +463,46 @@ export function buildVoyageView(world: World): VoyageView {
     isUnderway: true,
     events: voyage.events.map(buildEventView),
     fleetShipCount: voyage.fleetShipIds ? voyage.fleetShipIds.length : 1,
+  };
+}
+export function buildTavernView(world: World): TavernView {
+  const port = PORTS.find((p) => p.id === world.player.currentPortId);
+  const fleet = world.fleet;
+  const ships = fleet.ships.map((ship) => {
+    const config = SHIPS.find((s) => s.id === ship.typeId);
+    return {
+      id: ship.id,
+      name: ship.name,
+      typeName: config?.name ?? "未知",
+      baseCrew: config?.baseCrew ?? 0,
+    };
+  });
+
+  const minCrew = ships.reduce((sum, s) => sum + s.baseCrew, 0);
+  const hireCost = Math.floor(BASE_HIRE_COST * (1 + fleet.crew * 0.1));
+
+  // Calculate max hireable quantity
+  const remainingSlots = fleet.maxCrew - fleet.crew;
+  let maxHireable = 0;
+  let tempGold = fleet.gold;
+  while (maxHireable < remainingSlots) {
+    const nextCost = Math.floor(
+      BASE_HIRE_COST * (1 + (fleet.crew + maxHireable) * 0.1),
+    );
+    if (tempGold < nextCost) break;
+    tempGold -= nextCost;
+    maxHireable++;
+  }
+
+  return {
+    portName: port?.name ?? "未知",
+    gold: fleet.gold,
+    crew: fleet.crew,
+    maxCrew: fleet.maxCrew,
+    minCrew,
+    hireCost,
+    maxHireable,
+    blockedByVoyage: world.voyage !== null,
+    ships,
   };
 }

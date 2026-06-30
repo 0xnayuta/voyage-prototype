@@ -46,6 +46,9 @@ export function HarborDashboard({ view }: { view: HarborView }) {
           <span className="text-parchment-dark">
             舱容 {view.cargoCount}/{view.cargoCapacity}
           </span>
+          <span className="text-parchment-dark">
+            船员 {view.crew}/{view.maxCrew}
+          </span>
         </div>
       </div>
 

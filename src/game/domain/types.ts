@@ -54,7 +54,7 @@ export interface VoyageEvent {
   readonly description: string;
   readonly goldChange: number;
   readonly cargoLoss: number;
-  readonly type?: "combat";
+  readonly type?: "combat" | "storm";
   readonly combatOutcome?: CombatOutcome;
 }
 export interface VoyageState {
@@ -112,4 +112,6 @@ export type DomainErrorCode =
   | "SHIP_HAS_CARGO"
   | "SHIP_NOT_AT_PORT"
   | "EMPTY_FLEET_SELECTION"
-  | "SHIP_ZERO_DURABILITY";
+  | "SHIP_ZERO_DURABILITY"
+  | "CREW_EXCEEDS_CAPACITY"
+  | "INSUFFICIENT_CREW";

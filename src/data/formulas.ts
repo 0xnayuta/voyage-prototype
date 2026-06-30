@@ -87,3 +87,29 @@ export const SHIP_SELL_RATIO = 0.5;
 
 /// 舰队上限 = 1 + floor(level / MAX_SHIPS_LEVEL_DIVISOR)
 export const MAX_SHIPS_LEVEL_DIVISOR = 3;
+// ============================================================
+// 船员系统常量
+// ============================================================
+
+/// 招募一名船员的基础费用
+export const BASE_HIRE_COST = 20;
+
+/// 每名船员每日维护费用
+export const CREW_UPKEEP_PER_DAY = 2;
+
+/// 每多少个舱位提供一个船员配额
+export const CREW_PER_SLOT = 5;
+
+/// 风暴损失船员的概率
+export const STORM_CREW_LOSS_CHANCE = 0.3;
+
+/// 风暴单次损失船员的范围
+export const STORM_CREW_LOSS_MIN = 1;
+export const STORM_CREW_LOSS_MAX = 2;
+
+/// 战斗胜利时损失船员概率
+export const COMBAT_VICTORY_CREW_LOSS_CHANCE = 0.2;
+
+/// 战斗部分损失时损失船员的范围
+export const COMBAT_PARTIAL_LOSS_CREW_LOSS_MIN = 1;
+export const COMBAT_PARTIAL_LOSS_CREW_LOSS_MAX = 3;

@@ -1,6 +1,7 @@
 "use server";
 import { redirect } from "next/navigation";
 import { PORTS } from "../../data/ports";
+import { calcMinCrewForFleet } from "../../game/domain/crew";
 import { calcFleetTravelDays } from "../../game/domain/navigation";
 import { getActiveShip } from "../../game/domain/ship";
 import { startVoyage } from "../../game/domain/voyage";
@@ -39,6 +40,11 @@ export async function startTravel(formData: FormData): Promise<void> {
       if (ship.durability <= 0) throw new Error("船体严重损坏，无法出航");
     }
 
+    // 验证船员是否足够
+    const totalCrewRequired = calcMinCrewForFleet(world, shipIds);
+    if (world.fleet.crew < totalCrewRequired) {
+      throw new Error("船员不足，无法出海");
+    }
     // 查找目标港口，计算航线距离
     const fromPort = PORTS.find((p) => p.id === world.player.currentPortId);
     const toPort = PORTS.find((p) => p.id === targetPortId);

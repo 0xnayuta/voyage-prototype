@@ -6,8 +6,9 @@ import {
   STARTING_GOLD,
 } from "../../data/formulas";
 import { SHIPS } from "../../data/ships";
+import { getMaxCrewCapacity } from "./crew";
 import { applyDayPass, initMarketPrices } from "./market";
-import type { World } from "./types";
+import type { ShipInstance, World } from "./types";
 
 // ============================================================
 // 玩家 / 世界初始化的纯函数
@@ -15,6 +16,24 @@ import type { World } from "./types";
 
 export function createDefaultWorld(): World {
   const defaultShip = SHIPS.find((s) => s.id === "sloop") ?? SHIPS[0];
+  const initialShips: readonly ShipInstance[] = [
+    {
+      id: "ship-1",
+      typeId: defaultShip.id,
+      name: defaultShip.name,
+      equipment: {
+        hullLevel: 0,
+        sailLevel: 0,
+        armorLevel: 0,
+        cannonLevel: 0,
+      },
+      durability: defaultShip.baseDurability,
+      maxDurability: defaultShip.baseDurability,
+      cargo: [],
+      armamentLevel: 0,
+      equippedItems: [],
+    },
+  ];
 
   return {
     player: {
@@ -26,28 +45,11 @@ export function createDefaultWorld(): World {
       expToNext: BASE_EXP,
     },
     fleet: {
-      ships: [
-        {
-          id: "ship-1",
-          typeId: defaultShip.id,
-          name: defaultShip.name,
-          equipment: {
-            hullLevel: 0,
-            sailLevel: 0,
-            armorLevel: 0,
-            cannonLevel: 0,
-          },
-          durability: defaultShip.baseDurability,
-          maxDurability: defaultShip.baseDurability,
-          cargo: [],
-          armamentLevel: 0,
-          equippedItems: [],
-        },
-      ],
+      ships: initialShips,
       activeShipId: "ship-1",
       maxShips: 1,
       crew: defaultShip.baseCrew,
-      maxCrew: defaultShip.baseCrew * 2,
+      maxCrew: getMaxCrewCapacity(initialShips),
       gold: STARTING_GOLD,
     },
     market: initMarketPrices(),

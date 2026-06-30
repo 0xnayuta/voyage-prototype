@@ -3,14 +3,22 @@
 // ============================================================
 
 import { EVENT_CONFIGS, type EventTemplate } from "../../data/events";
-import { EVENT_EXP } from "../../data/formulas";
+import {
+  EVENT_EXP,
+  STORM_CREW_LOSS_CHANCE,
+  STORM_CREW_LOSS_MAX,
+  STORM_CREW_LOSS_MIN,
+  STORM_HP_DAMAGE_MAX,
+  STORM_HP_DAMAGE_MIN,
+} from "../../data/formulas";
 import { PORTS } from "../../data/ports";
 import { REGIONS } from "../../data/regions";
 import { SHIPS } from "../../data/ships";
 import { applyCombatOutcome, resolveCombat } from "./combat";
+import { calcMinCrewForFleet } from "./crew";
 import { getEffectiveCapacityForShip } from "./navigation";
 import { gainExp } from "./player";
-import { getActiveShip, getNearestPort } from "./ship";
+import { getActiveShip, getNearestPort, takeDamage } from "./ship";
 import type { CargoItem, VoyageEvent, VoyageState, World } from "./types";
 import { DomainError } from "./types";
 
@@ -55,8 +63,6 @@ function createCombatEvent(day: number, tmpl: EventTemplate): VoyageEvent {
     type: "combat",
   };
 }
-
-/** 创建普通事件（即时生成数值） */
 function createDefaultEvent(day: number, tmpl: EventTemplate): VoyageEvent {
   const goldChange =
     tmpl.minGold + Math.round(Math.random() * (tmpl.maxGold - tmpl.minGold));
@@ -64,7 +70,13 @@ function createDefaultEvent(day: number, tmpl: EventTemplate): VoyageEvent {
     Math.random() < tmpl.cargoLossChance
       ? 1 + Math.floor(Math.random() * tmpl.maxCargoLoss)
       : 0;
-  return { day, description: tmpl.triggerText, goldChange, cargoLoss };
+  return {
+    day,
+    description: tmpl.triggerText,
+    goldChange,
+    cargoLoss,
+    type: tmpl.type,
+  };
 }
 
 /** 每天最多一个事件：按权重随机选择并生成 */
@@ -198,6 +210,82 @@ function applyCargoLoss(world: World, loss: number): World {
   return result;
 }
 
+/** 解析风暴事件并应用结果 */
+function applyStormEvent(world: World, event: VoyageEvent): World {
+  const voyage = world.voyage;
+  if (!voyage) return world;
+
+  let result = world;
+  const fleetShipIds = voyage.fleetShipIds;
+
+  // 1. 耐久度扣减
+  for (const shipId of fleetShipIds) {
+    const damage =
+      STORM_HP_DAMAGE_MIN +
+      Math.floor(
+        Math.random() * (STORM_HP_DAMAGE_MAX - STORM_HP_DAMAGE_MIN + 1),
+      );
+    result = takeDamage(result, shipId, damage);
+  }
+
+  // 2. 船员损失
+  let crewLost = 0;
+  if (Math.random() < STORM_CREW_LOSS_CHANCE) {
+    crewLost = Math.min(
+      result.fleet.crew,
+      STORM_CREW_LOSS_MIN +
+        Math.floor(
+          Math.random() * (STORM_CREW_LOSS_MAX - STORM_CREW_LOSS_MIN + 1),
+        ),
+    );
+    result = {
+      ...result,
+      fleet: {
+        ...result.fleet,
+        crew: result.fleet.crew - crewLost,
+      },
+    };
+  }
+
+  // 3. 应用事件本身的货物和金币变动
+  result = applyGoldChange(result, event.goldChange);
+  result = applyCargoLoss(result, event.cargoLoss);
+
+  // 4. 更新描述
+  let descSuffix = "";
+  if (crewLost > 0) {
+    descSuffix += `，损失了 ${crewLost} 名船员！`;
+  } else {
+    descSuffix += "。";
+  }
+  const finalDesc = `${event.description} 船队在狂风巨浪中颠簸受损${descSuffix}`;
+  (event as { description: string }).description = finalDesc;
+
+  // 5. 旗舰沉没判定
+  const activeShip = result.fleet.ships.find(
+    (s) => s.id === result.fleet.activeShipId,
+  );
+  if (activeShip && activeShip.durability <= 0) {
+    const nearestPort = getNearestPort(voyage.fromPortId, voyage.toPortId);
+    result = {
+      ...result,
+      fleet: {
+        ...result.fleet,
+        crew: 0,
+        ships: result.fleet.ships.map((s) =>
+          fleetShipIds.includes(s.id) ? { ...s, durability: 1, cargo: [] } : s,
+        ),
+      },
+      player: { ...result.player, currentPortId: nearestPort },
+      voyage: null,
+    };
+    (event as { description: string }).description +=
+      " 旗舰不幸触礁沉没，舰队被迫就近漂回港口避难……";
+  }
+
+  return result;
+}
+
 /** 应用航行事件效果到 World */
 export function applyVoyageEvents(
   world: World,
@@ -207,6 +295,8 @@ export function applyVoyageEvents(
   for (const event of events) {
     if (event.type === "combat") {
       result = applyCombatEvent(result, event);
+    } else if (event.type === "storm") {
+      result = applyStormEvent(result, event);
     } else {
       result = applyGoldChange(result, event.goldChange);
       result = applyCargoLoss(result, event.cargoLoss);
@@ -234,6 +324,11 @@ export function startVoyage(
 
   if (fleetShipIds.length === 0) {
     throw new DomainError("EMPTY_FLEET_SELECTION");
+  }
+
+  const minCrew = calcMinCrewForFleet(world, fleetShipIds);
+  if (world.fleet.crew < minCrew) {
+    throw new DomainError("INSUFFICIENT_CREW");
   }
 
   // 校验所有船存在且耐久 > 0；累计舱容

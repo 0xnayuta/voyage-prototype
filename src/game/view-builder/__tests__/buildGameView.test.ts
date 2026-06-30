@@ -9,6 +9,7 @@ import {
   buildNavigationView,
   buildShipView,
   buildShipyardView,
+  buildTavernView,
   buildVoyageView,
 } from "../buildGameView";
 
@@ -22,7 +23,7 @@ describe("buildHarborView", () => {
     expect(view.region).toBe("东亚");
   });
 
-  it("shows player gold, cargo, day", () => {
+  it("shows player gold, cargo, day, crew", () => {
     const world = createTestWorld();
     const view = buildHarborView(world);
 
@@ -30,6 +31,8 @@ describe("buildHarborView", () => {
     expect(view.cargoCount).toBeGreaterThan(0);
     expect(view.cargoCapacity).toBe(35);
     expect(view.currentDay).toBe(1);
+    expect(view.crew).toBe(3);
+    expect(view.maxCrew).toBe(7);
   });
 
   it("shows ship name", () => {
@@ -105,6 +108,8 @@ describe("buildNavigationView", () => {
     expect(view.currentPortName).toBe("泉州");
     // All other ports are reachable via coordinate distance
     expect(view.destinations).toHaveLength(PORTS.length - 1);
+    expect(view.crew).toBe(3);
+    expect(view.maxCrew).toBe(7);
   });
 
   it("each destination has port info and travel days", () => {
@@ -134,6 +139,7 @@ describe("buildFleetView", () => {
     expect(activeShipView.cargo).toHaveLength(2);
     expect(activeShipView.cargo[0].goodName).toBe("丝绸");
     expect(activeShipView.cargo[0].quantity).toBe(5);
+    expect(activeShipView.baseCrew).toBe(3);
   });
 });
 
@@ -329,5 +335,23 @@ describe("buildVoyageView", () => {
     expect(view.events[0].effect).toBe("无影响");
     expect(view.events[1].effect).toContain("损失 30 金币");
     expect(view.events[1].effect).toContain("丢失 2 单位货物");
+  });
+});
+describe("buildTavernView", () => {
+  it("returns correct tavern view details", () => {
+    const world = createTestWorld();
+    const view = buildTavernView(world);
+
+    expect(view.portName).toBe("泉州");
+    expect(view.gold).toBe(5000);
+    expect(view.crew).toBe(3);
+    expect(view.maxCrew).toBe(7);
+    expect(view.minCrew).toBe(3);
+    expect(view.hireCost).toBe(26); // 20 * 1.3 = 26
+    expect(view.maxHireable).toBe(4); // remaining slots = 7 - 3 = 4, gold 5000 is plenty
+    expect(view.blockedByVoyage).toBe(false);
+    expect(view.ships).toHaveLength(1);
+    expect(view.ships[0].typeName).toBe("单桅帆船");
+    expect(view.ships[0].baseCrew).toBe(3);
   });
 });

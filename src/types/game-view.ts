@@ -18,6 +18,8 @@ export interface HarborView {
   readonly playerLevel: number;
   readonly playerExp: number;
   readonly playerExpToNext: number;
+  readonly crew: number;
+  readonly maxCrew: number;
 }
 
 /** 交易所页（/market） */
@@ -59,6 +61,8 @@ export interface NavigationView {
   readonly destinations: DestinationView[];
   readonly currentCargoCount: number;
   readonly fleetShips: FleetShipSummaryView[];
+  readonly crew: number;
+  readonly maxCrew: number;
 }
 
 /** 船舱页（/cargo） */
@@ -116,6 +120,7 @@ export interface FleetShipSummaryView {
   readonly armamentLabel: string;
   readonly defenseMultiplier: number;
   readonly cargo: readonly CargoItemView[];
+  readonly baseCrew: number;
 }
 
 /** 当前港口可购买的船只 */
@@ -171,4 +176,21 @@ export interface VoyageView {
   readonly isUnderway: boolean;
   readonly events: VoyageEventView[];
   readonly fleetShipCount: number;
+}
+/** 航海家酒馆页（/tavern） */
+export interface TavernView {
+  readonly portName: string;
+  readonly gold: number;
+  readonly crew: number;
+  readonly maxCrew: number;
+  readonly minCrew: number;
+  readonly hireCost: number;
+  readonly maxHireable: number;
+  readonly blockedByVoyage: boolean;
+  readonly ships: readonly {
+    readonly id: string;
+    readonly name: string;
+    readonly typeName: string;
+    readonly baseCrew: number;
+  }[];
 }

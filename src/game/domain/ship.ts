@@ -1,5 +1,6 @@
 import { REPAIR_COST_MULTIPLIER, SHIP_SELL_RATIO } from "../../data/formulas";
 import { SHIPS } from "../../data/ships";
+import { recalculateMaxCrew } from "./crew";
 import type { ShipEquipment, ShipInstance, World } from "./types";
 import { DomainError } from "./types";
 
@@ -102,7 +103,7 @@ export function upgradeComponent(
     newDurability = newMaxDurability;
   }
 
-  return {
+  const nextWorld = {
     ...world,
     fleet: {
       ...fleet,
@@ -119,6 +120,7 @@ export function upgradeComponent(
       ),
     },
   };
+  return recalculateMaxCrew(nextWorld);
 }
 
 /** 船只受损 */
@@ -229,7 +231,7 @@ export function buyShip(world: World, typeId: string): World {
     equippedItems: [],
   };
 
-  return {
+  const nextWorld = {
     ...world,
     fleet: {
       ...fleet,
@@ -237,6 +239,7 @@ export function buyShip(world: World, typeId: string): World {
       ships: [...fleet.ships, newShip],
     },
   };
+  return recalculateMaxCrew(nextWorld);
 }
 
 /** 出售船只 */
@@ -262,7 +265,7 @@ export function sellShip(world: World, shipId: string): World {
     newActiveShipId = newShips[0].id;
   }
 
-  return {
+  const nextWorld = {
     ...world,
     fleet: {
       ...fleet,
@@ -271,4 +274,5 @@ export function sellShip(world: World, shipId: string): World {
       activeShipId: newActiveShipId,
     },
   };
+  return recalculateMaxCrew(nextWorld);
 }
