@@ -99,6 +99,22 @@ describe("buildMarketView", () => {
     }
   });
 });
+it("includes available equipments at port and fleet inventory", () => {
+  const world = createTestWorld({
+    fleet: {
+      ...createTestWorld().fleet,
+      inventory: ["high_speed_sail"],
+    },
+  });
+  const view = buildMarketView(world);
+
+  // 泉州应该售卖高速帆等装备
+  expect(view.availableEquipments).not.toHaveLength(0);
+  const sail = view.availableEquipments.find((e) => e.id === "high_speed_sail");
+  expect(sail).toBeDefined();
+  expect(sail?.price).toBe(5000);
+  expect(view.fleetInventory).toContain("high_speed_sail");
+});
 
 describe("buildNavigationView", () => {
   it("lists destinations reachable from current port", () => {
@@ -257,6 +273,29 @@ describe("buildShipView", () => {
     expect(view.components[0].nextCost).toBeNull();
     expect(view.components[0].canUpgrade).toBe(false);
   });
+});
+it("includes equipped items and fleet inventory in detail", () => {
+  const world = createTestWorld({
+    fleet: {
+      ...createTestWorld().fleet,
+      inventory: ["cannon_light"],
+      ships: [
+        {
+          ...createTestWorld().fleet.ships[0],
+          equippedItems: ["high_speed_sail"],
+        },
+      ],
+    },
+  });
+  const view = buildShipView(world);
+
+  expect(view.equippedItems).toHaveLength(1);
+  expect(view.equippedItems[0].id).toBe("high_speed_sail");
+  expect(view.equippedItems[0].typeLabel).toBe("帆");
+
+  expect(view.fleetInventory).toHaveLength(1);
+  expect(view.fleetInventory[0].id).toBe("cannon_light");
+  expect(view.fleetInventory[0].typeLabel).toBe("炮");
 });
 
 describe("buildVoyageView", () => {
