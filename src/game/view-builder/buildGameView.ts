@@ -122,18 +122,6 @@ export function buildMarketView(world: World): MarketView {
     };
   });
 
-  const availableEquipments = EQUIPMENTS.filter((e) =>
-    e.sellPortIds.includes(world.player.currentPortId),
-  ).map((e) => ({
-    id: e.id,
-    name: e.name,
-    type: e.type,
-    typeLabel: EQUIPMENT_TYPE_LABELS[e.type],
-    effectDescription: getEquipmentEffectDescription(e),
-    price: e.price,
-    canAfford: world.fleet.gold >= e.price,
-  }));
-
   return {
     portName: port?.name ?? "未知",
     goods,
@@ -144,8 +132,6 @@ export function buildMarketView(world: World): MarketView {
       getMaxCapacity(world),
       activeShip.armamentLevel,
     ),
-    availableEquipments,
-    fleetInventory: world.fleet.inventory || [],
   };
 }
 
@@ -400,6 +386,7 @@ export function buildShipyardView(
   world: World,
   selectedShipId?: string,
 ): ShipyardView {
+  const port = PORTS.find((p) => p.id === world.player.currentPortId);
   const ships: FleetShipSummaryView[] = world.fleet.ships.map((ship) =>
     buildFleetShipSummaryView(world, ship),
   );
@@ -425,29 +412,30 @@ export function buildShipyardView(
     fleetFull: world.fleet.ships.length >= world.fleet.maxShips,
   }));
 
+  const availableEquipments = EQUIPMENTS.filter((e) =>
+    e.sellPortIds.includes(world.player.currentPortId),
+  ).map((e) => ({
+    id: e.id,
+    name: e.name,
+    type: e.type,
+    typeLabel: EQUIPMENT_TYPE_LABELS[e.type],
+    effectDescription: getEquipmentEffectDescription(e),
+    price: e.price,
+    canAfford: world.fleet.gold >= e.price,
+  }));
+
   return {
+    portName: port?.name ?? "未知",
     ships,
     selectedShipId: selectedShip.id,
     selectedShipDetail,
     availableShips,
+    availableEquipments,
     maxShips: world.fleet.maxShips,
     fleetGold: world.fleet.gold,
     blockedByVoyage: !!world.voyage,
   };
 }
-
-// ============================================================
-// 航行视图辅助函数
-// ============================================================
-
-/** 格式化金币变动文本 */
-function formatGoldChange(goldChange: number): string | null {
-  if (goldChange > 0) return `获得 ${goldChange} 金币`;
-  if (goldChange < 0) return `损失 ${Math.abs(goldChange)} 金币`;
-  return null;
-}
-
-/** 格式化战斗日志条目 */
 function formatCombatLog(outcome: CombatOutcome): CombatLogEntryView {
   const resultLabel =
     outcome.result === "victory"
@@ -462,6 +450,12 @@ function formatCombatLog(outcome: CombatOutcome): CombatLogEntryView {
     cargoLoss: outcome.cargoLoss,
     ...(outcome.allCargoLost ? { allCargoLost: true as const } : {}),
   };
+}
+/** 格式化金币变动文本 */
+function formatGoldChange(goldChange: number): string | null {
+  if (goldChange > 0) return `获得 ${goldChange} 金币`;
+  if (goldChange < 0) return `损失 ${Math.abs(goldChange)} 金币`;
+  return null;
 }
 
 /** 格式化单个航行事件视图 */

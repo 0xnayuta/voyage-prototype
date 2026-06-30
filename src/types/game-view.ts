@@ -39,8 +39,6 @@ export interface MarketView {
   readonly playerGold: number;
   readonly cargoCount: number;
   readonly cargoCapacity: number;
-  readonly availableEquipments: readonly AvailableEquipmentView[];
-  readonly fleetInventory: readonly string[];
 }
 
 export interface GoodView {
@@ -165,10 +163,12 @@ export interface FleetView {
 }
 
 export interface ShipyardView {
+  readonly portName: string;
   readonly ships: FleetShipSummaryView[];
   readonly selectedShipId: string;
   readonly selectedShipDetail: ShipView | null;
   readonly availableShips: AvailableShipView[];
+  readonly availableEquipments: readonly AvailableEquipmentView[];
   readonly maxShips: number;
   readonly fleetGold: number;
   readonly blockedByVoyage: boolean;
