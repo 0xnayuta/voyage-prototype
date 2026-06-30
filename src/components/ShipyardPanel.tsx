@@ -1,5 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
+import { equipItemAction, unequipItemAction } from "../app/actions/equipment";
 import { SHIP_SELL_RATIO } from "../data/formulas";
 import { SHIPS } from "../data/ships";
 import type { ComponentView, ShipyardView } from "../types/game-view";
@@ -69,6 +70,36 @@ export function ShipyardPanel({
         setDisplayView(nextView);
       } catch (e) {
         setError(e instanceof Error ? e.message : "维修失败");
+      }
+    });
+  };
+
+  const handleEquipItem = async (equipmentId: string) => {
+    setError(null);
+    startTransition(async () => {
+      try {
+        const fd = new FormData();
+        fd.set("shipId", selectedShipId);
+        fd.set("equipmentId", equipmentId);
+        const nextView = await equipItemAction(fd);
+        setDisplayView(nextView);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "装备失败");
+      }
+    });
+  };
+
+  const handleUnequipItem = async (equipmentId: string) => {
+    setError(null);
+    startTransition(async () => {
+      try {
+        const fd = new FormData();
+        fd.set("shipId", selectedShipId);
+        fd.set("equipmentId", equipmentId);
+        const nextView = await unequipItemAction(fd);
+        setDisplayView(nextView);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "卸下失败");
       }
     });
   };
@@ -222,6 +253,101 @@ export function ShipyardPanel({
                 isPending={isPending}
               />
             ))}
+          </div>
+
+          {/* 船只装备槽位 */}
+          <div className="space-y-3 border-t border-ocean-700/40 pt-3">
+            <h4 className="text-xs font-semibold text-parchment-dark">
+              装备插槽 ({selectedShipDetail.equippedItems.length} / 3)
+            </h4>
+
+            {/* 已装备列表 */}
+            {selectedShipDetail.equippedItems.length === 0 ? (
+              <p className="text-xs text-parchment-dark">
+                当前未配备任何装备。
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {selectedShipDetail.equippedItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between rounded border border-ocean-750 bg-ocean-900/40 p-2 text-xs"
+                  >
+                    <div>
+                      <div className="font-semibold text-parchment flex items-center gap-1.5">
+                        {item.name}
+                        <span className="rounded bg-ocean-700 px-1 py-0.5 text-[10px] text-parchment-dark">
+                          {item.typeLabel}
+                        </span>
+                      </div>
+                      <p className="text-parchment-dark mt-0.5">
+                        {item.effectDescription}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={isPending || blockedByVoyage}
+                      onClick={() => handleUnequipItem(item.id)}
+                      className="rounded bg-ocean-750 border border-ocean-600 px-2 py-1 text-parchment-dark hover:text-parchment transition-colors animate-none"
+                    >
+                      卸下
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 可装配列表 (从舰队装备包中选择) */}
+            {selectedShipDetail.equippedItems.length < 3 &&
+              !blockedByVoyage && (
+                <div className="space-y-2 pt-1">
+                  <h5 className="text-[11px] font-medium text-gold-400">
+                    可装配装备
+                  </h5>
+                  {selectedShipDetail.fleetInventory.length === 0 ? (
+                    <p className="text-xs text-parchment-dark">
+                      仓库中无可用装备。请先在交易所购买。
+                    </p>
+                  ) : (
+                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                      {selectedShipDetail.fleetInventory.map((item, index) => {
+                        // 校验是否同类型已装备
+                        const isSameTypeEquipped =
+                          selectedShipDetail.equippedItems.some(
+                            (eq) => eq.type === item.type,
+                          );
+
+                        return (
+                          <div
+                            key={`${item.id}-${index}`}
+                            className="flex items-center justify-between rounded border border-ocean-700/60 bg-ocean-700/20 p-2 text-xs"
+                          >
+                            <div>
+                              <span className="font-semibold text-parchment flex items-center gap-1">
+                                {item.name}
+                                <span className="rounded bg-ocean-700 px-1 py-0.5 text-[10px] text-parchment-dark">
+                                  {item.typeLabel}
+                                </span>
+                              </span>
+                              <p className="text-parchment-dark text-[10px] mt-0.5">
+                                {item.effectDescription}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              disabled={isPending || isSameTypeEquipped}
+                              onClick={() => handleEquipItem(item.id)}
+                              className="rounded bg-gold-500 px-2.5 py-1 text-[11px] font-bold text-ocean-900 hover:bg-gold-400 transition-colors disabled:opacity-50"
+                            >
+                              {isSameTypeEquipped ? "类型冲突" : "装配"}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
           </div>
 
           {/* 出售当前选定船只 */}
