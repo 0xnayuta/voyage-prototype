@@ -216,3 +216,16 @@ export interface TavernView {
     readonly baseCrew: number;
   }[];
 }
+
+/** 存档槽位预览（/saves 及启动页） */
+export interface SaveSlotView {
+  readonly slot: number; // 0=自动存档, 1-3=手动存档
+  readonly slotName: string;
+  readonly exists: boolean;
+  readonly playerLevel: number;
+  readonly shipCount: number;
+  readonly gold: number;
+  readonly currentPortName: string;
+  readonly day: number;
+  readonly updatedAt: string; // ISO 字符串，便于序列化
+}

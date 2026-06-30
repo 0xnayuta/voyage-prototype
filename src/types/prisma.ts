@@ -16,7 +16,23 @@ export interface PrismaTransactionClient {
       createdAt: Date;
       updatedAt: Date;
     } | null>;
+    findMany(args: Prisma.SaveFindManyArgs): Promise<
+      {
+        id: string;
+        slot: number;
+        data: string;
+        createdAt: Date;
+        updatedAt: Date;
+      }[]
+    >;
     upsert(args: Prisma.SaveUpsertArgs): Promise<{
+      id: string;
+      slot: number;
+      data: string;
+      createdAt: Date;
+      updatedAt: Date;
+    }>;
+    delete(args: Prisma.SaveDeleteArgs): Promise<{
       id: string;
       slot: number;
       data: string;
