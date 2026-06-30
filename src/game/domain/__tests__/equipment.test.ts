@@ -174,6 +174,50 @@ describe("装备系统领域逻辑", () => {
         new DomainError("CARGO_EXCEEDS_CAPACITY"),
       );
     });
+    it("卸下防具导致耐久上限与当前耐久同步扣减，且不低于 1", () => {
+      // 构造一个受损的船只装配了铁甲板 (+20)
+      // 基础 max 50, 受损后 durability 10 -> 装配后 30/70.
+      // 卸下后应该变回 10/50.
+      const world1 = createTestWorld({
+        fleet: {
+          ...createTestWorld().fleet,
+          ships: [
+            {
+              ...createTestWorld().fleet.ships[0],
+              equippedItems: ["armor_iron"],
+              durability: 30,
+              maxDurability: 70,
+            },
+          ],
+        },
+      });
+
+      const nextWorld1 = unequipItem(world1, "ship-1", "armor_iron");
+      const ship1 = nextWorld1.fleet.ships[0];
+      expect(ship1.maxDurability).toBe(50);
+      expect(ship1.durability).toBe(10); // 30 - 20 = 10
+
+      // 构造另一个极度受损的船只：装配后 5/70
+      // 卸下后 5 - 20 = -15 -> 应该被 Math.max(1, ...) 限制在 1/50
+      const world2 = createTestWorld({
+        fleet: {
+          ...createTestWorld().fleet,
+          ships: [
+            {
+              ...createTestWorld().fleet.ships[0],
+              equippedItems: ["armor_iron"],
+              durability: 5,
+              maxDurability: 70,
+            },
+          ],
+        },
+      });
+
+      const nextWorld2 = unequipItem(world2, "ship-1", "armor_iron");
+      const ship2 = nextWorld2.fleet.ships[0];
+      expect(ship2.maxDurability).toBe(50);
+      expect(ship2.durability).toBe(1);
+    });
   });
 
   describe("装备属性加成与逻辑集成", () => {

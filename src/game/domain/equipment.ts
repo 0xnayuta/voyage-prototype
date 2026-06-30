@@ -261,7 +261,13 @@ export function unequipItem(
       0,
       nextMaxDurability - config.effect.durabilityBonus,
     );
-    nextDurability = Math.min(nextDurability, nextMaxDurability);
+    nextDurability = Math.max(
+      1,
+      Math.min(
+        nextDurability - config.effect.durabilityBonus,
+        nextMaxDurability,
+      ),
+    );
   }
 
   // 校验超载：如果这个是舱容加成，卸下后舱容会减小，需要看当前船上已用容量是否超过新舱容
