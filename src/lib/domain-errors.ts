@@ -21,6 +21,10 @@ const ERROR_MAP: Record<string, string> = {
   SHIP_ZERO_DURABILITY: "船体严重损坏，无法出航",
   CREW_EXCEEDS_CAPACITY: "招募失败，船员人数超出舰队容量上限",
   INSUFFICIENT_CREW: "船员不足，无法出海",
+  EQUIPMENT_NOT_FOUND: "未找到该装备",
+  EQUIPMENT_SLOT_FULL: "装备槽已满（每艘船最多装备3件）",
+  DUPLICATE_EQUIPMENT_TYPE: "同类型装备不可重复装配",
+  SHIP_HAS_EQUIPMENT: "出售船只前必须先卸下所有装备",
 };
 
 /** 将领域层的 DomainError 转为用户可读的中文错误消息 */
