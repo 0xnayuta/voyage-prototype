@@ -104,6 +104,13 @@ export function HarborDashboard({ view }: { view: HarborView }) {
           <div className="mt-1 text-xs text-parchment-dark">维护与买卖船只</div>
         </a>
         <a
+          href="/tavern"
+          className="rounded-lg border border-ocean-600 bg-ocean-700/60 p-3 text-center text-sm hover:bg-ocean-700 transition-colors"
+        >
+          <div className="font-semibold text-gold-400">酒馆</div>
+          <div className="mt-1 text-xs text-parchment-dark">招募与解雇船员</div>
+        </a>
+        <a
           href="/fleet"
           className="rounded-lg border border-ocean-600 bg-ocean-700/60 p-3 text-center text-sm hover:bg-ocean-700 transition-colors"
         >
@@ -112,7 +119,7 @@ export function HarborDashboard({ view }: { view: HarborView }) {
         </a>
         <a
           href="/saves"
-          className="col-span-2 rounded-lg border border-ocean-600 bg-ocean-700/60 p-3 text-center text-sm hover:bg-ocean-700 transition-colors"
+          className="rounded-lg border border-ocean-600 bg-ocean-700/60 p-3 text-center text-sm hover:bg-ocean-700 transition-colors"
         >
           <div className="font-semibold text-gold-400">存档管理</div>
           <div className="mt-1 text-xs text-parchment-dark">
