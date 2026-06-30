@@ -1,4 +1,4 @@
-import { REPAIR_COST_MULTIPLIER } from "../../data/formulas";
+import { REPAIR_COST_MULTIPLIER, SHIP_SELL_RATIO } from "../../data/formulas";
 import { SHIPS } from "../../data/ships";
 import type { ShipEquipment, ShipInstance, World } from "./types";
 import { DomainError } from "./types";
@@ -195,4 +195,80 @@ export function setArmamentLevel(
 /** 获取最近港口 id（用于全损回港） */
 export function getNearestPort(fromPortId: string, _toPortId: string): string {
   return fromPortId;
+}
+
+/** 购买新船只 */
+export function buyShip(world: World, typeId: string): World {
+  if (world.voyage) throw new DomainError("IN_VOYAGE");
+
+  const shipConfig = SHIPS.find((s) => s.id === typeId);
+  if (!shipConfig) throw new DomainError("INVALID_SHIP");
+
+  if (!shipConfig.sellPortIds.includes(world.player.currentPortId))
+    throw new DomainError("SHIP_NOT_AT_PORT");
+
+  const fleet = world.fleet;
+  if (fleet.ships.length >= fleet.maxShips) throw new DomainError("FLEET_FULL");
+
+  if (fleet.gold < shipConfig.basePrice)
+    throw new DomainError("INSUFFICIENT_GOLD");
+
+  const newShip: ShipInstance = {
+    id:
+      "ship-" +
+      Date.now().toString(36) +
+      "-" +
+      Math.random().toString(36).slice(2, 6),
+    typeId: shipConfig.id,
+    name: shipConfig.name,
+    equipment: { hullLevel: 0, sailLevel: 0, armorLevel: 0, cannonLevel: 0 },
+    durability: shipConfig.baseDurability,
+    maxDurability: shipConfig.baseDurability,
+    cargo: [],
+    armamentLevel: 0,
+    equippedItems: [],
+  };
+
+  return {
+    ...world,
+    fleet: {
+      ...fleet,
+      gold: fleet.gold - shipConfig.basePrice,
+      ships: [...fleet.ships, newShip],
+    },
+  };
+}
+
+/** 出售船只 */
+export function sellShip(world: World, shipId: string): World {
+  if (world.voyage) throw new DomainError("IN_VOYAGE");
+
+  const fleet = world.fleet;
+  if (fleet.ships.length <= 1) throw new DomainError("LAST_SHIP");
+
+  const ship = fleet.ships.find((s) => s.id === shipId);
+  if (!ship) throw new DomainError("INVALID_SHIP");
+
+  if (ship.cargo.length > 0) throw new DomainError("SHIP_HAS_CARGO");
+
+  const shipConfig = SHIPS.find((s) => s.id === ship.typeId);
+  if (!shipConfig) throw new DomainError("INVALID_SHIP");
+
+  const recovery = Math.floor(shipConfig.basePrice * SHIP_SELL_RATIO);
+
+  const newShips = fleet.ships.filter((s) => s.id !== shipId);
+  let newActiveShipId = fleet.activeShipId;
+  if (shipId === fleet.activeShipId) {
+    newActiveShipId = newShips[0].id;
+  }
+
+  return {
+    ...world,
+    fleet: {
+      ...fleet,
+      gold: fleet.gold + recovery,
+      ships: newShips,
+      activeShipId: newActiveShipId,
+    },
+  };
 }

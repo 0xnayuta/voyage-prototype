@@ -23,9 +23,9 @@ describe("getUsedCapacity", () => {
 });
 
 describe("getMaxCapacity", () => {
-  it("should return sloop capacity 30 at level 0", () => {
+  it("should return sloop capacity 35 at level 0", () => {
     const world = createTestWorld();
-    expect(getMaxCapacity(world)).toBe(30);
+    expect(getMaxCapacity(world)).toBe(35);
   });
 
   it("should scale with upgrade level (每级 +20%)", () => {
@@ -45,8 +45,8 @@ describe("getMaxCapacity", () => {
         ],
       },
     });
-    // floor(30 * (1 + 2 * 0.2)) = floor(30 * 1.4) = 42
-    expect(getMaxCapacity(world)).toBe(42);
+    // floor(35 * (1 + 2 * 0.2)) = floor(35 * 1.4) = 49
+    expect(getMaxCapacity(world)).toBe(49);
   });
 });
 
@@ -104,9 +104,9 @@ describe("executeBuy", () => {
 
   it("should throw when not enough cargo capacity", () => {
     const world = createTestWorld();
-    // used = 13, max = 30, silk vol = 2
-    // buy 10 silk → 13 + 20 = 33 > 30; cost 10*102 = 1020 < 5000 (gold check passes)
-    expect(() => executeBuy(world, { goodId: "silk", quantity: 10 })).toThrow(
+    // used = 13, max = 35, silk vol = 2
+    // buy 12 silk → 13 + 24 = 37 > 35; cost 12*102 = 1224 < 5000 (gold check passes)
+    expect(() => executeBuy(world, { goodId: "silk", quantity: 12 })).toThrow(
       "INSUFFICIENT_CARGO",
     );
   });

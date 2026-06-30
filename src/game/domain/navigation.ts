@@ -33,15 +33,43 @@ export function getReachablePorts(
     .sort((a, b) => a.distance - b.distance);
 }
 
-/** 计算航行天数 */
-export function calcTravelDays(distance: number, world: World): number {
-  const activeShip = getActiveShip(world);
-  const shipConfig = SHIPS.find((s) => s.id === activeShip.typeId);
-  if (!shipConfig) return Infinity;
-  const baseSpeed =
-    shipConfig.speed * (1 + activeShip.equipment.sailLevel * 0.05);
+/** 计算多船舰队航行天数（以最慢船为准） */
+export function calcFleetTravelDays(
+  distance: number,
+  world: World,
+  shipIds: string[],
+): number {
+  const speeds = shipIds.map((id) => {
+    const ship = world.fleet.ships.find((s) => s.id === id);
+    if (!ship) return null;
+    const shipConfig = SHIPS.find((s) => s.id === ship.typeId);
+    if (!shipConfig) return null;
+    return shipConfig.speed * (1 + ship.equipment.sailLevel * 0.05);
+  });
+  const validSpeeds = speeds.filter((s): s is number => s !== null);
+  if (validSpeeds.length !== shipIds.length) return Infinity;
+  const fleetSpeed = Math.min(...validSpeeds);
   const levelBonus = 1 + world.player.level * LEVEL_SPEED_PER_LEVEL;
-  return Math.ceil(distance / (baseSpeed * levelBonus * SPEED_BASE));
+  return Math.ceil(distance / (fleetSpeed * levelBonus * SPEED_BASE));
+}
+
+/** 计算航行天数（单船，委托 calcFleetTravelDays） */
+export function calcTravelDays(distance: number, world: World): number {
+  return calcFleetTravelDays(distance, world, [getActiveShip(world).id]);
+}
+
+/** 计算舰队综合战力 */
+export function getFleetCombatPower(world: World, shipIds: string[]): number {
+  let total = 0;
+  for (const id of shipIds) {
+    const ship = world.fleet.ships.find((s) => s.id === id);
+    if (!ship) continue;
+    const shipConfig = SHIPS.find((s) => s.id === ship.typeId);
+    if (!shipConfig) continue;
+    const defenseMultiplier = shipConfig.armamentTiers[ship.armamentLevel][1];
+    total += ship.equipment.cannonLevel * defenseMultiplier;
+  }
+  return total;
 }
 export function arriveAtPort(
   world: World,

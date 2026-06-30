@@ -63,7 +63,7 @@ export interface VoyageState {
   readonly departureDay: number;
   readonly travelDays: number;
   readonly events: readonly VoyageEvent[];
-  readonly armamentLevel: 0 | 1 | 2;
+  readonly fleetShipIds: readonly string[];
 }
 export interface PlayerState {
   readonly name: string;
@@ -106,4 +106,10 @@ export type DomainErrorCode =
   | "UNKNOWN_REGION"
   | "NO_PRICE_DATA"
   | "NOT_AT_PORT"
-  | "CARGO_EXCEEDS_CAPACITY";
+  | "CARGO_EXCEEDS_CAPACITY"
+  | "FLEET_FULL"
+  | "LAST_SHIP"
+  | "SHIP_HAS_CARGO"
+  | "SHIP_NOT_AT_PORT"
+  | "EMPTY_FLEET_SELECTION"
+  | "SHIP_ZERO_DURABILITY";

@@ -6,11 +6,11 @@ import { EVENT_CONFIGS, type EventTemplate } from "../../data/events";
 import { EVENT_EXP } from "../../data/formulas";
 import { PORTS } from "../../data/ports";
 import { REGIONS } from "../../data/regions";
+import { SHIPS } from "../../data/ships";
 import { applyCombatOutcome, resolveCombat } from "./combat";
 import { getEffectiveCapacityForShip } from "./navigation";
 import { gainExp } from "./player";
 import { getActiveShip, getNearestPort } from "./ship";
-import { getMaxCapacity, getUsedCapacity } from "./trade";
 import type { CargoItem, VoyageEvent, VoyageState, World } from "./types";
 import { DomainError } from "./types";
 
@@ -159,7 +159,7 @@ function applyCombatEvent(world: World, event: VoyageEvent): World {
   (event as VoyageEvent & { combatOutcome: typeof outcome }).combatOutcome =
     outcome;
 
-  return applyCombatOutcome(world, outcome, nearestPort);
+  return applyCombatOutcome(world, outcome, nearestPort, voyage.fleetShipIds);
 }
 
 /** 应用金币变化 */
@@ -171,21 +171,31 @@ function applyGoldChange(world: World, delta: number): World {
   };
 }
 
-/** 应用货物损失 */
+/** 应用货物损失（舰队所有船只均分） */
 function applyCargoLoss(world: World, loss: number): World {
-  const activeShip = getActiveShip(world);
-  if (loss <= 0 || activeShip.cargo.length === 0) return world;
-  return {
-    ...world,
-    fleet: {
-      ...world.fleet,
-      ships: world.fleet.ships.map((s) =>
-        s.id === activeShip.id
-          ? { ...s, cargo: subtractCargoLoss(activeShip.cargo, loss) }
-          : s,
-      ),
-    },
-  };
+  const fleetShipIds = world.voyage?.fleetShipIds ?? [getActiveShip(world).id];
+  if (loss <= 0) return world;
+
+  const fleetSize = fleetShipIds.length;
+  const lossPerShip = Math.ceil(loss / fleetSize);
+
+  let result = world;
+  for (const shipId of fleetShipIds) {
+    const ship = result.fleet.ships.find((s) => s.id === shipId);
+    if (!ship || ship.cargo.length === 0) continue;
+    result = {
+      ...result,
+      fleet: {
+        ...result.fleet,
+        ships: result.fleet.ships.map((s) =>
+          s.id === shipId
+            ? { ...s, cargo: subtractCargoLoss(s.cargo, lossPerShip) }
+            : s,
+        ),
+      },
+    };
+  }
+  return result;
 }
 
 /** 应用航行事件效果到 World */
@@ -211,7 +221,7 @@ export interface StartVoyageOptions {
   readonly fromPortId: string;
   readonly toPortId: string;
   readonly travelDays: number;
-  readonly armamentLevel: 0 | 1 | 2;
+  readonly fleetShipIds?: readonly string[];
 }
 
 /** 创建航行状态（出航时调用）。校验有效舱容，超载则抛错。 */
@@ -219,24 +229,49 @@ export function startVoyage(
   world: World,
   options: StartVoyageOptions,
 ): VoyageState {
-  const { fromPortId, toPortId, travelDays, armamentLevel } = options;
-  const usedCapacity = getUsedCapacity(world);
-  const maxCapacity = getMaxCapacity(world);
-  const activeShip = getActiveShip(world);
-  const effectiveCapacity = getEffectiveCapacityForShip(
-    activeShip.typeId,
-    maxCapacity,
-    armamentLevel,
-  );
-  if (usedCapacity > effectiveCapacity) {
+  const { fromPortId, toPortId, travelDays } = options;
+  const fleetShipIds = options.fleetShipIds ?? [getActiveShip(world).id];
+
+  if (fleetShipIds.length === 0) {
+    throw new DomainError("EMPTY_FLEET_SELECTION");
+  }
+
+  // 校验所有船存在且耐久 > 0；累计舱容
+  let totalUsedCapacity = 0;
+  let totalEffectiveCapacity = 0;
+  for (const shipId of fleetShipIds) {
+    const ship = world.fleet.ships.find((s) => s.id === shipId);
+    if (!ship) throw new DomainError("INVALID_SHIP");
+    if (ship.durability <= 0) throw new DomainError("SHIP_ZERO_DURABILITY");
+
+    totalUsedCapacity += ship.cargo.reduce(
+      (sum, item) => sum + item.quantity,
+      0,
+    );
+
+    const shipConfig = SHIPS.find((s) => s.id === ship.typeId);
+    if (!shipConfig) throw new DomainError("INVALID_SHIP");
+    const maxCapForShip = Math.floor(
+      shipConfig.capacity * (1 + ship.equipment.hullLevel * 0.1),
+    );
+    const effectiveCapacity = getEffectiveCapacityForShip(
+      ship.typeId,
+      maxCapForShip,
+      ship.armamentLevel,
+    );
+    totalEffectiveCapacity += effectiveCapacity;
+  }
+
+  if (totalUsedCapacity > totalEffectiveCapacity) {
     throw new DomainError("CARGO_EXCEEDS_CAPACITY");
   }
+
   return {
     fromPortId,
     toPortId,
     departureDay: world.player.day,
     travelDays,
     events: generateVoyageEvents(world, travelDays),
-    armamentLevel,
+    fleetShipIds,
   };
 }

@@ -78,3 +78,12 @@ export const COMBAT_HP_PENALTY_FACTOR = 100;
 export const SURVIVAL_DISTANCE_FACTOR = 1.2;
 export const SURVIVAL_DEFENSE_FACTOR = 10;
 export const SURVIVAL_HP_PENALTY_FACTOR = 20;
+// ============================================================
+// 舰队管理常量
+// ============================================================
+
+/// 出售船只回收比例（回收价 = basePrice × SHIP_SELL_RATIO）
+export const SHIP_SELL_RATIO = 0.5;
+
+/// 舰队上限 = 1 + floor(level / MAX_SHIPS_LEVEL_DIVISOR)
+export const MAX_SHIPS_LEVEL_DIVISOR = 3;

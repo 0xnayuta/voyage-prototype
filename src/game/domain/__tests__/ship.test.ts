@@ -1,8 +1,10 @@
 import { describe, expect, it } from "bun:test";
 import {
+  buyShip,
   getActiveShip,
   getNearestPort,
   repairShip,
+  sellShip,
   setArmamentLevel,
   takeDamage,
   upgradeComponent,
@@ -226,11 +228,272 @@ describe("setArmamentLevel", () => {
         departureDay: 1,
         travelDays: 4,
         events: [],
-        armamentLevel: 0,
+        fleetShipIds: ["ship-1"],
       },
     });
     expect(() =>
       setArmamentLevel(voyaging, getActiveShip(voyaging).id, 1),
     ).toThrow("IN_VOYAGE");
+  });
+});
+
+describe("buyShip", () => {
+  it("successfully buys a ship when conditions are met", () => {
+    // Start at London (where caravel is sold)
+    const world = createTestWorld({
+      player: {
+        name: "test",
+        currentPortId: "london",
+        day: 1,
+        level: 1,
+        exp: 0,
+        expToNext: 100,
+      },
+      fleet: {
+        ships: [
+          {
+            id: "ship-1",
+            typeId: "sloop",
+            name: "单桅帆船",
+            equipment: {
+              hullLevel: 0,
+              sailLevel: 0,
+              armorLevel: 0,
+              cannonLevel: 0,
+            },
+            durability: 50,
+            maxDurability: 50,
+            cargo: [],
+            armamentLevel: 0,
+            equippedItems: [],
+          },
+        ],
+        activeShipId: "ship-1",
+        maxShips: 3,
+        crew: 3,
+        maxCrew: 6,
+        gold: 10000,
+      },
+    });
+
+    // Buy caravel (price: 5000, sold at london)
+    const result = buyShip(world, "caravel");
+    expect(result.fleet.ships).toHaveLength(2);
+    expect(result.fleet.ships[1].typeId).toBe("caravel");
+    expect(result.fleet.gold).toBe(5000);
+  });
+
+  it("throws IN_VOYAGE when voyaging", () => {
+    const world = createTestWorld({
+      voyage: {
+        fromPortId: "quanzhou",
+        toPortId: "london",
+        departureDay: 1,
+        travelDays: 5,
+        events: [],
+        fleetShipIds: ["ship-1"],
+      },
+    });
+    expect(() => buyShip(world, "caravel")).toThrow("IN_VOYAGE");
+  });
+
+  it("throws SHIP_NOT_AT_PORT when ship is not sold at current port", () => {
+    // London doesn't sell galleon (sold at quanzhou)
+    const world = createTestWorld({
+      player: {
+        name: "test",
+        currentPortId: "london",
+        day: 1,
+        level: 1,
+        exp: 0,
+        expToNext: 100,
+      },
+    });
+    expect(() => buyShip(world, "galleon")).toThrow("SHIP_NOT_AT_PORT");
+  });
+
+  it("throws FLEET_FULL when maxShips limit is reached", () => {
+    const world = createTestWorld({
+      player: {
+        name: "test",
+        currentPortId: "london",
+        day: 1,
+        level: 1,
+        exp: 0,
+        expToNext: 100,
+      },
+      fleet: {
+        ships: [
+          {
+            id: "ship-1",
+            typeId: "sloop",
+            name: "单桅帆船",
+            equipment: {
+              hullLevel: 0,
+              sailLevel: 0,
+              armorLevel: 0,
+              cannonLevel: 0,
+            },
+            durability: 50,
+            maxDurability: 50,
+            cargo: [],
+            armamentLevel: 0,
+            equippedItems: [],
+          },
+        ],
+        activeShipId: "ship-1",
+        maxShips: 1, // Full
+        crew: 3,
+        maxCrew: 6,
+        gold: 10000,
+      },
+    });
+    expect(() => buyShip(world, "caravel")).toThrow("FLEET_FULL");
+  });
+
+  it("throws INSUFFICIENT_GOLD when gold is not enough", () => {
+    const world = createTestWorld({
+      player: {
+        name: "test",
+        currentPortId: "london",
+        day: 1,
+        level: 1,
+        exp: 0,
+        expToNext: 100,
+      },
+      fleet: {
+        ships: [
+          {
+            id: "ship-1",
+            typeId: "sloop",
+            name: "单桅帆船",
+            equipment: {
+              hullLevel: 0,
+              sailLevel: 0,
+              armorLevel: 0,
+              cannonLevel: 0,
+            },
+            durability: 50,
+            maxDurability: 50,
+            cargo: [],
+            armamentLevel: 0,
+            equippedItems: [],
+          },
+        ],
+        activeShipId: "ship-1",
+        maxShips: 3,
+        crew: 3,
+        maxCrew: 6,
+        gold: 1000, // need 5000 for caravel
+      },
+    });
+    expect(() => buyShip(world, "caravel")).toThrow("INSUFFICIENT_GOLD");
+  });
+});
+
+describe("sellShip", () => {
+  it("successfully sells a ship and recovers gold", () => {
+    const world = createTestWorld({
+      fleet: {
+        ships: [
+          {
+            id: "ship-1",
+            typeId: "sloop",
+            name: "单桅帆船",
+            equipment: {
+              hullLevel: 0,
+              sailLevel: 0,
+              armorLevel: 0,
+              cannonLevel: 0,
+            },
+            durability: 50,
+            maxDurability: 50,
+            cargo: [],
+            armamentLevel: 0,
+            equippedItems: [],
+          },
+          {
+            id: "ship-2",
+            typeId: "caravel", // basePrice: 5000
+            name: "中型帆船",
+            equipment: {
+              hullLevel: 0,
+              sailLevel: 0,
+              armorLevel: 0,
+              cannonLevel: 0,
+            },
+            durability: 80,
+            maxDurability: 80,
+            cargo: [],
+            armamentLevel: 0,
+            equippedItems: [],
+          },
+        ],
+        activeShipId: "ship-2",
+        maxShips: 3,
+        crew: 3,
+        maxCrew: 6,
+        gold: 1000,
+      },
+    });
+
+    // Sell ship-2: recovers 5000 * 0.5 = 2500 gold
+    const result = sellShip(world, "ship-2");
+    expect(result.fleet.ships).toHaveLength(1);
+    expect(result.fleet.ships[0].id).toBe("ship-1");
+    expect(result.fleet.gold).toBe(3500);
+    expect(result.fleet.activeShipId).toBe("ship-1"); // activeShipId switched
+  });
+
+  it("throws LAST_SHIP when trying to sell the only ship", () => {
+    const world = createTestWorld();
+    expect(() => sellShip(world, "ship-1")).toThrow("LAST_SHIP");
+  });
+
+  it("throws SHIP_HAS_CARGO when ship is carrying goods", () => {
+    const world = createTestWorld({
+      fleet: {
+        ships: [
+          {
+            id: "ship-1",
+            typeId: "sloop",
+            name: "单桅帆船",
+            equipment: {
+              hullLevel: 0,
+              sailLevel: 0,
+              armorLevel: 0,
+              cannonLevel: 0,
+            },
+            durability: 50,
+            maxDurability: 50,
+            cargo: [{ goodId: "silk", quantity: 5, buyPrice: 100 }], // has cargo
+            armamentLevel: 0,
+            equippedItems: [],
+          },
+          {
+            id: "ship-2",
+            typeId: "caravel",
+            name: "中型帆船",
+            equipment: {
+              hullLevel: 0,
+              sailLevel: 0,
+              armorLevel: 0,
+              cannonLevel: 0,
+            },
+            durability: 80,
+            maxDurability: 80,
+            cargo: [],
+            armamentLevel: 0,
+            equippedItems: [],
+          },
+        ],
+        activeShipId: "ship-2",
+        maxShips: 3,
+        crew: 3,
+        maxCrew: 6,
+        gold: 1000,
+      },
+    });
+    expect(() => sellShip(world, "ship-1")).toThrow("SHIP_HAS_CARGO");
   });
 });

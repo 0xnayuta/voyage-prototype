@@ -38,7 +38,7 @@ export function resolveCombat(
     return { result: "victory", hpDamage: 0, cargoLoss: 0, description: "" };
   }
 
-  const score = calcCombatScore(world, activeShip, difficulty, rng, shipConfig);
+  const score = calcCombatScore(world, difficulty, rng);
 
   if (score < TOTAL_LOSS_THRESHOLD) return buildTotalLossOutcome(activeShip);
   if (score < 50) return buildPartialLossOutcome(rng);
@@ -48,22 +48,35 @@ export function resolveCombat(
 /** 计算战斗评分 */
 function calcCombatScore(
   world: World,
-  activeShip: ShipInstance,
   difficulty: number,
   rng: RngSource,
-  shipConfig: (typeof SHIPS)[number],
 ): number {
-  const armamentLevel = world.voyage?.armamentLevel ?? 0;
-  const defenseMultiplier = shipConfig.armamentTiers[armamentLevel][1];
+  const fleetShipIds = world.voyage?.fleetShipIds ?? [getActiveShip(world).id];
 
-  const hpRatio =
-    activeShip.maxDurability > 0
-      ? activeShip.durability / activeShip.maxDurability
-      : 0;
+  let totalDefenseMultiplier = 0;
+  let totalHpRatio = 0;
+  let fleetSize = 0;
+
+  for (const shipId of fleetShipIds) {
+    const ship = world.fleet.ships.find((s) => s.id === shipId);
+    if (!ship) continue;
+    const cfg = SHIPS.find((s) => s.id === ship.typeId);
+    if (!cfg) continue;
+    const defenseMultiplier = cfg.armamentTiers[ship.armamentLevel][1];
+    const hpRatio =
+      ship.maxDurability > 0 ? ship.durability / ship.maxDurability : 0;
+    totalDefenseMultiplier += defenseMultiplier;
+    totalHpRatio += hpRatio;
+    fleetSize++;
+  }
+
+  const avgDefenseMultiplier =
+    fleetSize > 0 ? totalDefenseMultiplier / fleetSize : 1;
+  const avgHpRatio = fleetSize > 0 ? totalHpRatio / fleetSize : 0;
 
   let score = calcDefenseScore(
-    defenseMultiplier,
-    hpRatio,
+    avgDefenseMultiplier,
+    avgHpRatio,
     COMBAT_DEFENSE_BONUS_FACTOR,
     COMBAT_HP_PENALTY_FACTOR,
   );
@@ -118,36 +131,47 @@ export function applyCombatOutcome(
   world: World,
   outcome: CombatOutcome,
   nearestPortId: string,
+  fleetShipIds: readonly string[] = [getActiveShip(world).id],
 ): World {
-  const activeShip = getActiveShip(world);
-  let result = takeDamage(world, activeShip.id, outcome.hpDamage);
+  const fleetSize = fleetShipIds.length;
+  const hpDamagePerShip = Math.ceil(outcome.hpDamage / fleetSize);
+
+  // Apply HP damage to all fleet ships
+  let result = world;
+  for (const shipId of fleetShipIds) {
+    result = takeDamage(result, shipId, hpDamagePerShip);
+  }
 
   if (outcome.result === "totalLoss") {
+    // All fleet ships lose cargo, durability set to 1, teleport to nearest port
     result = {
       ...result,
       fleet: {
         ...result.fleet,
         ships: result.fleet.ships.map((s) =>
-          s.id === activeShip.id ? { ...s, durability: 1, cargo: [] } : s,
+          fleetShipIds.includes(s.id) ? { ...s, durability: 1, cargo: [] } : s,
         ),
       },
       player: { ...result.player, currentPortId: nearestPortId },
       voyage: null,
     };
   } else if (outcome.cargoLoss > 0) {
-    const remainingCargo = subtractCargoLoss(
-      activeShip.cargo,
-      outcome.cargoLoss,
-    );
-    result = {
-      ...result,
-      fleet: {
-        ...result.fleet,
-        ships: result.fleet.ships.map((s) =>
-          s.id === activeShip.id ? { ...s, cargo: remainingCargo } : s,
-        ),
-      },
-    };
+    // Split cargo loss across fleet ships
+    const cargoLossPerShip = Math.ceil(outcome.cargoLoss / fleetSize);
+    for (const shipId of fleetShipIds) {
+      const ship = result.fleet.ships.find((s) => s.id === shipId);
+      if (!ship || ship.cargo.length === 0) continue;
+      const remainingCargo = subtractCargoLoss(ship.cargo, cargoLossPerShip);
+      result = {
+        ...result,
+        fleet: {
+          ...result.fleet,
+          ships: result.fleet.ships.map((s) =>
+            s.id === shipId ? { ...s, cargo: remainingCargo } : s,
+          ),
+        },
+      };
+    }
   }
 
   return result;

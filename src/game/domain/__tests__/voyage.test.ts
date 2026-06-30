@@ -212,3 +212,138 @@ describe("generateVoyageEvents", () => {
     vi.restoreAllMocks();
   });
 });
+
+import { applyCombatOutcome } from "../combat";
+
+describe("applyVoyageEvents fleet behavior", () => {
+  it("splits cargo loss evenly across fleet ships", () => {
+    const world = createTestWorld({
+      voyage: {
+        fromPortId: "quanzhou",
+        toPortId: "malacca",
+        departureDay: 1,
+        travelDays: 3,
+        events: [],
+        fleetShipIds: ["ship-1", "ship-2"], // 2 ships in voyage
+      },
+      fleet: {
+        ships: [
+          {
+            id: "ship-1",
+            typeId: "sloop",
+            name: "ship 1",
+            equipment: {
+              hullLevel: 0,
+              sailLevel: 0,
+              armorLevel: 0,
+              cannonLevel: 0,
+            },
+            durability: 50,
+            maxDurability: 50,
+            cargo: [{ goodId: "silk", quantity: 5, buyPrice: 100 }],
+            armamentLevel: 0,
+            equippedItems: [],
+          },
+          {
+            id: "ship-2",
+            typeId: "sloop",
+            name: "ship 2",
+            equipment: {
+              hullLevel: 0,
+              sailLevel: 0,
+              armorLevel: 0,
+              cannonLevel: 0,
+            },
+            durability: 50,
+            maxDurability: 50,
+            cargo: [{ goodId: "silk", quantity: 5, buyPrice: 100 }],
+            armamentLevel: 0,
+            equippedItems: [],
+          },
+        ],
+        activeShipId: "ship-1",
+        maxShips: 3,
+        crew: 3,
+        maxCrew: 6,
+        gold: 1000,
+      },
+    });
+
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    const events: VoyageEvent[] = [
+      { day: 1, description: "pirates", goldChange: 0, cargoLoss: 4 }, // loss = 4, split = 2 per ship
+    ];
+
+    const result = applyVoyageEvents(world, events);
+
+    // Both ships should lose 2 silk
+    expect(result.fleet.ships[0].cargo[0].quantity).toBe(3);
+    expect(result.fleet.ships[1].cargo[0].quantity).toBe(3);
+
+    vi.restoreAllMocks();
+  });
+});
+
+describe("applyCombatOutcome fleet behavior", () => {
+  it("splits HP damage evenly across all fleet ships", () => {
+    const world = createTestWorld({
+      fleet: {
+        ships: [
+          {
+            id: "ship-1",
+            typeId: "sloop",
+            name: "ship 1",
+            equipment: {
+              hullLevel: 0,
+              sailLevel: 0,
+              armorLevel: 0,
+              cannonLevel: 0,
+            },
+            durability: 50,
+            maxDurability: 50,
+            cargo: [],
+            armamentLevel: 0,
+            equippedItems: [],
+          },
+          {
+            id: "ship-2",
+            typeId: "sloop",
+            name: "ship 2",
+            equipment: {
+              hullLevel: 0,
+              sailLevel: 0,
+              armorLevel: 0,
+              cannonLevel: 0,
+            },
+            durability: 50,
+            maxDurability: 50,
+            cargo: [],
+            armamentLevel: 0,
+            equippedItems: [],
+          },
+        ],
+        activeShipId: "ship-1",
+        maxShips: 3,
+        crew: 3,
+        maxCrew: 6,
+        gold: 1000,
+      },
+    });
+
+    const outcome = {
+      result: "partialLoss" as const,
+      hpDamage: 10, // 10 damage total, split = 5 per ship
+      cargoLoss: 0,
+      description: "fight",
+    };
+
+    const result = applyCombatOutcome(world, outcome, "quanzhou", [
+      "ship-1",
+      "ship-2",
+    ]);
+
+    expect(result.fleet.ships[0].durability).toBe(45);
+    expect(result.fleet.ships[1].durability).toBe(45);
+  });
+});

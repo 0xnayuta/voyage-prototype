@@ -13,6 +13,12 @@ const ERROR_MAP: Record<string, string> = {
   NO_PRICE_DATA: "该商品暂无价格数据",
   UNKNOWN_REGION: "未知海域",
   CARGO_EXCEEDS_CAPACITY: "当前货物量超出该配置有效舱容，无法出航",
+  FLEET_FULL: "舰队已满，提升等级以扩充舰队",
+  LAST_SHIP: "至少保留一艘船",
+  SHIP_HAS_CARGO: "请先清空船上货物",
+  SHIP_NOT_AT_PORT: "当前港口无法购买该船只",
+  EMPTY_FLEET_SELECTION: "请至少选择一艘船出航",
+  SHIP_ZERO_DURABILITY: "船体严重损坏，无法出航",
 };
 
 /** 将领域层的 DomainError 转为用户可读的中文错误消息 */

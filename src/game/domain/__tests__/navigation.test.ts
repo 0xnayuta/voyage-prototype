@@ -95,3 +95,117 @@ describe("arriveAtPort", () => {
     expect(world.player.currentPortId).toBe("quanzhou");
   });
 });
+
+import { calcFleetTravelDays, getFleetCombatPower } from "../navigation";
+
+describe("calcFleetTravelDays", () => {
+  it("uses slowest ship in fleet to determine travel days", () => {
+    const world = createTestWorld({
+      fleet: {
+        ships: [
+          {
+            id: "ship-1",
+            typeId: "light-sailboat", // speed: 1.2
+            name: "快船",
+            equipment: {
+              hullLevel: 0,
+              sailLevel: 0,
+              armorLevel: 0,
+              cannonLevel: 0,
+            },
+            durability: 35,
+            maxDurability: 35,
+            cargo: [],
+            armamentLevel: 0,
+            equippedItems: [],
+          },
+          {
+            id: "ship-2",
+            typeId: "galleon", // speed: 0.55 (slowest)
+            name: "慢船",
+            equipment: {
+              hullLevel: 0,
+              sailLevel: 0,
+              armorLevel: 0,
+              cannonLevel: 0,
+            },
+            durability: 120,
+            maxDurability: 120,
+            cargo: [],
+            armamentLevel: 0,
+            equippedItems: [],
+          },
+        ],
+        activeShipId: "ship-1",
+        maxShips: 3,
+        crew: 3,
+        maxCrew: 6,
+        gold: 1000,
+      },
+    });
+
+    // Distance 10.
+    // Speed light-sailboat: 1.2 * 2.0 = 2.4. Travel days: ceil(10/2.4) = 5
+    // Speed galleon: 0.55 * 2.0 = 1.1. Travel days: ceil(10/1.1) = 10
+    // Level 1 bonus: 1 + 1 * 0.02 = 1.02.
+    // If we send only ship-1: speed 1.2 * 1.02 * 2.0 = 2.448. ceil(10/2.448) = 5 days.
+    // If we send ship-1 and ship-2: fleet speed is galleon's 0.55.
+    // 0.55 * 1.02 * 2.0 = 1.122. ceil(10/1.122) = 9 days.
+    expect(calcFleetTravelDays(10, world, ["ship-1"])).toBe(5);
+    expect(calcFleetTravelDays(10, world, ["ship-1", "ship-2"])).toBe(9);
+  });
+});
+
+describe("getFleetCombatPower", () => {
+  it("sums individual ship combat powers based on cannonLevel and armament multiplier", () => {
+    const world = createTestWorld({
+      fleet: {
+        ships: [
+          {
+            id: "ship-1",
+            typeId: "sloop",
+            name: "小船",
+            equipment: {
+              hullLevel: 0,
+              sailLevel: 0,
+              armorLevel: 0,
+              cannonLevel: 2,
+            },
+            durability: 50,
+            maxDurability: 50,
+            cargo: [],
+            armamentLevel: 1, // Standard tier defense/combat multiplier = 1.5
+            equippedItems: [],
+          },
+          {
+            id: "ship-2",
+            typeId: "cog",
+            name: "大船",
+            equipment: {
+              hullLevel: 0,
+              sailLevel: 0,
+              armorLevel: 0,
+              cannonLevel: 4,
+            },
+            durability: 90,
+            maxDurability: 90,
+            cargo: [],
+            armamentLevel: 2, // Combat tier defense/combat multiplier = 2.5
+            equippedItems: [],
+          },
+        ],
+        activeShipId: "ship-1",
+        maxShips: 3,
+        crew: 3,
+        maxCrew: 6,
+        gold: 1000,
+      },
+    });
+
+    // ship-1 power = 2 * 1.5 = 3
+    // ship-2 power = 4 * 2.5 = 10
+    // total = 13
+    expect(getFleetCombatPower(world, ["ship-1"])).toBe(3);
+    expect(getFleetCombatPower(world, ["ship-1", "ship-2"])).toBe(13);
+  });
+});

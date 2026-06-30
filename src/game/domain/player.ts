@@ -1,6 +1,7 @@
 import {
   BASE_EXP,
   LEVEL_EXP_GROWTH,
+  MAX_SHIPS_LEVEL_DIVISOR,
   STARTING_DAY,
   STARTING_GOLD,
 } from "../../data/formulas";
@@ -13,7 +14,7 @@ import type { World } from "./types";
 // ============================================================
 
 export function createDefaultWorld(): World {
-  const defaultShip = SHIPS[0]; // sloop
+  const defaultShip = SHIPS.find((s) => s.id === "sloop") ?? SHIPS[0];
 
   return {
     player: {
@@ -105,6 +106,10 @@ function levelUp(world: World): World {
       level: nextLevel,
       exp: nextExp,
       expToNext: nextExpToNext,
+    },
+    fleet: {
+      ...world.fleet,
+      maxShips: 1 + Math.floor(nextLevel / MAX_SHIPS_LEVEL_DIVISOR),
     },
   });
 }
