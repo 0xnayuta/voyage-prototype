@@ -1,5 +1,5 @@
 ---
-status: current
+status: completed
 last_verified: 2026-06-26
 ---
 

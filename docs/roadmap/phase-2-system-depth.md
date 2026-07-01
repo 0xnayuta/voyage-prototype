@@ -1,5 +1,5 @@
 ---
-status: draft
+status: completed
 last_verified: 2026-06-30
 ---
 
