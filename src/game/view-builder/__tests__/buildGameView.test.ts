@@ -175,7 +175,7 @@ describe("buildShipyardView", () => {
     const world = createTestWorld({
       fleet: {
         ...createTestWorld().fleet,
-        inventory: ["high_speed_sail"],
+        shipEquipmentInventory: ["high_speed_sail"],
       },
     });
     const view = buildShipyardView(world);
@@ -290,7 +290,7 @@ it("includes equipped items and fleet inventory in detail", () => {
   const world = createTestWorld({
     fleet: {
       ...createTestWorld().fleet,
-      inventory: ["cannon_light"],
+      shipEquipmentInventory: ["cannon_light"],
       ships: [
         {
           ...createTestWorld().fleet.ships[0],

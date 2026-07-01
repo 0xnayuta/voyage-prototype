@@ -19,6 +19,18 @@ export function createTestWorld(overrides?: Partial<World>): World {
       level: 1,
       exp: 0,
       expToNext: 100,
+      str: 1,
+      dex: 1,
+      int: 1,
+      fth: 1,
+      arc: 1,
+      attributePoints: 0,
+      equipment: {
+        weapon: null,
+        armor: null,
+        accessory1: null,
+        accessory2: null,
+      },
     },
     fleet: {
       ships: [
@@ -48,6 +60,7 @@ export function createTestWorld(overrides?: Partial<World>): World {
       maxCrew: 7,
       gold: 5000,
       inventory: [],
+      shipEquipmentInventory: [],
     },
     market: { prices: buildTestPrices() },
     voyage: null,
@@ -65,6 +78,18 @@ export function createEmptyWorld(overrides?: Partial<World>): World {
       level: 1,
       exp: 0,
       expToNext: 100,
+      str: 1,
+      dex: 1,
+      int: 1,
+      fth: 1,
+      arc: 1,
+      attributePoints: 0,
+      equipment: {
+        weapon: null,
+        armor: null,
+        accessory1: null,
+        accessory2: null,
+      },
     },
     fleet: {
       ships: [
@@ -91,6 +116,7 @@ export function createEmptyWorld(overrides?: Partial<World>): World {
       maxCrew: 7,
       gold: 10000,
       inventory: [],
+      shipEquipmentInventory: [],
     },
     market: { prices: buildTestPrices() },
     voyage: null,

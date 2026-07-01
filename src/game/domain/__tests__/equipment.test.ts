@@ -21,7 +21,9 @@ describe("装备系统领域逻辑", () => {
       const nextWorld = buyEquipment(world, "high_speed_sail");
 
       expect(nextWorld.fleet.gold).toBe(0);
-      expect(nextWorld.fleet.inventory).toContain("high_speed_sail");
+      expect(nextWorld.fleet.shipEquipmentInventory).toContain(
+        "high_speed_sail",
+      );
     });
 
     it("金币不足抛错", () => {
@@ -50,14 +52,16 @@ describe("装备系统领域逻辑", () => {
       const world = createTestWorld({
         fleet: {
           ...createTestWorld().fleet,
-          inventory: ["high_speed_sail"],
+          shipEquipmentInventory: ["high_speed_sail"],
           gold: 1000,
         },
       });
 
       const nextWorld = sellEquipment(world, "high_speed_sail");
       expect(nextWorld.fleet.gold).toBe(3500); // 1000 + 5000 * 0.5
-      expect(nextWorld.fleet.inventory).not.toContain("high_speed_sail");
+      expect(nextWorld.fleet.shipEquipmentInventory).not.toContain(
+        "high_speed_sail",
+      );
     });
 
     it("出售不存在的装备抛错", () => {
@@ -73,14 +77,16 @@ describe("装备系统领域逻辑", () => {
       const world = createTestWorld({
         fleet: {
           ...createTestWorld().fleet,
-          inventory: ["armor_iron"], // 铁甲板, durabilityBonus: 20
+          shipEquipmentInventory: ["armor_iron"], // 铁甲板, durabilityBonus: 20
         },
       });
 
       const nextWorld = equipItem(world, "ship-1", "armor_iron");
       const ship = nextWorld.fleet.ships[0];
 
-      expect(nextWorld.fleet.inventory).not.toContain("armor_iron");
+      expect(nextWorld.fleet.shipEquipmentInventory).not.toContain(
+        "armor_iron",
+      );
       expect(ship.equippedItems).toContain("armor_iron");
       expect(ship.maxDurability).toBe(70); // 50 + 20
       expect(ship.durability).toBe(70); // 50 + 20
@@ -90,7 +96,7 @@ describe("装备系统领域逻辑", () => {
       const world = createTestWorld({
         fleet: {
           ...createTestWorld().fleet,
-          inventory: ["cargo_reinforcement"],
+          shipEquipmentInventory: ["cargo_reinforcement"],
           ships: [
             {
               ...createTestWorld().fleet.ships[0],
@@ -109,7 +115,7 @@ describe("装备系统领域逻辑", () => {
       const world = createTestWorld({
         fleet: {
           ...createTestWorld().fleet,
-          inventory: ["gale_sail"], // Gale Sail (sail type)
+          shipEquipmentInventory: ["gale_sail"], // Gale Sail (sail type)
           ships: [
             {
               ...createTestWorld().fleet.ships[0],
@@ -142,7 +148,7 @@ describe("装备系统领域逻辑", () => {
       const nextWorld = unequipItem(world, "ship-1", "armor_iron");
       const ship = nextWorld.fleet.ships[0];
 
-      expect(nextWorld.fleet.inventory).toContain("armor_iron");
+      expect(nextWorld.fleet.shipEquipmentInventory).toContain("armor_iron");
       expect(ship.equippedItems).not.toContain("armor_iron");
       expect(ship.maxDurability).toBe(50);
       expect(ship.durability).toBe(50);
@@ -325,6 +331,7 @@ describe("装备系统领域逻辑", () => {
           maxCrew: 7,
           gold: 5000,
           inventory: [],
+          shipEquipmentInventory: [],
         },
       });
 

@@ -2,7 +2,18 @@ import { describe, expect, it, vi } from "bun:test";
 import { GOODS } from "../../../data/goods";
 import { PORTS } from "../../../data/ports";
 import { getBasePriceFor } from "../market";
-import { advanceDay, createDefaultWorld, gainExp } from "../player";
+import {
+  advanceDay,
+  allocateAttributePoint,
+  calcPanelStats,
+  createDefaultWorld,
+  equipCharacterItem,
+  gainExp,
+  gainItem,
+  getEffectiveAttribute,
+  removeItem,
+  unequipCharacterItem,
+} from "../player";
 import { createTestWorld } from "./helpers";
 
 describe("createDefaultWorld", () => {
@@ -192,6 +203,7 @@ describe("gainExp", () => {
     const leveled = gainExp(world, 100);
     expect(leveled.player.level).toBe(2);
     expect(leveled.player.exp).toBe(0);
+    expect(leveled.player.attributePoints).toBe(3);
     expect(leveled.player.expToNext).toBe(130); // BASE_EXP * (1 + 2 * 0.15) = 100 * 1.3 = 130
   });
 
@@ -200,6 +212,7 @@ describe("gainExp", () => {
     const leveled = gainExp(world, 150);
     expect(leveled.player.level).toBe(2);
     expect(leveled.player.exp).toBe(50); // 150 - 100 = 50
+    expect(leveled.player.attributePoints).toBe(3);
   });
 
   it("supports multi-level gain", () => {
@@ -209,6 +222,7 @@ describe("gainExp", () => {
     // expToNext for level 1 = 100, level 2 = 130
     // 300 - 100 - 130 = 70
     expect(leveled.player.exp).toBe(70);
+    expect(leveled.player.attributePoints).toBe(6);
   });
 
   it("returns same world when amount is 0", () => {
@@ -228,5 +242,191 @@ describe("gainExp", () => {
     gainExp(world, 100);
     expect(world.player.level).toBe(1);
     expect(world.player.exp).toBe(0);
+  });
+});
+
+describe("calcPanelStats & getEffectiveAttribute", () => {
+  it("calculates correct base values at level 1 with all attributes = 1", () => {
+    const world = createDefaultWorld();
+    const stats = calcPanelStats(world.player, world.fleet.inventory);
+
+    // HP = 80 + 1 * 8 + 1 * 4 + (1+1+1+1) * 1 = 96
+    expect(stats.hp).toBe(96);
+    // ATK = 8 + 1 * 2 + 1 * 0.5 = 10 (Math.floor(10.5) = 10)
+    expect(stats.atk).toBe(10);
+    // DEF = 5 + 1 * 0.8 + 1 * 0.4 = 6 (Math.floor(6.2) = 6)
+    expect(stats.def).toBe(6);
+    // MAG = 5 + 1 * 2 + 1 * 0.5 = 7 (Math.floor(7.5) = 7)
+    expect(stats.mag).toBe(7);
+    // MDF = 5 + 1 * 0.6 + 1 * 1.0 = 6 (Math.floor(6.6) = 6)
+    expect(stats.mdf).toBe(6);
+    // SPD = 8 + 1 * 1.5 = 9 (Math.floor(9.5) = 9)
+    expect(stats.spd).toBe(9);
+    // LUK = 5 + 1 * 2.0 = 7
+    expect(stats.luk).toBe(7);
+    // EquipLoad = 15 + 1 * 2.5 = 17 (Math.floor(17.5) = 17)
+    expect(stats.equipLoad).toBe(17);
+  });
+
+  it("applies soft cap bracketed calculation correctly", () => {
+    // 20 points => 20 * 1.0 = 20
+    expect(getEffectiveAttribute(20)).toBe(20);
+    // 30 points => 20 * 1.0 + 10 * 0.75 = 27.5
+    expect(getEffectiveAttribute(30)).toBe(27.5);
+    // 50 points => 20 * 1.0 + 20 * 0.75 + 10 * 0.5 = 40
+    expect(getEffectiveAttribute(50)).toBe(40);
+  });
+
+  it("calculates equipment bonuses and scaling correctly", () => {
+    const weaponInstance = {
+      uid: "weapon-1",
+      itemId: "rusted_sword",
+      quantity: 1,
+      equippedSlot: "weapon",
+    };
+    const armorInstance = {
+      uid: "armor-1",
+      itemId: "leather_armor",
+      quantity: 1,
+      equippedSlot: "armor",
+    };
+    const inventory = [weaponInstance, armorInstance];
+    const player = {
+      name: "测试",
+      currentPortId: "quanzhou",
+      day: 1,
+      level: 1,
+      exp: 0,
+      expToNext: 100,
+      str: 10,
+      dex: 10,
+      int: 10,
+      fth: 10,
+      arc: 10,
+      attributePoints: 0,
+      equipment: {
+        weapon: "weapon-1",
+        armor: "armor-1",
+        accessory1: null,
+        accessory2: null,
+      },
+    };
+
+    const stats = calcPanelStats(player, inventory);
+
+    // rusted_sword has base ATK +5, scaling: str: good (0.25).
+    // leather_armor has base DEF +8, base HP +30, base EquipLoad +5.
+    // Level = 1. STR = 10 (effective STR = 10). DEX = 10 (effective DEX = 10).
+    // Player base HP = 80 + 8 + 40 + (10+10+10+10)*1 = 168.
+    // Equipped HP bonus = 30 (from leather_armor). Total HP = 198.
+    expect(stats.hp).toBe(198);
+
+    // Player base ATK = 8 + 10 * 2.0 + 10 * 0.5 = 33.
+    // Equipped ATK bonus = 5 (from rusted_sword).
+    // Weapon scaling: baseWeaponAtk (5) * (effStr / 100) * strCoeff (0.25)
+    // = 5 * (10 / 100) * 0.25 = 5 * 0.1 * 0.25 = 0.125.
+    // Total ATK = 33 + 5 + 0.125 = 38.125 => Math.floor(38.125) = 38.
+    expect(stats.atk).toBe(38);
+  });
+});
+
+describe("allocateAttributePoint", () => {
+  it("successfully spends attribute points and increments attributes", () => {
+    let world = createDefaultWorld();
+    world = gainExp(world, 100);
+    expect(world.player.attributePoints).toBe(3);
+    expect(world.player.str).toBe(1);
+
+    const nextWorld = allocateAttributePoint(world, "str");
+    expect(nextWorld.player.str).toBe(2);
+    expect(nextWorld.player.attributePoints).toBe(2);
+  });
+
+  it("throws error when attribute points are 0", () => {
+    const world = createDefaultWorld();
+    expect(world.player.attributePoints).toBe(0);
+    expect(() => allocateAttributePoint(world, "str")).toThrow(
+      new Error("INSUFFICIENT_ATTRIBUTE_POINTS"),
+    );
+  });
+
+  it("throws DomainError subclass specifically", () => {
+    const world = createDefaultWorld();
+    expect(() => allocateAttributePoint(world, "str")).toThrow(
+      "INSUFFICIENT_ATTRIBUTE_POINTS",
+    );
+  });
+});
+
+describe("gainItem & removeItem", () => {
+  it("adds non-stackable items as separate instances with default values", () => {
+    let world = createDefaultWorld();
+    world = gainItem(world, "rusted_sword", 2, ["uid-1", "uid-2"]);
+
+    expect(world.fleet.inventory).toHaveLength(2);
+    expect(world.fleet.inventory[0].itemId).toBe("rusted_sword");
+    expect(world.fleet.inventory[0].uid).toBe("uid-1");
+    expect(world.fleet.inventory[0].durability).toBe(100);
+    expect(world.fleet.inventory[0].upgradeLevel).toBe(0);
+    expect(world.fleet.inventory[1].uid).toBe("uid-2");
+  });
+
+  it("removes items from inventory by uid", () => {
+    let world = createDefaultWorld();
+    world = gainItem(world, "rusted_sword", 1, ["uid-1"]);
+    expect(world.fleet.inventory).toHaveLength(1);
+
+    const nextWorld = removeItem(world, "uid-1", 1);
+    expect(nextWorld.fleet.inventory).toHaveLength(0);
+  });
+});
+
+describe("equipCharacterItem & unequipCharacterItem", () => {
+  it("successfully equips weapon from inventory and marks slot", () => {
+    let world = createDefaultWorld();
+    world = gainItem(world, "rusted_sword", 1, ["uid-1"]);
+
+    const nextWorld = equipCharacterItem(world, "uid-1", "weapon");
+    expect(nextWorld.player.equipment.weapon).toBe("uid-1");
+    expect(nextWorld.fleet.inventory[0].equippedSlot).toBe("weapon");
+  });
+
+  it("throws error when equipping incompatible item type in slot", () => {
+    let world = createDefaultWorld();
+    world = gainItem(world, "leather_armor", 1, ["uid-1"]);
+
+    expect(() => equipCharacterItem(world, "uid-1", "weapon")).toThrow(
+      "ITEM_NOT_EQUIPPABLE",
+    );
+  });
+
+  it("automatically unequips old item when equipping new one", () => {
+    let world = createDefaultWorld();
+    world = gainItem(world, "rusted_sword", 2, ["uid-1", "uid-2"]);
+
+    let nextWorld = equipCharacterItem(world, "uid-1", "weapon");
+    expect(nextWorld.player.equipment.weapon).toBe("uid-1");
+    expect(
+      nextWorld.fleet.inventory.find((i) => i.uid === "uid-1")?.equippedSlot,
+    ).toBe("weapon");
+
+    nextWorld = equipCharacterItem(nextWorld, "uid-2", "weapon");
+    expect(nextWorld.player.equipment.weapon).toBe("uid-2");
+    expect(
+      nextWorld.fleet.inventory.find((i) => i.uid === "uid-2")?.equippedSlot,
+    ).toBe("weapon");
+    expect(
+      nextWorld.fleet.inventory.find((i) => i.uid === "uid-1")?.equippedSlot,
+    ).toBeUndefined();
+  });
+
+  it("unequips items back to inventory", () => {
+    let world = createDefaultWorld();
+    world = gainItem(world, "rusted_sword", 1, ["uid-1"]);
+    world = equipCharacterItem(world, "uid-1", "weapon");
+
+    const nextWorld = unequipCharacterItem(world, "weapon");
+    expect(nextWorld.player.equipment.weapon).toBeNull();
+    expect(nextWorld.fleet.inventory[0].equippedSlot).toBeUndefined();
   });
 });
