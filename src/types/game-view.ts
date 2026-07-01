@@ -192,6 +192,60 @@ export interface VoyageEventView {
 }
 
 /** 航行中页（/voyage） */
+export interface SkillView {
+  readonly skillId: string;
+  readonly name: string;
+  readonly mpCost: number;
+  readonly type: "physical" | "magical" | "status" | "heal";
+  readonly description: string;
+  readonly power: number;
+}
+
+export interface CombatStatusView {
+  readonly type: string;
+  readonly label: string;
+  readonly duration: number;
+}
+
+export interface CombatParticipantView {
+  readonly id: string;
+  readonly name: string;
+  readonly type: "player" | "ally" | "enemy";
+  readonly hp: number;
+  readonly maxHp: number;
+  readonly mp: number;
+  readonly maxMp: number;
+  readonly spd: number;
+  readonly level: number;
+  readonly weaponName: string | null;
+  readonly statuses: readonly CombatStatusView[];
+  readonly isDodging: boolean;
+  readonly isParrying: boolean;
+  readonly isDead: boolean;
+}
+
+export interface CombatLogView {
+  readonly round: number;
+  readonly message: string;
+}
+
+export interface PersonCombatView {
+  readonly participants: readonly CombatParticipantView[];
+  readonly turnOrder: readonly string[];
+  readonly currentTurnId: string;
+  readonly round: number;
+  readonly logs: readonly CombatLogView[];
+  readonly status: "in_progress" | "victory" | "defeat" | "surrendered";
+  readonly isPlayerTurn: boolean;
+  readonly availableSkills: readonly SkillView[];
+}
+
+export interface CombatChoiceView {
+  readonly hasSelection: boolean;
+  readonly isDirectBoarding: boolean;
+  readonly difficulty: number;
+}
+
 export interface VoyageView {
   readonly fromPortName: string;
   readonly toPortName: string;
@@ -199,6 +253,8 @@ export interface VoyageView {
   readonly isUnderway: boolean;
   readonly events: VoyageEventView[];
   readonly fleetShipCount: number;
+  readonly combatState: PersonCombatView | null;
+  readonly combatChoice: CombatChoiceView | null;
 }
 /** 航海家酒馆页（/tavern） */
 export interface TavernView {

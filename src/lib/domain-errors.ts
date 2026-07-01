@@ -30,6 +30,12 @@ const ERROR_MAP: Record<string, string> = {
   ITEM_NOT_FOUND: "背包中未找到该物品",
   ITEM_NOT_EQUIPPABLE: "该物品无法装备在人物身上",
   EQUIPMENT_SLOT_INVALID: "无效的装备位置",
+  NOT_IN_COMBAT: "当前不在战斗中",
+  INVALID_COMBAT_TARGET: "无效的战斗目标",
+  INSUFFICIENT_MP: "MP 不足，无法施放技能",
+  INVALID_COMBAT_ACTION: "无效的战斗动作",
+  NOT_YOUR_TURN: "当前不是您的回合",
+  SILENCED: "您处于沉默状态，无法施放魔法技能",
 };
 
 /** 将领域层的 DomainError 转为用户可读的中文错误消息 */

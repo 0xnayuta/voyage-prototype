@@ -72,6 +72,7 @@ export function createDefaultWorld(): World {
     },
     market: initMarketPrices(),
     voyage: null,
+    combat: null,
   };
 }
 
@@ -137,6 +138,7 @@ function levelUp(world: World): World {
 
 export interface PanelStats {
   readonly hp: number;
+  readonly mp: number;
   readonly atk: number;
   readonly def: number;
   readonly mag: number;
@@ -189,6 +191,7 @@ export function calcPanelStats(
     player.level * 8 +
     effStr * 4 +
     (effDex + effInt + effFth + effArc) * 1;
+  const baseMp = 20 + player.level * 2 + effInt * 2 + effFth * 1;
   const baseAtk = 8 + effStr * 2.0 + effDex * 0.5;
   const baseDef = 5 + effStr * 0.8 + effDex * 0.4;
   const baseMag = 5 + effInt * 2.0 + effFth * 0.5;
@@ -293,6 +296,7 @@ export function calcPanelStats(
 
   return {
     hp: Math.max(0, Math.floor(baseHp + eqHp)),
+    mp: Math.max(0, Math.floor(baseMp)),
     atk: Math.max(0, Math.floor(baseAtk + eqAtk + scalingAtk)),
     def: Math.max(0, Math.floor(baseDef + eqDef + scalingDef)),
     mag: Math.max(0, Math.floor(baseMag + eqMag + scalingMag)),

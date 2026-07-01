@@ -1,12 +1,98 @@
 "use client";
 
+import { useActionState } from "react";
+import {
+  acceptBoarding,
+  performCombatAction,
+  surrenderAfterFleetLoss,
+} from "../app/actions/combat";
+import { completeVoyage } from "../app/voyage/actions";
 import type { VoyageEventView, VoyageView } from "../types/game-view";
+import { CombatPanel } from "./CombatPanel";
 
 interface VoyageScreenProps {
   readonly view: VoyageView;
 }
 
 export function VoyageScreen({ view }: VoyageScreenProps) {
+  const [_state, _action, isPending] = useActionState(
+    performCombatAction,
+    null,
+  );
+
+  // 战斗进行中 → 显示战斗面板
+  if (view.combatState) {
+    // 战斗已结束（胜利/失败），显示结果并允许继续
+    if (
+      view.combatState.status === "victory" ||
+      view.combatState.status === "defeat"
+    ) {
+      return (
+        <div className="flex-1 p-4 max-w-2xl mx-auto w-full space-y-4">
+          <CombatPanel combatView={view.combatState} />
+          <div className="text-center">
+            <form action={completeVoyage}>
+              <button
+                type="submit"
+                disabled={isPending}
+                className="rounded-lg bg-gold-500 px-6 py-2 font-bold text-ocean-900 hover:bg-gold-400 transition-colors disabled:opacity-50"
+              >
+                {isPending ? "处理中..." : "继续航行"}
+              </button>
+            </form>
+          </div>
+        </div>
+      );
+    }
+    // 战斗中
+    return (
+      <div className="flex-1 p-4 max-w-2xl mx-auto w-full space-y-4">
+        <CombatPanel combatView={view.combatState} />
+      </div>
+    );
+  }
+  if (view.combatChoice?.hasSelection) {
+    return (
+      <div className="flex-1 p-4 max-w-2xl mx-auto w-full space-y-4">
+        <div className="rounded-lg border border-red-600 bg-red-900/30 p-6 text-center">
+          <h2 className="text-lg font-bold text-red-400">舰队战败！</h2>
+          <p className="mt-2 text-sm text-parchment-dark">
+            你的舰队在海战中失利了。请选择您的命运：
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <form action={surrenderAfterFleetLoss}>
+            <button
+              type="submit"
+              disabled={isPending}
+              className="w-full rounded-lg border border-yellow-600 bg-yellow-700/40 px-4 py-4 text-center hover:bg-yellow-600/40 transition-colors disabled:opacity-50"
+            >
+              <span className="block font-bold text-yellow-300">投降</span>
+              <span className="mt-1 text-xs text-parchment-dark">
+                损失全部货物与 15% 金币，继续航行
+              </span>
+            </button>
+          </form>
+
+          <form action={acceptBoarding}>
+            <button
+              type="submit"
+              disabled={isPending}
+              className="w-full rounded-lg border border-red-600 bg-red-700/40 px-4 py-4 text-center hover:bg-red-600/40 transition-colors disabled:opacity-50"
+            >
+              <span className="block font-bold text-red-300">接舷战</span>
+              <span className="mt-1 text-xs text-parchment-dark">
+                进入人物回合制战斗，胜负在此一举！
+              </span>
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // 正常航行界面
   return (
     <div className="flex-1 p-4 max-w-2xl mx-auto w-full space-y-4">
       <VoyageStatusBar
@@ -22,6 +108,18 @@ export function VoyageScreen({ view }: VoyageScreenProps) {
       />
 
       <EventLog events={view.events} />
+
+      <div className="text-center">
+        <form action={completeVoyage}>
+          <button
+            type="submit"
+            disabled={isPending}
+            className="rounded-lg bg-gold-500 px-8 py-3 text-lg font-bold text-ocean-900 hover:bg-gold-400 transition-colors disabled:opacity-50"
+          >
+            {isPending ? "处理中..." : "推进航行"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
@@ -142,24 +240,25 @@ interface CombatLogEntryProps {
 }
 
 function CombatLogEntry({ log }: CombatLogEntryProps) {
-  const resultColor =
-    log.result === "胜利"
-      ? "text-green-400"
-      : log.result === "受损"
-        ? "text-yellow-400"
-        : "text-red-400";
-
   return (
-    <div className="mt-1 rounded border border-ocean-600 bg-ocean-800/60 px-2 py-1.5">
-      <div className="flex items-center gap-2 text-xs">
-        <span className={resultColor}>[{log.result}]</span>
-        <span className="text-parchment-dark">{log.description}</span>
-      </div>
-      <div className="mt-1 text-xs text-parchment-dark/60">
-        {log.hpDamage > 0 && <span>船体受损 -{log.hpDamage} </span>}
-        {log.cargoLoss > 0 && <span>货物损失 {log.cargoLoss} 单位</span>}
-        {log.allCargoLost && <span>所有货物全部丢失</span>}
-      </div>
+    <div className="mt-1 rounded bg-ocean-800/60 px-2 py-1">
+      <p className="text-xs font-semibold text-gold-500">
+        {log.result === "victory"
+          ? "战斗胜利"
+          : log.result === "partialLoss"
+            ? "遭受损失"
+            : "全损"}
+      </p>
+      <p className="text-xs text-parchment-dark">{log.description}</p>
+      {log.hpDamage > 0 && (
+        <p className="text-xs text-red-400">舰体损伤：{log.hpDamage}</p>
+      )}
+      {log.cargoLoss > 0 && (
+        <p className="text-xs text-red-400">货物损失：{log.cargoLoss} 单位</p>
+      )}
+      {log.allCargoLost && (
+        <p className="text-xs text-red-400">全部货物丢失！</p>
+      )}
     </div>
   );
 }

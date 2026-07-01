@@ -15,10 +15,11 @@ import { PORTS } from "../../data/ports";
 import { REGIONS } from "../../data/regions";
 import { SHIPS } from "../../data/ships";
 import { applyCombatOutcome, resolveCombat } from "./combat";
-import { calcMinCrewForFleet } from "./crew";
+import { initPersonCombat } from "./combat-person";
+import { calcMinCrewForFleet, deductCrewUpkeep } from "./crew";
 import { getFleetPirateEvasion, getShipCargoCapacity } from "./equipment";
-import { getEffectiveCapacityForShip } from "./navigation";
-import { gainExp } from "./player";
+import { arriveAtPort, getEffectiveCapacityForShip } from "./navigation";
+import { advanceDay, gainExp } from "./player";
 import { getActiveShip, getNearestPort, takeDamage } from "./ship";
 import type { CargoItem, VoyageEvent, VoyageState, World } from "./types";
 import { DomainError } from "./types";
@@ -135,7 +136,7 @@ function subtractCargoLoss(
 }
 
 /** 断言查找结果不为空 */
-function findOrThrow<T extends { id: string }>(
+export function findOrThrow<T extends { id: string }>(
   items: readonly T[],
   id: string,
   code: string,
@@ -384,4 +385,240 @@ export function startVoyage(
     events: generateVoyageEvents(world, travelDays),
     fleetShipIds,
   };
+}
+
+/**
+ * 推进航行天数，调整航程状态中的剩余天数和事件触发天数
+ */
+export function advanceVoyageDays(world: World, days: number): World {
+  if (days <= 0) return world;
+  let res = advanceDay(world, days);
+  if (res.voyage) {
+    const remainingEvents = res.voyage.events.map((ev) => ({
+      ...ev,
+      day: Math.max(0, ev.day - days),
+    }));
+    res = {
+      ...res,
+      voyage: {
+        ...res.voyage,
+        travelDays: Math.max(0, res.voyage.travelDays - days),
+        events: remainingEvents,
+      },
+    };
+  }
+  return res;
+}
+
+/**
+ * 推进航行事件，如果遇到战斗事件需要玩家交互，则中途暂停。
+ * 如果无事件或全部事件非战斗/战斗胜利，则直接推进到终点。
+ */
+export function progressVoyage(world: World): World {
+  if (!world.voyage) return world;
+
+  let result = world;
+  const voyage = world.voyage;
+  const events = [...voyage.events];
+
+  // 找出第一个待处理的事件（按天数排序）
+  events.sort((a, b) => a.day - b.day);
+
+  let currentDayAdvanced = 0;
+
+  for (let i = 0; i < events.length; i++) {
+    if (!result.voyage) break;
+    const event = events[i];
+    const daysToAdvance = event.day - currentDayAdvanced;
+
+    if (event.type === "combat") {
+      // 推进天数到该事件发生的那天
+      result = advanceVoyageDays(result, daysToAdvance);
+      currentDayAdvanced += daysToAdvance;
+
+      // 更新当前事件，获取最新的 voyage 状态
+      const currentVoyage = result.voyage;
+      if (!currentVoyage) break;
+
+      // 重新计算 progress
+      const progress =
+        voyage.travelDays > 0 ? event.day / voyage.travelDays : 0;
+
+      const depPort = findOrThrow(
+        PORTS,
+        currentVoyage.fromPortId,
+        "UNKNOWN_PORT",
+      );
+      const arrPort = findOrThrow(
+        PORTS,
+        currentVoyage.toPortId,
+        "UNKNOWN_PORT",
+      );
+      const depRegion = findOrThrow(
+        REGIONS,
+        depPort.regionId,
+        "UNKNOWN_REGION",
+      );
+      const arrRegion = findOrThrow(
+        REGIONS,
+        arrPort.regionId,
+        "UNKNOWN_REGION",
+      );
+      const curMod =
+        depRegion.dangerModifier +
+        (arrRegion.dangerModifier - depRegion.dangerModifier) * progress;
+      const curDanger =
+        depPort.danger + (arrPort.danger - depPort.danger) * progress;
+      const difficulty = curMod * curDanger;
+
+      // 判定是否成功回避海盗
+      const evasionChance = getFleetPirateEvasion(
+        result,
+        currentVoyage.fleetShipIds,
+      );
+      if (Math.random() < evasionChance) {
+        const outcome = {
+          result: "victory" as const,
+          hpDamage: 0,
+          cargoLoss: 0,
+          crewLoss: 0,
+          description: "舰队在航行中遭遇海盗，但凭借装备成功避开了海盗袭击！",
+        };
+        const updatedEvent = {
+          ...event,
+          combatOutcome: outcome,
+          description: `${event.description} (成功回避海盗袭击)`,
+        };
+        // 成功回避，更新事件列表并继续
+        result = {
+          ...result,
+          voyage: {
+            ...currentVoyage,
+            events: currentVoyage.events.map((ev) =>
+              ev.day === event.day && ev.type === "combat" ? updatedEvent : ev,
+            ),
+          },
+        };
+        result = gainExp(result, EVENT_EXP);
+        continue;
+      }
+
+      // 10% 几率直接触发接舷战
+      if (Math.random() < 0.1) {
+        const _updatedEvent = {
+          ...event,
+          description: `${event.description} (海盗突袭登船，直接进入接舷战！)`,
+        };
+        // 移除当前已被处理的 combat 事件（或是标记已触发），这里直接移除此事件以避免重复触发
+        const filteredEvents = currentVoyage.events.filter(
+          (ev) => !(ev.day === event.day && ev.type === "combat"),
+        );
+        const nextVoyage = {
+          ...currentVoyage,
+          directBoarding: true,
+          combatSelection: false,
+          events: filteredEvents,
+        };
+        result = {
+          ...result,
+          voyage: nextVoyage,
+          combat: initPersonCombat(result, difficulty),
+        };
+        return result; // 暂停并进入接舷战！
+      }
+
+      // 90% 正常舰队战
+      const outcome = resolveCombat(result, difficulty);
+      const nearestPort = getNearestPort(
+        currentVoyage.fromPortId,
+        currentVoyage.toPortId,
+      );
+
+      const updatedEvent = {
+        ...event,
+        combatOutcome: outcome,
+      };
+
+      if (outcome.result === "victory") {
+        // 舰队战胜利：应用结果，并把当前事件移出 pending 列表，然后继续
+        const victoryWorld = applyCombatOutcome(
+          result,
+          outcome,
+          nearestPort,
+          currentVoyage.fleetShipIds,
+        );
+        if (victoryWorld.voyage) {
+          const filteredEvents = victoryWorld.voyage.events.filter(
+            (ev) => !(ev.day === event.day && ev.type === "combat"),
+          );
+          result = {
+            ...victoryWorld,
+            voyage: {
+              ...victoryWorld.voyage,
+              events: filteredEvents,
+            },
+          };
+        } else {
+          result = victoryWorld;
+        }
+        result = gainExp(result, EVENT_EXP);
+      } else {
+        // 舰队战战败：中途暂停，把当前事件在列表中更新（保存 outcome，好让 UI 显示），等待玩家交互
+        const nextVoyage = {
+          ...currentVoyage,
+          combatSelection: true,
+          directBoarding: false,
+          events: currentVoyage.events.map((ev) =>
+            ev.day === event.day && ev.type === "combat" ? updatedEvent : ev,
+          ),
+        };
+        result = {
+          ...result,
+          voyage: nextVoyage,
+        };
+        return result; // 暂停！
+      }
+    } else if (event.type === "storm") {
+      // 推进天数到风暴发生的那天
+      result = advanceVoyageDays(result, daysToAdvance);
+      currentDayAdvanced += daysToAdvance;
+      result = applyStormEvent(result, event);
+      result = gainExp(result, EVENT_EXP);
+    } else {
+      // 推进天数到事件发生的那天
+      result = advanceVoyageDays(result, daysToAdvance);
+      currentDayAdvanced += daysToAdvance;
+      result = applyGoldChange(result, event.goldChange);
+      result = applyCargoLoss(result, event.cargoLoss);
+      result = gainExp(result, EVENT_EXP);
+    }
+  }
+
+  // 走到这里，说明全部事件已处理（或非战斗/战斗胜利）
+  // 推进完剩余的时间，正常到达
+  const finalVoyage = result.voyage;
+  if (finalVoyage) {
+    const remainingDays = finalVoyage.travelDays;
+    result = advanceVoyageDays(result, remainingDays);
+    const updatedVoyage = result.voyage;
+    if (updatedVoyage) {
+      const arrived = arriveAtPort(
+        result,
+        updatedVoyage.toPortId,
+        updatedVoyage.travelDays +
+          (result.player.day - updatedVoyage.departureDay),
+      );
+      const afterUpkeep = deductCrewUpkeep(
+        arrived,
+        updatedVoyage.travelDays +
+          (result.player.day - updatedVoyage.departureDay),
+      );
+      result = {
+        ...afterUpkeep,
+        voyage: null,
+      };
+    }
+  }
+
+  return result;
 }

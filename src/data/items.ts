@@ -27,6 +27,10 @@ export interface ItemConfig {
   };
   readonly description?: string;
   readonly stackable?: boolean;
+  readonly skills?: readonly {
+    readonly skillId: string;
+    readonly levelRequired: number;
+  }[];
 }
 
 export const ITEMS: readonly ItemConfig[] = [
@@ -41,6 +45,7 @@ export const ITEMS: readonly ItemConfig[] = [
     scaling: { str: "good" },
     description: "一把布满铁锈的旧长剑，聊胜于无。",
     stackable: false,
+    skills: [{ skillId: "heavy_strike", levelRequired: 1 }],
   },
   {
     id: "iron_sword",
@@ -52,6 +57,10 @@ export const ITEMS: readonly ItemConfig[] = [
     scaling: { str: "excellent", dex: "good" },
     description: "精铁锻造的长剑，坚固锋利，是合格的水手武器。",
     stackable: false,
+    skills: [
+      { skillId: "heavy_strike", levelRequired: 1 },
+      { skillId: "pierce", levelRequired: 3 },
+    ],
   },
   {
     id: "silver_rapier",
@@ -63,6 +72,10 @@ export const ITEMS: readonly ItemConfig[] = [
     scaling: { dex: "excellent" },
     description: "优雅的刺剑，白银打造，适合灵巧的剑客。",
     stackable: false,
+    skills: [
+      { skillId: "pierce", levelRequired: 1 },
+      { skillId: "bloody_thrust", levelRequired: 5 },
+    ],
   },
   {
     id: "mage_staff",
@@ -74,6 +87,10 @@ export const ITEMS: readonly ItemConfig[] = [
     scaling: { int: "excellent" },
     description: "顶端镶嵌微光晶石的木质法杖，能引导微弱的魔力。",
     stackable: false,
+    skills: [
+      { skillId: "fireball", levelRequired: 1 },
+      { skillId: "freeze_lance", levelRequired: 4 },
+    ],
   },
   {
     id: "holy_mace",
@@ -85,6 +102,10 @@ export const ITEMS: readonly ItemConfig[] = [
     scaling: { str: "good", fth: "excellent" },
     description: "教会修士常用的战锤，其上镌刻有圣洁的祷文。",
     stackable: false,
+    skills: [
+      { skillId: "holy_strike", levelRequired: 1 },
+      { skillId: "heal_light", levelRequired: 3 },
+    ],
   },
   {
     id: "pirate_cutlass",
@@ -96,6 +117,10 @@ export const ITEMS: readonly ItemConfig[] = [
     scaling: { dex: "good", arc: "excellent" },
     description: "弧度夸张的弯刀，适合在狭窄的甲板上挥砍。",
     stackable: false,
+    skills: [
+      { skillId: "flurry", levelRequired: 1 },
+      { skillId: "poison_blade", levelRequired: 4 },
+    ],
   },
   {
     id: "legendary_harpoon",
@@ -107,6 +132,10 @@ export const ITEMS: readonly ItemConfig[] = [
     scaling: { str: "legendary", dex: "excellent" },
     description: "曾用来捕获深海巨兽的古老鱼叉，蕴含着海洋的雷霆之力。",
     stackable: false,
+    skills: [
+      { skillId: "flurry", levelRequired: 1 },
+      { skillId: "thunder_spear", levelRequired: 5 },
+    ],
   },
 
   // ---- 铠甲/防具 (6 件) ----

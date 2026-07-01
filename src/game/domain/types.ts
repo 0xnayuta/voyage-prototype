@@ -84,6 +84,8 @@ export interface VoyageState {
   readonly travelDays: number;
   readonly events: readonly VoyageEvent[];
   readonly fleetShipIds: readonly string[];
+  readonly combatSelection?: boolean;
+  readonly directBoarding?: boolean;
 }
 export interface PlayerState {
   readonly name: string;
@@ -103,11 +105,58 @@ export interface PlayerState {
   readonly equipment: CharacterEquipment;
 }
 
+export interface CombatParticipant {
+  readonly id: string; // "player", "ally-X", "enemy-X"
+  readonly name: string;
+  readonly type: "player" | "ally" | "enemy";
+  readonly hp: number;
+  readonly maxHp: number;
+  readonly mp: number;
+  readonly maxMp: number;
+  readonly atk: number;
+  readonly def: number;
+  readonly mag: number;
+  readonly mdf: number;
+  readonly spd: number;
+  readonly luk: number;
+  readonly level: number;
+  readonly weaponId: string | null;
+  readonly statuses: readonly {
+    readonly type:
+      | "poison"
+      | "bleed"
+      | "burn"
+      | "freeze"
+      | "sleep"
+      | "silence"
+      | "blind";
+    readonly duration: number;
+  }[];
+  readonly isDodging: boolean;
+  readonly isParrying: boolean;
+}
+
+export interface CombatLogEntry {
+  readonly round: number;
+  readonly turnIndex: number;
+  readonly message: string;
+}
+
+export interface PersonCombatState {
+  readonly participants: readonly CombatParticipant[];
+  readonly currentTurnIndex: number;
+  readonly turnOrder: readonly string[]; // IDs of participants
+  readonly round: number;
+  readonly logs: readonly CombatLogEntry[];
+  readonly status: "in_progress" | "victory" | "defeat" | "surrendered";
+}
+
 export interface World {
   readonly player: PlayerState;
   readonly fleet: FleetState;
   readonly market: MarketPriceState;
   readonly voyage: VoyageState | null;
+  readonly combat: PersonCombatState | null;
 }
 
 // ---- 领域错误 ----
@@ -151,4 +200,10 @@ export type DomainErrorCode =
   | "INSUFFICIENT_ATTRIBUTE_POINTS"
   | "ITEM_NOT_FOUND"
   | "ITEM_NOT_EQUIPPABLE"
-  | "EQUIPMENT_SLOT_INVALID";
+  | "EQUIPMENT_SLOT_INVALID"
+  | "NOT_IN_COMBAT"
+  | "INVALID_COMBAT_TARGET"
+  | "INSUFFICIENT_MP"
+  | "INVALID_COMBAT_ACTION"
+  | "NOT_YOUR_TURN"
+  | "SILENCED";
