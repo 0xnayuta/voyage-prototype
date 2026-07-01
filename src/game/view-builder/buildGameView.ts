@@ -287,17 +287,19 @@ export function buildShipView(world: World, targetShipId?: string): ShipView {
     };
   });
 
-  const fleetInventory = (world.fleet.inventory || []).map((itemId) => {
-    const eq = EQUIPMENTS.find((e) => e.id === itemId);
-    return {
-      id: itemId,
-      name: eq?.name ?? "未知",
-      type: eq?.type ?? "special",
-      typeLabel: eq ? EQUIPMENT_TYPE_LABELS[eq.type] : "未知",
-      effectDescription: eq ? getEquipmentEffectDescription(eq) : "",
-      sellPrice: sellPrice(eq),
-    };
-  });
+  const fleetInventory = (world.fleet.shipEquipmentInventory || []).map(
+    (itemId) => {
+      const eq = EQUIPMENTS.find((e) => e.id === itemId);
+      return {
+        id: itemId,
+        name: eq?.name ?? "未知",
+        type: eq?.type ?? "special",
+        typeLabel: eq ? EQUIPMENT_TYPE_LABELS[eq.type] : "未知",
+        effectDescription: eq ? getEquipmentEffectDescription(eq) : "",
+        sellPrice: sellPrice(eq),
+      };
+    },
+  );
 
   return {
     shipName: shipConfig.name,

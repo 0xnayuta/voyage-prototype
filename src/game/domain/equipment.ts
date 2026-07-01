@@ -116,7 +116,10 @@ export function buyEquipment(world: World, equipmentId: string): World {
     fleet: {
       ...world.fleet,
       gold: world.fleet.gold - config.price,
-      inventory: [...(world.fleet.inventory || []), equipmentId],
+      shipEquipmentInventory: [
+        ...(world.fleet.shipEquipmentInventory || []),
+        equipmentId,
+      ],
     },
   };
 }
@@ -128,7 +131,7 @@ export function buyEquipment(world: World, equipmentId: string): World {
 export function sellEquipment(world: World, equipmentId: string): World {
   if (world.voyage) throw new DomainError("IN_VOYAGE");
 
-  const idx = (world.fleet.inventory || []).indexOf(equipmentId);
+  const idx = (world.fleet.shipEquipmentInventory || []).indexOf(equipmentId);
   if (idx === -1) {
     throw new DomainError("EQUIPMENT_NOT_FOUND");
   }
@@ -139,7 +142,7 @@ export function sellEquipment(world: World, equipmentId: string): World {
   // 回收价格折半
   const refund = Math.floor(config.price * 0.5);
 
-  const nextInventory = [...(world.fleet.inventory || [])];
+  const nextInventory = [...(world.fleet.shipEquipmentInventory || [])];
   nextInventory.splice(idx, 1);
 
   return {
@@ -147,7 +150,7 @@ export function sellEquipment(world: World, equipmentId: string): World {
     fleet: {
       ...world.fleet,
       gold: world.fleet.gold + refund,
-      inventory: nextInventory,
+      shipEquipmentInventory: nextInventory,
     },
   };
 }
@@ -167,7 +170,7 @@ export function equipItem(
   const config = EQUIPMENTS.find((e) => e.id === equipmentId);
   if (!config) throw new DomainError("EQUIPMENT_NOT_FOUND");
 
-  const idx = (world.fleet.inventory || []).indexOf(equipmentId);
+  const idx = (world.fleet.shipEquipmentInventory || []).indexOf(equipmentId);
   if (idx === -1) throw new DomainError("EQUIPMENT_NOT_FOUND");
   if ((ship.equippedItems || []).length >= 3)
     throw new DomainError("EQUIPMENT_SLOT_FULL");
@@ -179,7 +182,7 @@ export function equipItem(
   )
     throw new DomainError("DUPLICATE_EQUIPMENT_TYPE");
 
-  const nextInventory = [...(world.fleet.inventory || [])];
+  const nextInventory = [...(world.fleet.shipEquipmentInventory || [])];
   nextInventory.splice(idx, 1);
 
   const durBonus = config.effect.durabilityBonus ?? 0;
@@ -187,7 +190,7 @@ export function equipItem(
     ...world,
     fleet: {
       ...world.fleet,
-      inventory: nextInventory,
+      shipEquipmentInventory: nextInventory,
       ships: world.fleet.ships.map((s) =>
         s.id === shipId
           ? {
@@ -256,7 +259,10 @@ export function unequipItem(
     ...world,
     fleet: {
       ...world.fleet,
-      inventory: [...(world.fleet.inventory || []), equipmentId],
+      shipEquipmentInventory: [
+        ...(world.fleet.shipEquipmentInventory || []),
+        equipmentId,
+      ],
       ships: world.fleet.ships.map((s) =>
         s.id === shipId
           ? {
