@@ -423,7 +423,17 @@ export function equipCharacterItem(
 
   let nextWorld = world;
 
-  const currentlyEquippedUid = world.player.equipment[slot];
+  // Check if this item is already equipped in another slot
+  const oldSlot = Object.keys(world.player.equipment).find(
+    (key) =>
+      world.player.equipment[key as keyof typeof world.player.equipment] ===
+      itemUid,
+  ) as keyof typeof world.player.equipment | undefined;
+
+  if (oldSlot) {
+    nextWorld = unequipCharacterItem(nextWorld, oldSlot);
+  }
+  const currentlyEquippedUid = nextWorld.player.equipment[slot];
   if (currentlyEquippedUid) {
     nextWorld = unequipCharacterItem(nextWorld, slot);
   }

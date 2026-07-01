@@ -420,6 +420,23 @@ describe("equipCharacterItem & unequipCharacterItem", () => {
     ).toBeUndefined();
   });
 
+  it("automatically unequips same item from old slot when equipping to new slot", () => {
+    let world = createDefaultWorld();
+    world = gainItem(world, "brass_ring", 1, ["uid-1"]);
+
+    // Equip in accessory1
+    let nextWorld = equipCharacterItem(world, "uid-1", "accessory1");
+    expect(nextWorld.player.equipment.accessory1).toBe("uid-1");
+    expect(nextWorld.player.equipment.accessory2).toBeNull();
+    expect(nextWorld.fleet.inventory[0].equippedSlot).toBe("accessory1");
+
+    // Equip same item in accessory2
+    nextWorld = equipCharacterItem(nextWorld, "uid-1", "accessory2");
+    expect(nextWorld.player.equipment.accessory1).toBeNull();
+    expect(nextWorld.player.equipment.accessory2).toBe("uid-1");
+    expect(nextWorld.fleet.inventory[0].equippedSlot).toBe("accessory2");
+  });
+
   it("unequips items back to inventory", () => {
     let world = createDefaultWorld();
     world = gainItem(world, "rusted_sword", 1, ["uid-1"]);
