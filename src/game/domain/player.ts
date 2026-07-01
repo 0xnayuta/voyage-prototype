@@ -250,11 +250,16 @@ export function calcPanelStats(
     const fthCoeff = weapon.scaling?.fth
       ? SCALING_COEFFICIENTS[weapon.scaling.fth]
       : 0;
+    const arcCoeff = weapon.scaling?.arc
+      ? SCALING_COEFFICIENTS[weapon.scaling.arc]
+      : 0;
 
     scalingAtk += baseWeaponAtk * (effStr / 100) * strCoeff;
     scalingAtk += baseWeaponAtk * (effDex / 100) * dexCoeff;
+    scalingAtk += baseWeaponAtk * (effArc / 100) * arcCoeff;
     scalingMag += baseWeaponMag * (effInt / 100) * intCoeff;
     scalingMag += baseWeaponMag * (effFth / 100) * fthCoeff;
+    scalingMag += baseWeaponMag * (effArc / 100) * arcCoeff;
   }
 
   // 防具补正 DEF 和 MDF
@@ -274,11 +279,16 @@ export function calcPanelStats(
     const fthCoeff = armor.scaling?.fth
       ? SCALING_COEFFICIENTS[armor.scaling.fth]
       : 0;
+    const arcCoeff = armor.scaling?.arc
+      ? SCALING_COEFFICIENTS[armor.scaling.arc]
+      : 0;
 
     scalingDef += baseArmorDef * (effStr / 100) * strCoeff;
     scalingDef += baseArmorDef * (effDex / 100) * dexCoeff;
+    scalingDef += baseArmorDef * (effArc / 100) * arcCoeff;
     scalingMdf += baseArmorMdf * (effInt / 100) * intCoeff;
     scalingMdf += baseArmorMdf * (effFth / 100) * fthCoeff;
+    scalingMdf += baseArmorMdf * (effArc / 100) * arcCoeff;
   }
 
   return {

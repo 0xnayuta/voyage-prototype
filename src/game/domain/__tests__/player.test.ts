@@ -328,6 +328,66 @@ describe("calcPanelStats & getEffectiveAttribute", () => {
     // Total ATK = 33 + 5 + 0.125 = 38.125 => Math.floor(38.125) = 38.
     expect(stats.atk).toBe(38);
   });
+
+  it("calculates arc scaling for weapon and armor correctly", () => {
+    const weaponInstance = {
+      uid: "weapon-1",
+      itemId: "pirate_cutlass", // dex: "good", arc: "excellent"
+      quantity: 1,
+      equippedSlot: "weapon",
+    };
+    const armorInstance = {
+      uid: "armor-1",
+      itemId: "legendary_captain_coat", // arc: "legendary", dex: "good"
+      quantity: 1,
+      equippedSlot: "armor",
+    };
+    const inventory = [weaponInstance, armorInstance];
+    const player = {
+      name: "测试",
+      currentPortId: "quanzhou",
+      day: 1,
+      level: 1,
+      exp: 0,
+      expToNext: 100,
+      str: 10,
+      dex: 20,
+      int: 10,
+      fth: 10,
+      arc: 30, // effArc = 27.5
+      attributePoints: 0,
+      equipment: {
+        weapon: "weapon-1",
+        armor: "armor-1",
+        accessory1: null,
+        accessory2: null,
+      },
+    };
+    const stats = calcPanelStats(player, inventory);
+
+    // pirate_cutlass: atkBonus: 20, spdBonus: 3
+    // scaling: dex: "good" (0.25), arc: "excellent" (0.5)
+    // effDex = 20, effArc = 27.5
+    // baseAtk = 8 + 10 * 2.0 + 20 * 0.5 = 38
+    // baseWeaponAtk = 20
+    // scalingAtk = baseWeaponAtk * (effDex/100) * dexCoeff + baseWeaponAtk * (effArc/100) * arcCoeff
+    // = 20 * 0.2 * 0.25 + 20 * 0.275 * 0.5
+    // = 1.0 + 2.75 = 3.75
+    // eqAtk = 20
+    // Total ATK = baseAtk + eqAtk + scalingAtk = 38 + 20 + 3.75 = 61.75 => Math.floor = 61
+    expect(stats.atk).toBe(61);
+
+    // legendary_captain_coat: defBonus: 55, mdfBonus: 35, hpBonus: 250
+    // scaling: arc: "legendary" (1.0), dex: "good" (0.25)
+    // baseDef = 5 + 10 * 0.8 + 20 * 0.4 = 21
+    // baseArmorDef = 55
+    // scalingDef = baseArmorDef * (effDex/100) * dexCoeff + baseArmorDef * (effArc/100) * arcCoeff
+    // = 55 * 0.2 * 0.25 + 55 * 0.275 * 1.0
+    // = 2.75 + 15.125 = 17.875
+    // eqDef = 55
+    // Total DEF = baseDef + eqDef + scalingDef = 21 + 55 + 17.875 = 93.875 => Math.floor = 93
+    expect(stats.def).toBe(93);
+  });
 });
 
 describe("allocateAttributePoint", () => {
