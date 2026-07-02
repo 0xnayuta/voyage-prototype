@@ -103,6 +103,12 @@ export interface PlayerState {
   readonly attributePoints: number;
   // 装备栏
   readonly equipment: CharacterEquipment;
+  // 称号统计追踪
+  readonly totalSalesRevenue: number;
+  readonly bestSingleProfit: number;
+  readonly totalMileage: number;
+  readonly combatWins: number;
+  readonly voyagesCompleted: number;
 }
 
 export interface CombatParticipant {
@@ -177,6 +183,7 @@ export interface World {
   readonly combat: PersonCombatState | null;
   readonly npcRelations: Record<string, NpcRelationState>;
   readonly activeQuests: readonly ActiveQuest[];
+  readonly selectedTitle: string | null;
 }
 
 // ---- 领域错误 ----
@@ -237,4 +244,6 @@ export type DomainErrorCode =
   | "QUEST_NOT_AVAILABLE"
   | "QUEST_NOT_COMPLETABLE"
   | "QUEST_REQUIREMENT_NOT_MET"
-  | "ITEM_NOT_FOUND_IN_INVENTORY";
+  | "ITEM_NOT_FOUND_IN_INVENTORY"
+  | "TITLE_NOT_FOUND"
+  | "TITLE_NOT_UNLOCKED";
